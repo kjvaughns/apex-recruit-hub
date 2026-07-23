@@ -50,18 +50,21 @@ function ApplicantDetailPage() {
   return (
     <PortalShell>
       <PortalHeader
-        kicker={<Link to="/portal/crm" className="text-apex-gold hover:underline">← Back to CRM</Link> as unknown as string}
+        kicker="CRM › Applicant"
         title={isLoading || !a ? "Loading…" : `${a.first_name} ${a.last_name}`}
         actions={
-          currentStage && (
-            <span
-              className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
-              style={{ borderColor: `${currentStage.color}55`, background: `${currentStage.color}18`, color: currentStage.color }}
-            >
-              <span className="h-2 w-2 rounded-full" style={{ background: currentStage.color }} />
-              {currentStage.name}
-            </span>
-          )
+          <div className="flex items-center gap-2">
+            <Link to="/portal/crm" className="apx-btn-ghost px-3 py-2 text-[12.5px]">← Back to CRM</Link>
+            {currentStage && (
+              <span
+                className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+                style={{ borderColor: `${currentStage.color}55`, background: `${currentStage.color}18`, color: currentStage.color }}
+              >
+                <span className="h-2 w-2 rounded-full" style={{ background: currentStage.color }} />
+                {currentStage.name}
+              </span>
+            )}
+          </div>
         }
       />
 
