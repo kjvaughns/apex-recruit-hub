@@ -226,14 +226,7 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-  .handler(async ({ context, data }) => {
-    const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
-    const { id, ...rest } = data;
-    const { error } = await supabase.from("profiles").update(rest).eq("id", id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
+
 
 export const adminListStages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
