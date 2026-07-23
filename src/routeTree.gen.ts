@@ -22,10 +22,15 @@ import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
 import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authenticated/portal/calendar'
+import { Route as AuthenticatedPortalResourcesRouteRouteImport } from './routes/_authenticated/portal/resources/route'
 import { Route as AuthenticatedPortalCrmRouteRouteImport } from './routes/_authenticated/portal/crm/route'
 import { Route as AuthenticatedPortalAdminRouteRouteImport } from './routes/_authenticated/portal/admin/route'
+import { Route as AuthenticatedPortalResourcesIndexRouteImport } from './routes/_authenticated/portal/resources/index'
 import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
 import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
+import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
+import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
+import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
 import { Route as AuthenticatedPortalCrmApplicantIdRouteImport } from './routes/_authenticated/portal/crm/$applicantId'
 import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
 import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
@@ -101,6 +106,12 @@ const AuthenticatedPortalCalendarRoute =
     path: '/calendar',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
+const AuthenticatedPortalResourcesRouteRoute =
+  AuthenticatedPortalResourcesRouteRouteImport.update({
+    id: '/resources',
+    path: '/resources',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
 const AuthenticatedPortalCrmRouteRoute =
   AuthenticatedPortalCrmRouteRouteImport.update({
     id: '/crm',
@@ -113,6 +124,12 @@ const AuthenticatedPortalAdminRouteRoute =
     path: '/admin',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
+const AuthenticatedPortalResourcesIndexRoute =
+  AuthenticatedPortalResourcesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
+  } as any)
 const AuthenticatedPortalCrmIndexRoute =
   AuthenticatedPortalCrmIndexRouteImport.update({
     id: '/',
@@ -124,6 +141,24 @@ const AuthenticatedPortalAdminIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalResourcesPresentationsRoute =
+  AuthenticatedPortalResourcesPresentationsRouteImport.update({
+    id: '/presentations',
+    path: '/presentations',
+    getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
+  } as any)
+const AuthenticatedPortalResourcesLibraryRoute =
+  AuthenticatedPortalResourcesLibraryRouteImport.update({
+    id: '/library',
+    path: '/library',
+    getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
+  } as any)
+const AuthenticatedPortalResourcesAdminRoute =
+  AuthenticatedPortalResourcesAdminRouteImport.update({
+    id: '/admin',
+    path: '/admin',
+    getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
   } as any)
 const AuthenticatedPortalCrmApplicantIdRoute =
   AuthenticatedPortalCrmApplicantIdRouteImport.update({
@@ -160,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
   '/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
+  '/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
@@ -169,8 +205,12 @@ export interface FileRoutesByFullPath {
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
+  '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
+  '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
+  '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
   '/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
+  '/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -188,8 +228,12 @@ export interface FileRoutesByTo {
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
+  '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
+  '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
+  '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
   '/portal/admin': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm': typeof AuthenticatedPortalCrmIndexRoute
+  '/portal/resources': typeof AuthenticatedPortalResourcesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -203,6 +247,7 @@ export interface FileRoutesById {
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
   '/_authenticated/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
+  '/_authenticated/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   '/_authenticated/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
@@ -212,8 +257,12 @@ export interface FileRoutesById {
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
   '/_authenticated/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
+  '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
+  '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
+  '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
   '/_authenticated/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/_authenticated/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
+  '/_authenticated/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -227,6 +276,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/portal/admin'
     | '/portal/crm'
+    | '/portal/resources'
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/pipeline'
@@ -236,8 +286,12 @@ export interface FileRouteTypes {
     | '/portal/admin/stages'
     | '/portal/admin/users'
     | '/portal/crm/$applicantId'
+    | '/portal/resources/admin'
+    | '/portal/resources/library'
+    | '/portal/resources/presentations'
     | '/portal/admin/'
     | '/portal/crm/'
+    | '/portal/resources/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -255,8 +309,12 @@ export interface FileRouteTypes {
     | '/portal/admin/stages'
     | '/portal/admin/users'
     | '/portal/crm/$applicantId'
+    | '/portal/resources/admin'
+    | '/portal/resources/library'
+    | '/portal/resources/presentations'
     | '/portal/admin'
     | '/portal/crm'
+    | '/portal/resources'
   id:
     | '__root__'
     | '/'
@@ -269,6 +327,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal'
     | '/_authenticated/portal/admin'
     | '/_authenticated/portal/crm'
+    | '/_authenticated/portal/resources'
     | '/_authenticated/portal/calendar'
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/pipeline'
@@ -278,8 +337,12 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/admin/stages'
     | '/_authenticated/portal/admin/users'
     | '/_authenticated/portal/crm/$applicantId'
+    | '/_authenticated/portal/resources/admin'
+    | '/_authenticated/portal/resources/library'
+    | '/_authenticated/portal/resources/presentations'
     | '/_authenticated/portal/admin/'
     | '/_authenticated/portal/crm/'
+    | '/_authenticated/portal/resources/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -385,6 +448,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalCalendarRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/_authenticated/portal/resources': {
+      id: '/_authenticated/portal/resources'
+      path: '/resources'
+      fullPath: '/portal/resources'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesRouteRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
     '/_authenticated/portal/crm': {
       id: '/_authenticated/portal/crm'
       path: '/crm'
@@ -399,6 +469,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalAdminRouteRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/_authenticated/portal/resources/': {
+      id: '/_authenticated/portal/resources/'
+      path: '/'
+      fullPath: '/portal/resources/'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
+    }
     '/_authenticated/portal/crm/': {
       id: '/_authenticated/portal/crm/'
       path: '/'
@@ -412,6 +489,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/admin/'
       preLoaderRoute: typeof AuthenticatedPortalAdminIndexRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/resources/presentations': {
+      id: '/_authenticated/portal/resources/presentations'
+      path: '/presentations'
+      fullPath: '/portal/resources/presentations'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesPresentationsRouteImport
+      parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
+    }
+    '/_authenticated/portal/resources/library': {
+      id: '/_authenticated/portal/resources/library'
+      path: '/library'
+      fullPath: '/portal/resources/library'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesLibraryRouteImport
+      parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
+    }
+    '/_authenticated/portal/resources/admin': {
+      id: '/_authenticated/portal/resources/admin'
+      path: '/admin'
+      fullPath: '/portal/resources/admin'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesAdminRouteImport
+      parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
     }
     '/_authenticated/portal/crm/$applicantId': {
       id: '/_authenticated/portal/crm/$applicantId'
@@ -482,9 +580,34 @@ const AuthenticatedPortalCrmRouteRouteWithChildren =
     AuthenticatedPortalCrmRouteRouteChildren,
   )
 
+interface AuthenticatedPortalResourcesRouteRouteChildren {
+  AuthenticatedPortalResourcesAdminRoute: typeof AuthenticatedPortalResourcesAdminRoute
+  AuthenticatedPortalResourcesLibraryRoute: typeof AuthenticatedPortalResourcesLibraryRoute
+  AuthenticatedPortalResourcesPresentationsRoute: typeof AuthenticatedPortalResourcesPresentationsRoute
+  AuthenticatedPortalResourcesIndexRoute: typeof AuthenticatedPortalResourcesIndexRoute
+}
+
+const AuthenticatedPortalResourcesRouteRouteChildren: AuthenticatedPortalResourcesRouteRouteChildren =
+  {
+    AuthenticatedPortalResourcesAdminRoute:
+      AuthenticatedPortalResourcesAdminRoute,
+    AuthenticatedPortalResourcesLibraryRoute:
+      AuthenticatedPortalResourcesLibraryRoute,
+    AuthenticatedPortalResourcesPresentationsRoute:
+      AuthenticatedPortalResourcesPresentationsRoute,
+    AuthenticatedPortalResourcesIndexRoute:
+      AuthenticatedPortalResourcesIndexRoute,
+  }
+
+const AuthenticatedPortalResourcesRouteRouteWithChildren =
+  AuthenticatedPortalResourcesRouteRoute._addFileChildren(
+    AuthenticatedPortalResourcesRouteRouteChildren,
+  )
+
 interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalAdminRouteRoute: typeof AuthenticatedPortalAdminRouteRouteWithChildren
   AuthenticatedPortalCrmRouteRoute: typeof AuthenticatedPortalCrmRouteRouteWithChildren
+  AuthenticatedPortalResourcesRouteRoute: typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   AuthenticatedPortalCalendarRoute: typeof AuthenticatedPortalCalendarRoute
   AuthenticatedPortalLeaderboardRoute: typeof AuthenticatedPortalLeaderboardRoute
   AuthenticatedPortalPipelineRoute: typeof AuthenticatedPortalPipelineRoute
@@ -498,6 +621,8 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
       AuthenticatedPortalAdminRouteRouteWithChildren,
     AuthenticatedPortalCrmRouteRoute:
       AuthenticatedPortalCrmRouteRouteWithChildren,
+    AuthenticatedPortalResourcesRouteRoute:
+      AuthenticatedPortalResourcesRouteRouteWithChildren,
     AuthenticatedPortalCalendarRoute: AuthenticatedPortalCalendarRoute,
     AuthenticatedPortalLeaderboardRoute: AuthenticatedPortalLeaderboardRoute,
     AuthenticatedPortalPipelineRoute: AuthenticatedPortalPipelineRoute,
