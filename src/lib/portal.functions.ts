@@ -286,3 +286,214 @@ export const adminSetSetting = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/* ============================================================
+   Tasks
+   ============================================================ */
+
+const taskInput = z.object({
+  scope: z.enum(["mine", "all"]).optional().default("mine"),
+  status: z.enum(["open", "done", "all"]).optional().default("open"),
+});
+
+export const listTasks = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => taskInput.parse(d ?? {}))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    let q = supabase
+      .from("tasks")
+      .select("id, title, notes, due_at, completed_at, priority, assigned_to, created_by, applicant_id, created_at, applicants(first_name, last_name)")
+      .order("completed_at", { ascending: true, nullsFirst: true })
+      .order("due_at", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (data.scope === "mine") q = q.eq("assigned_to", userId);
+    if (data.status === "open") q = q.is("completed_at", null);
+    if (data.status === "done") q = q.not("completed_at", "is", null);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return { tasks: rows ?? [] };
+  });
+
+export const createTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    title: z.string().trim().min(1).max(200),
+    notes: z.string().max(2000).optional(),
+    due_at: z.string().datetime().optional().nullable(),
+    priority: z.enum(["low", "normal", "high"]).optional().default("normal"),
+    assigned_to: z.string().uuid().optional().nullable(),
+    applicant_id: z.string().uuid().optional().nullable(),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase.from("tasks").insert({
+      title: data.title,
+      notes: data.notes ?? null,
+      due_at: data.due_at ?? null,
+      priority: data.priority,
+      assigned_to: data.assigned_to ?? userId,
+      created_by: userId,
+      applicant_id: data.applicant_id ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const toggleTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), done: z.boolean() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { error } = await supabase
+      .from("tasks")
+      .update({ completed_at: data.done ? new Date().toISOString() : null })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteTask = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { error } = await supabase.from("tasks").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/* ============================================================
+   Calendar
+   ============================================================ */
+
+export const getCalendar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    from: z.string().datetime(),
+    to: z.string().datetime(),
+    scope: z.enum(["mine", "all"]).optional().default("mine"),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    let apps = supabase
+      .from("applicants")
+      .select("id, first_name, last_name, calendly_scheduled_at, assigned_recruiter_id")
+      .not("calendly_scheduled_at", "is", null)
+      .gte("calendly_scheduled_at", data.from)
+      .lte("calendly_scheduled_at", data.to);
+    if (data.scope === "mine") apps = apps.eq("assigned_recruiter_id", userId);
+
+    let tasks = supabase
+      .from("tasks")
+      .select("id, title, due_at, completed_at, priority, assigned_to")
+      .not("due_at", "is", null)
+      .gte("due_at", data.from)
+      .lte("due_at", data.to);
+    if (data.scope === "mine") tasks = tasks.eq("assigned_to", userId);
+
+    const [appsRes, tasksRes] = await Promise.all([apps, tasks]);
+    return { appointments: appsRes.data ?? [], tasks: tasksRes.data ?? [] };
+  });
+
+/* ============================================================
+   Leaderboard
+   ============================================================ */
+
+export const getLeaderboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    window: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const days = data.window === "7d" ? 7 : data.window === "30d" ? 30 : data.window === "90d" ? 90 : 3650;
+    const since = new Date(Date.now() - days * 86400_000).toISOString();
+
+    const [appsRes, profilesRes] = await Promise.all([
+      supabase
+        .from("applicants")
+        .select("assigned_recruiter_id, calendly_scheduled_at, evaluation_completed_at, created_at, current_stage_id, pipeline_stages(is_completed_stage)")
+        .gte("created_at", since)
+        .not("assigned_recruiter_id", "is", null),
+      supabase.from("profiles").select("id, first_name, last_name, avatar_url").eq("is_active", true),
+    ]);
+
+    const byUser: Record<string, { user_id: string; applicants: number; scheduled: number; evaluated: number; onboarded: number }> = {};
+    for (const p of profilesRes.data ?? []) {
+      byUser[p.id] = { user_id: p.id, applicants: 0, scheduled: 0, evaluated: 0, onboarded: 0 };
+    }
+    for (const a of appsRes.data ?? []) {
+      const uid = a.assigned_recruiter_id as string | null;
+      if (!uid) continue;
+      const row = (byUser[uid] ??= { user_id: uid, applicants: 0, scheduled: 0, evaluated: 0, onboarded: 0 });
+      row.applicants += 1;
+      if (a.calendly_scheduled_at) row.scheduled += 1;
+      if (a.evaluation_completed_at) row.evaluated += 1;
+      const stage = a.pipeline_stages as { is_completed_stage: boolean } | null;
+      if (stage?.is_completed_stage) row.onboarded += 1;
+    }
+    const profileMap: Record<string, { first_name: string | null; last_name: string | null; avatar_url: string | null }> = {};
+    for (const p of profilesRes.data ?? []) profileMap[p.id] = p;
+
+    const rows = Object.values(byUser)
+      .map((r) => ({ ...r, profile: profileMap[r.user_id] ?? null, score: r.onboarded * 10 + r.evaluated * 3 + r.scheduled * 2 + r.applicants }))
+      .filter((r) => r.applicants > 0 || r.scheduled > 0 || r.evaluated > 0 || r.onboarded > 0)
+      .sort((a, b) => b.score - a.score);
+
+    return { rows };
+  });
+
+/* ============================================================
+   Resources
+   ============================================================ */
+
+export const listResources = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data } = await supabase
+      .from("resources")
+      .select("*")
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: false });
+    return { resources: data ?? [] };
+  });
+
+export const upsertResource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    id: z.string().uuid().optional(),
+    title: z.string().min(1),
+    description: z.string().optional().nullable(),
+    category: z.string().min(1),
+    url: z.string().url().optional().nullable(),
+    kind: z.enum(["link", "doc", "video"]).optional().default("link"),
+    position: z.number().int().optional().default(0),
+    is_published: z.boolean().optional().default(true),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    if (data.id) {
+      const { id, ...rest } = data;
+      const { error } = await supabase.from("resources").update(rest).eq("id", id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase.from("resources").insert({ ...data, created_by: userId });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const deleteResource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { error } = await supabase.from("resources").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
