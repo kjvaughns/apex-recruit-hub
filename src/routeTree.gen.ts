@@ -14,7 +14,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as EvaluationRouteImport } from './routes/evaluation'
 import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as ApplicationCompleteRouteImport } from './routes/application-complete'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
+import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
+import { Route as AuthenticatedPortalCrmRouteRouteImport } from './routes/_authenticated/portal/crm/route'
+import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
+import { Route as AuthenticatedPortalCrmApplicantIdRouteImport } from './routes/_authenticated/portal/crm/$applicantId'
 
 const ScheduleRoute = ScheduleRouteImport.update({
   id: '/schedule',
@@ -41,11 +47,45 @@ const ApplicationCompleteRoute = ApplicationCompleteRouteImport.update({
   path: '/application-complete',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPortalRouteRoute =
+  AuthenticatedPortalRouteRouteImport.update({
+    id: '/portal',
+    path: '/portal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPortalIndexRoute =
+  AuthenticatedPortalIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalCrmRouteRoute =
+  AuthenticatedPortalCrmRouteRouteImport.update({
+    id: '/crm',
+    path: '/crm',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalCrmIndexRoute =
+  AuthenticatedPortalCrmIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalCrmRouteRoute,
+  } as any)
+const AuthenticatedPortalCrmApplicantIdRoute =
+  AuthenticatedPortalCrmApplicantIdRouteImport.update({
+    id: '/$applicantId',
+    path: '/$applicantId',
+    getParentRoute: () => AuthenticatedPortalCrmRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +94,11 @@ export interface FileRoutesByFullPath {
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
+  '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
+  '/portal/': typeof AuthenticatedPortalIndexRoute
+  '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
+  '/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,15 +107,24 @@ export interface FileRoutesByTo {
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
+  '/portal': typeof AuthenticatedPortalIndexRoute
+  '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
+  '/portal/crm': typeof AuthenticatedPortalCrmIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/application-complete': typeof ApplicationCompleteRoute
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
+  '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/_authenticated/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
+  '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
+  '/_authenticated/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
+  '/_authenticated/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +135,11 @@ export interface FileRouteTypes {
     | '/evaluation'
     | '/login'
     | '/schedule'
+    | '/portal'
+    | '/portal/crm'
+    | '/portal/'
+    | '/portal/crm/$applicantId'
+    | '/portal/crm/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,18 +148,28 @@ export interface FileRouteTypes {
     | '/evaluation'
     | '/login'
     | '/schedule'
+    | '/portal'
+    | '/portal/crm/$applicantId'
+    | '/portal/crm'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/application-complete'
     | '/apply'
     | '/evaluation'
     | '/login'
     | '/schedule'
+    | '/_authenticated/portal'
+    | '/_authenticated/portal/crm'
+    | '/_authenticated/portal/'
+    | '/_authenticated/portal/crm/$applicantId'
+    | '/_authenticated/portal/crm/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   ApplicationCompleteRoute: typeof ApplicationCompleteRoute
   ApplyRoute: typeof ApplyRoute
   EvaluationRoute: typeof EvaluationRoute
@@ -145,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApplicationCompleteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -152,11 +228,92 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal/': {
+      id: '/_authenticated/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/crm': {
+      id: '/_authenticated/portal/crm'
+      path: '/crm'
+      fullPath: '/portal/crm'
+      preLoaderRoute: typeof AuthenticatedPortalCrmRouteRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/crm/': {
+      id: '/_authenticated/portal/crm/'
+      path: '/'
+      fullPath: '/portal/crm/'
+      preLoaderRoute: typeof AuthenticatedPortalCrmIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalCrmRouteRoute
+    }
+    '/_authenticated/portal/crm/$applicantId': {
+      id: '/_authenticated/portal/crm/$applicantId'
+      path: '/$applicantId'
+      fullPath: '/portal/crm/$applicantId'
+      preLoaderRoute: typeof AuthenticatedPortalCrmApplicantIdRouteImport
+      parentRoute: typeof AuthenticatedPortalCrmRouteRoute
+    }
   }
 }
 
+interface AuthenticatedPortalCrmRouteRouteChildren {
+  AuthenticatedPortalCrmApplicantIdRoute: typeof AuthenticatedPortalCrmApplicantIdRoute
+  AuthenticatedPortalCrmIndexRoute: typeof AuthenticatedPortalCrmIndexRoute
+}
+
+const AuthenticatedPortalCrmRouteRouteChildren: AuthenticatedPortalCrmRouteRouteChildren =
+  {
+    AuthenticatedPortalCrmApplicantIdRoute:
+      AuthenticatedPortalCrmApplicantIdRoute,
+    AuthenticatedPortalCrmIndexRoute: AuthenticatedPortalCrmIndexRoute,
+  }
+
+const AuthenticatedPortalCrmRouteRouteWithChildren =
+  AuthenticatedPortalCrmRouteRoute._addFileChildren(
+    AuthenticatedPortalCrmRouteRouteChildren,
+  )
+
+interface AuthenticatedPortalRouteRouteChildren {
+  AuthenticatedPortalCrmRouteRoute: typeof AuthenticatedPortalCrmRouteRouteWithChildren
+  AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
+}
+
+const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildren =
+  {
+    AuthenticatedPortalCrmRouteRoute:
+      AuthenticatedPortalCrmRouteRouteWithChildren,
+    AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
+  }
+
+const AuthenticatedPortalRouteRouteWithChildren =
+  AuthenticatedPortalRouteRoute._addFileChildren(
+    AuthenticatedPortalRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedPortalRouteRoute: typeof AuthenticatedPortalRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedPortalRouteRoute: AuthenticatedPortalRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   ApplicationCompleteRoute: ApplicationCompleteRoute,
   ApplyRoute: ApplyRoute,
   EvaluationRoute: EvaluationRoute,
