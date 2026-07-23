@@ -14,16 +14,424 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applicant_activities: {
+        Row: {
+          actor_id: string | null
+          applicant_id: string
+          created_at: string
+          data: Json | null
+          event_type: string
+          id: string
+          summary: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          applicant_id: string
+          created_at?: string
+          data?: Json | null
+          event_type: string
+          id?: string
+          summary?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          applicant_id?: string
+          created_at?: string
+          data?: Json | null
+          event_type?: string
+          id?: string
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_activities_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicant_activities_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applicant_sources: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      applicants: {
+        Row: {
+          address: string | null
+          archived_at: string | null
+          assigned_recruiter_id: string | null
+          calendly_scheduled_at: string | null
+          city: string | null
+          consent_contact: boolean
+          created_at: string
+          current_stage_id: string | null
+          date_of_birth: string | null
+          email: string
+          evaluation_completed_at: string | null
+          first_name: string
+          id: string
+          last_contacted_at: string | null
+          last_name: string
+          licensed: boolean
+          licensing_status: string | null
+          next_follow_up_at: string | null
+          original_recruiter_id: string | null
+          phone: string | null
+          priority: string
+          ref_slug: string | null
+          source_details: string | null
+          source_id: string | null
+          stage_entered_at: string
+          state: string | null
+          status: string
+          team_id: string | null
+          updated_at: string
+          why_text: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          archived_at?: string | null
+          assigned_recruiter_id?: string | null
+          calendly_scheduled_at?: string | null
+          city?: string | null
+          consent_contact?: boolean
+          created_at?: string
+          current_stage_id?: string | null
+          date_of_birth?: string | null
+          email: string
+          evaluation_completed_at?: string | null
+          first_name: string
+          id?: string
+          last_contacted_at?: string | null
+          last_name: string
+          licensed?: boolean
+          licensing_status?: string | null
+          next_follow_up_at?: string | null
+          original_recruiter_id?: string | null
+          phone?: string | null
+          priority?: string
+          ref_slug?: string | null
+          source_details?: string | null
+          source_id?: string | null
+          stage_entered_at?: string
+          state?: string | null
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+          why_text?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          archived_at?: string | null
+          assigned_recruiter_id?: string | null
+          calendly_scheduled_at?: string | null
+          city?: string | null
+          consent_contact?: boolean
+          created_at?: string
+          current_stage_id?: string | null
+          date_of_birth?: string | null
+          email?: string
+          evaluation_completed_at?: string | null
+          first_name?: string
+          id?: string
+          last_contacted_at?: string | null
+          last_name?: string
+          licensed?: boolean
+          licensing_status?: string | null
+          next_follow_up_at?: string | null
+          original_recruiter_id?: string | null
+          phone?: string | null
+          priority?: string
+          ref_slug?: string | null
+          source_details?: string | null
+          source_id?: string | null
+          stage_entered_at?: string
+          state?: string | null
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+          why_text?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicants_assigned_recruiter_id_fkey"
+            columns: ["assigned_recruiter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_current_stage_id_fkey"
+            columns: ["current_stage_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_original_recruiter_id_fkey"
+            columns: ["original_recruiter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "applicant_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluations: {
+        Row: {
+          answers: Json
+          applicant_id: string | null
+          created_at: string
+          email: string
+          id: string
+          matched: boolean
+        }
+        Insert: {
+          answers?: Json
+          applicant_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          matched?: boolean
+        }
+        Update: {
+          answers?: Json
+          applicant_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          matched?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluations_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipeline_stages: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_archived: boolean
+          is_completed_stage: boolean
+          is_lost_stage: boolean
+          name: string
+          position: number
+          slug: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          is_completed_stage?: boolean
+          is_lost_stage?: boolean
+          name: string
+          position: number
+          slug: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          is_completed_stage?: boolean
+          is_lost_stage?: boolean
+          name?: string
+          position?: number
+          slug?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          full_name: string | null
+          id: string
+          is_active: boolean
+          last_name: string | null
+          manager_id: string | null
+          phone: string | null
+          recruiting_slug: string | null
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          id: string
+          is_active?: boolean
+          last_name?: string | null
+          manager_id?: string | null
+          phone?: string | null
+          recruiting_slug?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          full_name?: string | null
+          id?: string
+          is_active?: boolean
+          last_name?: string | null
+          manager_id?: string | null
+          phone?: string | null
+          recruiting_slug?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
+      mark_applicant_scheduled: { Args: { _email: string }; Returns: Json }
+      submit_application: { Args: { payload: Json }; Returns: Json }
+      submit_evaluation: { Args: { payload: Json }; Returns: Json }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "agent" | "manager" | "admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +558,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["agent", "manager", "admin", "super_admin"],
+    },
   },
 } as const
