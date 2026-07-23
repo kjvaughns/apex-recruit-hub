@@ -30,7 +30,7 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
     if (error) { setError(error.message); return; }
-    navigate({ to: "/" }); // portal comes online in Phase 2
+    navigate({ to: "/portal" });
   }
 
   return (
