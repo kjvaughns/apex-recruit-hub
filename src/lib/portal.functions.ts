@@ -152,3 +152,137 @@ export const addApplicantNote = createServerFn({ method: "POST" })
     await supabase.from("applicants").update({ last_contacted_at: new Date().toISOString() }).eq("id", data.id);
     return { ok: true };
   });
+
+/* ============================================================
+   Admin functions
+   ============================================================ */
+
+async function assertAdmin(supabase: any, userId: string) {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const roles = (data ?? []).map((r: { role: string }) => r.role);
+  if (!roles.some((r: string) => r === "admin" || r === "super_admin")) {
+    throw new Error("Forbidden: admin only");
+  }
+  return roles;
+}
+
+export const adminListUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const [profilesRes, rolesRes, teamsRes] = await Promise.all([
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
+      supabase.from("teams").select("*").order("name"),
+    ]);
+    const roleMap: Record<string, string[]> = {};
+    for (const r of rolesRes.data ?? []) {
+      (roleMap[r.user_id] ??= []).push(r.role);
+    }
+    return {
+      users: (profilesRes.data ?? []).map((p: any) => ({ ...p, roles: roleMap[p.id] ?? [] })),
+      teams: teamsRes.data ?? [],
+    };
+  });
+
+export const adminSetUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      user_id: z.string().uuid(),
+      role: z.enum(["agent", "senior_agent", "manager", "admin", "super_admin"]),
+      grant: z.boolean(),
+    }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    if (data.grant) {
+      await supabase.from("user_roles").upsert({ user_id: data.user_id, role: data.role }, { onConflict: "user_id,role" });
+    } else {
+      await supabase.from("user_roles").delete().eq("user_id", data.user_id).eq("role", data.role);
+    }
+    return { ok: true };
+  });
+
+export const adminUpdateProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      first_name: z.string().optional(),
+      last_name: z.string().optional(),
+      phone: z.string().optional(),
+      title: z.string().optional(),
+      team_id: z.string().uuid().nullable().optional(),
+      is_active: z.boolean().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { id, ...rest } = data;
+    const { error } = await supabase.from("profiles").update(rest).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminListStages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { data } = await supabase.from("pipeline_stages").select("*").order("position");
+    return { stages: data ?? [] };
+  });
+
+export const adminUpsertStage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid().optional(),
+      name: z.string().min(1),
+      slug: z.string().min(1),
+      color: z.string().optional(),
+      position: z.number().int(),
+      is_archived: z.boolean().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    if (data.id) {
+      const { error } = await supabase.from("pipeline_stages").update(data).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase.from("pipeline_stages").insert(data);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const adminGetSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { data } = await supabase.from("system_settings").select("*");
+    return { settings: data ?? [] };
+  });
+
+export const adminSetSetting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ key: z.string().min(1), value: z.any() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { error } = await supabase
+      .from("system_settings")
+      .upsert({ key: data.key, value: data.value }, { onConflict: "key" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
