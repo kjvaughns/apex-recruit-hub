@@ -191,7 +191,7 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["agent", "senior_agent", "manager", "admin", "super_admin"]),
+      role: z.enum(["agent", "manager", "admin", "super_admin"]),
       grant: z.boolean(),
     }).parse(d),
   )
@@ -214,11 +214,18 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
       first_name: z.string().optional(),
       last_name: z.string().optional(),
       phone: z.string().optional(),
-      title: z.string().optional(),
       team_id: z.string().uuid().nullable().optional(),
       is_active: z.boolean().optional(),
     }).parse(d),
   )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { id, ...rest } = data;
+    const { error } = await supabase.from("profiles").update(rest).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
