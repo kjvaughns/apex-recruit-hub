@@ -1,82 +1,89 @@
-## Scope reality check
 
-The upload is ~2,650 lines of HTML plus a starter SQL migration, and the spec covers a full public site, applicant flow, agent portal, admin portal, CRM, pipeline, tasks, calendar, leaderboard, reports, resources, RBAC, RLS, emails, and demo data. Building all of that in one pass would produce something shallow and broken. I'll deliver it in reviewable phases, each ending in a working app you can click through. After each phase you approve and I start the next.
+## Scope
 
-I'll preserve the exact visual language from the uploaded HTML: black `#000`, gold `#C9A84C`, ivory `#F4F2ED`, Bebas Neue + DM Sans, the dark cards, gold hairlines, and restrained shadows. Design tokens go into `src/styles.css`; the uploaded HTML is translated into React components, never shipped as-is.
+Replace the current simple `/portal/resources` page with the full **APEX Agent Hub** design from your zip: a hub landing → two sub-views (Resource Library + Recorded Presentations), plus a Quick Links footer. Data comes from the database (not `window.APEX_*`), and admins can manage everything in-app.
 
-## Phase 1 — Foundation, public site, applicant funnel (this build)
+Uses the existing portal auth — no password gate (already signed in via Supabase).
 
-Goal: a new visitor can land on the site, apply through a recruiter's referral link, schedule, and complete evaluation. Data lands in Supabase. No portal yet.
+**Deferred (not part of this build):** the full 6-lesson Phone Sales Mastery *course engine* with per-user progress, quizzes, and certificate. That's its own module (course viewer, quiz grader, `enrollments` / `quiz_responses` tables). Say the word if you want it in a follow-up phase — otherwise I'll seed the course PDF/summary as a regular "training" resource card here.
 
-1. **Design system**: replace the default tokens in `src/styles.css` with the APEX palette; register Bebas Neue + DM Sans via `<link>` in `__root.tsx`; update root `head()` metadata (title, description, OG). Upload `apex-logo-trans.png` as a Lovable asset.
-2. **Enable Lovable Cloud** (Supabase) and run the initial migration covering only what Phase 1 uses:
-   - `profiles` (linked to `auth.users`, with `recruiting_slug`, `role`, `team_id`, `manager_id`)
-   - `app_role` enum + `user_roles` + `has_role()` security-definer
-   - `teams`
-   - `applicant_sources`
-   - `pipeline_stages` (seeded with the 11 default stages)
-   - `applicants` (single source of truth per spec)
-   - `applicant_activities`
-   - `evaluations`
-   - `system_settings` (Calendly URL, sender info)
-   - GRANTs + RLS: public can INSERT into `applicants` and `evaluations` via a `SECURITY DEFINER` server function only; nobody except staff can SELECT.
-3. **Public routes** built as React components from `APEX Financial.dc.html`:
-   - `/` landing (nav, hero, VSL slot, why APEX, process, earnings, benefits, testimonials, FAQ, CTA, footer)
-   - `/apply` full application form with zod validation, reads `?ref=` slug, shows referring recruiter's name
-   - `/schedule` — greets by first name, embeds Calendly URL from `system_settings`
-   - `/evaluation` — questionnaire keyed by email
-   - `/application-complete` — confirmation
-   - `/login` — Supabase email/password (used by Phase 2)
-4. **Server functions** (`createServerFn`, no auth middleware, use publishable server client + narrow `TO anon` INSERT policies routed through `SECURITY DEFINER` RPC):
-   - `submitApplication` — resolves recruiter by slug, inserts applicant at `New Applicant` stage, logs activity, returns applicant id
-   - `submitEvaluation` — matches most recent applicant by email, stores answers, logs activity; preserves record if no match
-5. **Emails**: wire the two uploaded templates into the Lovable email scaffold (welcome + evaluation-request). Trigger welcome on application submit. Sender = "APEX Financial Hiring", reply-to = `kjvaughns13@gmail.com`, stored in `system_settings`.
-6. **Deliverable**: public site is live, applicant funnel works end-to-end, data is queryable in Supabase, styling matches the uploaded design.
+## Design tokens
 
-## Phase 2 — Auth, portal shell, agent dashboard, applicant CRM & profile
+Straight from the design HTML: `--bg #0A0A0A`, `--surface #131313`, `--surface-2 #1A1A1A`, gold `#C9A84C`, ivory `#F4F2ED`, muted `#8C8A84`. Bebas Neue headings, DM Sans body (already registered). Type badges keep the design's palette (video red `#E5484D`, pdf blue `#4C7DF0`, training gold, guide green `#46A758`).
 
-- Real Supabase auth (login, forgot password, reset, sign out, session).
-- Roles: `agent | manager | admin | super_admin` in `user_roles`; helper policies via `has_role`.
-- `_authenticated/route.tsx` gate (integration-managed). Portal layout: fixed sidebar desktop, collapsible tablet, bottom-nav mobile — translated from `APEX Agent Portal.dc.html`.
-- `/portal` dashboard cards + widgets, all reading from Supabase.
-- `/portal/applicants` CRM (search, filters, table+card views, pagination, CSV export, manual create, reassign).
-- `/portal/applicants/:id` profile with tabs (Overview / Activity / Notes / Appointments / Tasks / Documents / Licensing / Application / Evaluation).
-- RLS: agents see only their assignments; managers see their team; admins see all.
+## Data model
 
-## Phase 3 — Pipeline, tasks, calendar
+Add three tables + extend `resources`:
 
-- Drag-and-drop Kanban at `/portal/pipeline` writing stage transitions + activity events.
-- Tasks table + `/portal/tasks` (list / day / week, overdue filter).
-- Calendar at `/portal/calendar` (day/week/month) surfacing appointments + tasks; structure ready for Calendly webhook + Google Calendar sync (route stub at `/api/public/webhooks/calendly`).
+```text
+resources (extend)
+  + type          text        -- 'video' | 'pdf' | 'training' | 'guide' | 'course'
+  + long          text        -- long description shown in modal
+  + cta           text        -- button label ("Open PDF", "Open Script"…)
+  + meta          text        -- "PDF", "Script · Google Doc", …
+  + tags          text[]      -- hashtag chips
+  + display_date  date        -- "May 28, 2026" shown on card
+  (existing: title, description, category, url, position, is_published)
 
-## Phase 4 — Leaderboard, reports, resources
+presenters
+  id, name, role, initials, sort_order, is_active
 
-- `/portal/leaderboard` with aggregated metrics only; RLS + a `SECURITY DEFINER` aggregate function so agents can't read peers' applicant rows.
-- `/portal/reports` with the 11 report views, filters, CSV export, dark charts w/ gold accents (Recharts).
-- `/portal/resources` published resources for agents; categories per spec.
+recordings
+  id, presenter_id → presenters, title, topic, description,
+  video_url (Google Drive /preview or YouTube embed), audio (bool),
+  duration text (e.g. "9:45"), recorded_on date, is_published, position
 
-## Phase 5 — Admin portal & system settings
+quick_links
+  id, label, sub, url, position, is_active
+```
 
-- `/admin/*` routes (dashboard, applicants, users, teams, pipeline config, sources, resources, reports, settings), all gated by `has_role('admin')` / `has_role('super_admin')`.
-- Pipeline stage CRUD, source CRUD, resource CRUD, user invite + role assignment (super_admin only), team management.
-- Calendly URL, email sender info, and other tunables editable via `/admin/settings` → `system_settings`.
+RLS: `authenticated` can SELECT published rows; admins can insert/update/delete.
+GRANTs: `SELECT, INSERT, UPDATE, DELETE` to `authenticated`, `ALL` to `service_role`.
+Seed with the exact rows from `project/data.js` (Playbook + Needs Quiz + two scripts + 5 presenters + KJ's 3 recordings + 4 quick links).
 
-## Phase 6 — Demo data, responsive QA, cleanup
+The Playbook and Needs-Analysis PDFs from the zip get uploaded via `lovable-assets` and their CDN URLs stored in the seed rows — no binaries in the repo.
 
-- Seed migration for demo agents/managers/teams/applicants/activities (marked `is_demo=true`), matching the sample data shown in the uploads.
-- Desktop / tablet / mobile pass on every route.
-- Remove any remaining prototype scaffolding, static demo values in dashboard, and duplicate nav.
+## Routes
 
-## Technical notes
+```text
+/portal/resources                → Hub landing (2 tiles + Quick Links)
+/portal/resources/library        → Filterable library grid + modal
+/portal/resources/presentations  → Presenter selector + recordings + player modal
+/portal/resources/admin          → Admin-only: manage resources / presenters / recordings / quick links
+```
 
-- Stack stays TanStack Start + React + TS + Tailwind v4 + Supabase (Lovable Cloud). No new framework.
-- Single `applicants` table — no split between "application" and "applicant".
-- Public writes go through `SECURITY DEFINER` RPCs called from unauthenticated `createServerFn`s; no broad anon INSERT policies on `applicants`.
-- Authenticated server fns use `requireSupabaseAuth`; admin operations verify role via `has_role` in `context.supabase` before importing `supabaseAdmin`.
-- Calendly webhook: `src/routes/api/public/webhooks/calendly.ts` with signature verification, stubbed until you provide the signing secret.
-- Emails via the Lovable managed email API; no queue or cron table.
-- Recruiter attribution stored on `applicants.original_recruiter_id` and never overwritten by reassignment (`assigned_recruiter_id` moves independently).
+Sidebar keeps a single "Resources" link pointing to `/portal/resources`. Sub-nav (`← Hub`) inside the section matches the design.
 
-## One decision I need from you before starting Phase 1
+## Component/file plan
 
-Do you want me to proceed strictly phase-by-phase (approve after each), or should I roll Phases 1–2 together in the first build so you can log in and see the portal shell right away? Phase 1 alone still gives a working public funnel; Phases 1+2 is roughly 2× the surface area in one shot.
+New:
+- `src/lib/resources.functions.ts` — server fns: `getHub`, `listLibrary`, `listPresenters`, `listRecordings`, `listQuickLinks`, plus admin `upsert*` / `delete*` for the four entities.
+- `src/components/apex/resources/` — presentation components (Hub tiles, LibraryCard, LibraryModal, PresenterSelector, RecordingRow, MediaPlayer with mock transcript, PlayerModal, QuickLinks).
+- `src/routes/_authenticated/portal/resources/route.tsx` — outlet layout.
+- `src/routes/_authenticated/portal/resources/index.tsx` — Hub view.
+- `src/routes/_authenticated/portal/resources/library.tsx` — Library view (tabs + search).
+- `src/routes/_authenticated/portal/resources/presentations.tsx` — Recordings view.
+- `src/routes/_authenticated/portal/resources/admin.tsx` — admin CRUD tabs (Resources / Presenters / Recordings / Quick Links).
+
+Delete/replace:
+- Old flat `src/routes/_authenticated/portal/resources.tsx` (becomes the folder above).
+
+Keep:
+- Existing `resources` server fns get folded into the new file; admin CRUD you already have keeps working through the new admin tab.
+
+## Media player details
+
+Matches the design's `MediaPlayer`:
+- Google Drive `/preview` URLs render in a 16:9 `<iframe>`; audio-only shows the shorter player strip; no source ⇒ animated placeholder.
+- Below the frame: a play/pause + progress bar with a **client-side mock transcript** generated deterministically from the recording's id + duration (same algorithm as `makeTranscript` in the design). Real transcript ingestion (Whisper) is out of scope — the mock keeps the visual behavior; each row seeks the player.
+
+## Out of scope for this build
+
+- Course engine, quiz grading, per-user progress, certificate PDF.
+- Whisper transcription pipeline / real transcript storage.
+- File-upload UI for recordings (admins paste Drive/YouTube embed URLs for now).
+- Tweaks panel (accent/density/card style toggles) — those were designer knobs, not production controls.
+
+## Verification
+
+Typecheck (`bunx tsgo --noEmit`) and a quick preview walkthrough: hub → library filters/search/modal → presentations presenter switch + player modal → admin adds a test recording and it appears immediately.
