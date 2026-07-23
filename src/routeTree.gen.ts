@@ -9,8 +9,38 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as EvaluationRouteImport } from './routes/evaluation'
+import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as ApplicationCompleteRouteImport } from './routes/application-complete'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EvaluationRoute = EvaluationRouteImport.update({
+  id: '/evaluation',
+  path: '/evaluation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplyRoute = ApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplicationCompleteRoute = ApplicationCompleteRouteImport.update({
+  id: '/application-complete',
+  path: '/application-complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +49,102 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/application-complete': typeof ApplicationCompleteRoute
+  '/apply': typeof ApplyRoute
+  '/evaluation': typeof EvaluationRoute
+  '/login': typeof LoginRoute
+  '/schedule': typeof ScheduleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/application-complete': typeof ApplicationCompleteRoute
+  '/apply': typeof ApplyRoute
+  '/evaluation': typeof EvaluationRoute
+  '/login': typeof LoginRoute
+  '/schedule': typeof ScheduleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/application-complete': typeof ApplicationCompleteRoute
+  '/apply': typeof ApplyRoute
+  '/evaluation': typeof EvaluationRoute
+  '/login': typeof LoginRoute
+  '/schedule': typeof ScheduleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/application-complete'
+    | '/apply'
+    | '/evaluation'
+    | '/login'
+    | '/schedule'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/application-complete'
+    | '/apply'
+    | '/evaluation'
+    | '/login'
+    | '/schedule'
+  id:
+    | '__root__'
+    | '/'
+    | '/application-complete'
+    | '/apply'
+    | '/evaluation'
+    | '/login'
+    | '/schedule'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApplicationCompleteRoute: typeof ApplicationCompleteRoute
+  ApplyRoute: typeof ApplyRoute
+  EvaluationRoute: typeof EvaluationRoute
+  LoginRoute: typeof LoginRoute
+  ScheduleRoute: typeof ScheduleRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/evaluation': {
+      id: '/evaluation'
+      path: '/evaluation'
+      fullPath: '/evaluation'
+      preLoaderRoute: typeof EvaluationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apply': {
+      id: '/apply'
+      path: '/apply'
+      fullPath: '/apply'
+      preLoaderRoute: typeof ApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/application-complete': {
+      id: '/application-complete'
+      path: '/application-complete'
+      fullPath: '/application-complete'
+      preLoaderRoute: typeof ApplicationCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,17 +157,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApplicationCompleteRoute: ApplicationCompleteRoute,
+  ApplyRoute: ApplyRoute,
+  EvaluationRoute: EvaluationRoute,
+  LoginRoute: LoginRoute,
+  ScheduleRoute: ScheduleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
