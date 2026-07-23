@@ -292,6 +292,42 @@ export type Database = {
         }
         Relationships: []
       }
+      presenters: {
+        Row: {
+          created_at: string
+          id: string
+          initials: string
+          is_active: boolean
+          name: string
+          role: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          initials: string
+          is_active?: boolean
+          name: string
+          role?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          initials?: string
+          is_active?: boolean
+          name?: string
+          role?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -355,18 +391,113 @@ export type Database = {
           },
         ]
       }
+      quick_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          position: number
+          sub: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          position?: number
+          sub?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          position?: number
+          sub?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      recordings: {
+        Row: {
+          audio: boolean
+          created_at: string
+          description: string | null
+          duration: string | null
+          id: string
+          is_published: boolean
+          position: number
+          presenter_id: string
+          recorded_on: string | null
+          title: string
+          topic: string | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          audio?: boolean
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_published?: boolean
+          position?: number
+          presenter_id: string
+          recorded_on?: string | null
+          title: string
+          topic?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          audio?: boolean
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          id?: string
+          is_published?: boolean
+          position?: number
+          presenter_id?: string
+          recorded_on?: string | null
+          title?: string
+          topic?: string | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordings_presenter_id_fkey"
+            columns: ["presenter_id"]
+            isOneToOne: false
+            referencedRelation: "presenters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resources: {
         Row: {
           body: string | null
           category: string
           created_at: string
           created_by: string | null
+          cta: string | null
           description: string | null
+          display_date: string | null
           id: string
           is_published: boolean
           kind: string
+          long: string | null
+          meta: string | null
           position: number
+          tags: string[]
           title: string
+          type: string
           updated_at: string
           url: string | null
         }
@@ -375,12 +506,18 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          cta?: string | null
           description?: string | null
+          display_date?: string | null
           id?: string
           is_published?: boolean
           kind?: string
+          long?: string | null
+          meta?: string | null
           position?: number
+          tags?: string[]
           title: string
+          type?: string
           updated_at?: string
           url?: string | null
         }
@@ -389,12 +526,18 @@ export type Database = {
           category?: string
           created_at?: string
           created_by?: string | null
+          cta?: string | null
           description?: string | null
+          display_date?: string | null
           id?: string
           is_published?: boolean
           kind?: string
+          long?: string | null
+          meta?: string | null
           position?: number
+          tags?: string[]
           title?: string
+          type?: string
           updated_at?: string
           url?: string | null
         }
