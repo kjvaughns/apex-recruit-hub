@@ -132,7 +132,7 @@ export const updateApplicantStage = createServerFn({ method: "POST" })
       applicant_id: data.id,
       event_type: "stage_changed",
       summary: "Stage updated",
-      created_by: userId,
+      actor_id: userId,
       data: { stage_id: data.stage_id },
     });
     return { ok: true };
@@ -147,7 +147,7 @@ export const addApplicantNote = createServerFn({ method: "POST" })
       applicant_id: data.id,
       event_type: "note",
       summary: data.note,
-      created_by: userId,
+      actor_id: userId,
     });
     await supabase.from("applicants").update({ last_contacted_at: new Date().toISOString() }).eq("id", data.id);
     return { ok: true };
