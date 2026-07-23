@@ -355,6 +355,59 @@ export type Database = {
           },
         ]
       }
+      resources: {
+        Row: {
+          body: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_published: boolean
+          kind: string
+          position: number
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          kind?: string
+          position?: number
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          body?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          kind?: string
+          position?: number
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           key: string
@@ -372,6 +425,70 @@ export type Database = {
           value?: string | null
         }
         Relationships: []
+      }
+      tasks: {
+        Row: {
+          applicant_id: string | null
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          due_at: string | null
+          id: string
+          notes: string | null
+          priority: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_id?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_id?: string | null
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teams: {
         Row: {
