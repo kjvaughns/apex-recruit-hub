@@ -912,3 +912,58 @@ export const createApplicantManual = createServerFn({ method: "POST" })
 
     return { id: created.id as string };
   });
+
+// ---- Company-wide leaderboard (Phase 6) ----------------------------------
+
+export const getCompanyLeaderboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        metric: z
+          .enum([
+            "new_applicants",
+            "contacted",
+            "interviews_scheduled",
+            "interviews_completed",
+            "promoted",
+          ])
+          .optional()
+          .default("new_applicants"),
+        period: z
+          .enum(["today", "week", "month", "quarter", "year", "all"])
+          .optional()
+          .default("month"),
+        role: z.enum(["agent", "leader", "manager", "admin"]).optional().or(z.literal("")),
+        team_id: z.string().uuid().optional().or(z.literal("")),
+        state: z.string().trim().max(4).optional().or(z.literal("")),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: rows, error } = await (supabase as any).rpc("company_leaderboard", {
+      payload: data,
+    });
+    if (error) throw new Error(error.message);
+    // Filter options (teams) for the UI.
+    const { data: teams } = await supabase.from("teams").select("id, name").order("name");
+    return { rows: (rows ?? []) as CompanyLeaderboardRow[], meId: userId, teams: teams ?? [] };
+  });
+
+export type CompanyLeaderboardRow = {
+  profile_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string | null;
+  team_name: string | null;
+  manager_name: string | null;
+  new_count: number;
+  contacted_count: number;
+  scheduled_count: number;
+  completed_count: number;
+  promoted_count: number;
+  conversion: number;
+  total: number;
+  prev_total: number;
+};
