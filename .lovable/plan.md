@@ -1,17 +1,23 @@
 ## Problem
 
-Navigating to `/application-complete/unlicensed/<token>` (or `/licensed/<token>`) always shows the generic "Application Received" screen instead of the token-specific licensed/unlicensed pages.
+`CalendlyInline` mounts the `calendly-inline-widget` div and injects `assets.calendly.com/external/widget.js`. Two issues:
 
-Root cause: `src/routes/application-complete.tsx` and the folder `src/routes/application-complete/` both exist. In TanStack file-based routing, that file becomes the **parent layout** for the folder's children. It renders its own UI (the generic success card) and never renders `<Outlet />`, so the child routes match but are masked. The licensed/unlicensed files are already correctly declared — they just can't render.
+1. **Not rendering on client-side navigation.** When applicants land on `/application-complete/{licensed,unlicensed}/$token` via `useNavigate`, the widget script has often already loaded on a previous page. Our fallback path calls `window.Calendly.initInlineWidgets()`, but that helper only scans widgets present at initial script load — on a new SPA route it silently does nothing, so the embed area stays blank.
+2. **Too tall.** Fixed `height = 720` overflows the viewport on laptops and small windows, and the wrapping `.apx-card` adds extra padding that makes it look oversized.
 
 ## Fix
 
-1. Convert `src/routes/application-complete.tsx` into a pathless pass-through layout: `component: () => <Outlet />`, keep the `head()` as-is for the parent path.
-2. Create `src/routes/application-complete/index.tsx` containing the current generic "Application Received" UI so bare `/application-complete` still works as a fallback (used by the "not found" redirects inside the licensed/unlicensed pages).
-3. No changes needed to `apply.tsx`, the child routes, or the DB — redirect logic already returns the right `success_page_type` and token.
+Replace the script-based `calendly-inline-widget` approach with a direct `<iframe>` — it's the pattern Calendly documents for SPA/embedded use and it works identically on first paint and after client navigation, with no global script needed.
+
+`src/components/apex/calendly-inline.tsx`:
+- Render `<iframe src={calendlyUrl}>` where `calendlyUrl` appends `embed_domain=<window.location.host>&embed_type=Inline` plus the existing branding params already on the URL (`hide_event_type_details=1&hide_gdpr_banner=1&primary_color=e6b400`).
+- Default `height` down to `630`, and make it responsive: `min(80vh, height)` so it never overflows the viewport.
+- Drop the `.apx-card` padding wrapper; keep a thin gold border only, so the frame doesn't visually inflate the widget.
+- Keep the same `{ url, height? }` prop signature so all three call sites (`unlicensed.$token.tsx`, `licensed.$token.tsx`, `portal/settings.tsx` preview) work unchanged.
 
 ## Verification
 
-- Submit `/apply` with "Yes, I'm licensed" → lands on `/application-complete/licensed/<token>` and sees the recruiter/manager Calendly (or fallback message).
-- Submit with "No" → lands on `/application-complete/unlicensed/<token>` and sees the global overview Calendly.
-- Direct visit to `/application-complete` → still shows the generic success card.
+- Submit `/apply` as unlicensed → land on `/application-complete/unlicensed/<token>` → Calendly loads immediately, fits within the viewport.
+- Same for licensed flow.
+- Portal `Settings → Preview` still shows the agent's own Calendly.
+- Refresh each page → still renders (no dependency on script load ordering).
