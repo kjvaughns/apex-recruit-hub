@@ -381,9 +381,15 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          can_invite_agents: boolean
+          can_invite_leaders: boolean
+          can_manage_resources: boolean
           can_receive_applicants: boolean
           can_schedule_licensed: boolean
           created_at: string
+          organization_path: string | null
+          parent_user_id: string | null
+          status: string
           email: string | null
           first_name: string | null
           full_name: string | null
@@ -400,9 +406,15 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          can_invite_agents?: boolean
+          can_invite_leaders?: boolean
+          can_manage_resources?: boolean
           can_receive_applicants?: boolean
           can_schedule_licensed?: boolean
           created_at?: string
+          organization_path?: string | null
+          parent_user_id?: string | null
+          status?: string
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -419,9 +431,15 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          can_invite_agents?: boolean
+          can_invite_leaders?: boolean
+          can_manage_resources?: boolean
           can_receive_applicants?: boolean
           can_schedule_licensed?: boolean
           created_at?: string
+          organization_path?: string | null
+          parent_user_id?: string | null
+          status?: string
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -776,7 +794,7 @@ export type Database = {
       submit_evaluation: { Args: { payload: Json }; Returns: Json }
     }
     Enums: {
-      app_role: "agent" | "manager" | "admin" | "super_admin"
+      app_role: "agent" | "leader" | "manager" | "admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -11,11 +11,19 @@ export const getMe = createServerFn({ method: "GET" })
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
+    const roles = (rolesRes.data ?? []).map((r) => r.role as string);
+    const ORDER = ["super_admin", "admin", "manager", "leader", "agent"];
+    const primaryRole = ORDER.find((r) => roles.includes(r)) ?? null;
     return {
       profile: profileRes.data,
-      roles: (rolesRes.data ?? []).map((r) => r.role),
+      roles,
+      primaryRole,
     };
   });
+
+// Precedence-ordered role labels shown in the portal (owner level hidden).
+export const PORTAL_ROLES = ["admin", "manager", "leader", "agent"] as const;
+export type PortalRole = (typeof PORTAL_ROLES)[number];
 
 /** The signed-in agent's recruiting slug + how many applicants it generated. */
 export const getMyRecruitingLink = createServerFn({ method: "GET" })
@@ -240,7 +248,8 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["agent", "manager", "admin", "super_admin"]),
+      // super_admin is a protected internal owner level and is never selectable.
+      role: z.enum(["agent", "leader", "manager", "admin"]),
       grant: z.boolean(),
     }).parse(d),
   )
@@ -264,8 +273,13 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
       last_name: z.string().optional(),
       phone: z.string().optional(),
       team_id: z.string().uuid().nullable().optional(),
+      parent_user_id: z.string().uuid().nullable().optional(),
       is_active: z.boolean().optional(),
+      status: z.enum(["active", "inactive"]).optional(),
       can_receive_applicants: z.boolean().optional(),
+      can_invite_agents: z.boolean().optional(),
+      can_invite_leaders: z.boolean().optional(),
+      can_manage_resources: z.boolean().optional(),
       recruiting_slug: z
         .string()
         .trim()
