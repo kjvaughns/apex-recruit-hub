@@ -160,7 +160,11 @@ function ApplyPage() {
         },
       });
       sessionStorage.setItem("apex_applicant_first", form.first_name.trim());
-      if (res.success_page_type === "licensed") {
+      // Route by the applicant's own answer (source of truth on the client),
+      // falling back to the server's echo. Prevents any drift between the two.
+      const isLicensed =
+        form.licensed === true || res.success_page_type === "licensed";
+      if (isLicensed) {
         navigate({ to: "/application-complete/licensed/$token", params: { token: res.token } });
       } else {
         navigate({ to: "/application-complete/unlicensed/$token", params: { token: res.token } });
