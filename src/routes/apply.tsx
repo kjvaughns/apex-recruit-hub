@@ -5,11 +5,10 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { PublicShell } from "@/components/apex/brand";
 import { StateCombobox } from "@/components/apex/state-combobox";
-import { RecruiterCombobox } from "@/components/apex/recruiter-combobox";
+import { RecruiterCombobox, type RecruiterSelection } from "@/components/apex/recruiter-combobox";
 import {
   submitApplication,
   getRecruiterBySlug,
-  type RecruiterOption,
 } from "@/lib/applications.functions";
 import { getReferral } from "@/lib/referral";
 
@@ -70,8 +69,8 @@ function ApplyPage() {
   const [form, setForm] = useState<Form>(initial);
   // Final selected recruiter (what gets submitted) + the original referral-link
   // recruiter (kept for attribution audit even if the applicant changes it).
-  const [recruiter, setRecruiter] = useState<RecruiterOption | null>(null);
-  const [originalReferral, setOriginalReferral] = useState<RecruiterOption | null>(null);
+  const [recruiter, setRecruiter] = useState<RecruiterSelection | null>(null);
+  const [originalReferral, setOriginalReferral] = useState<RecruiterSelection | null>(null);
   const [referralSlug, setReferralSlug] = useState("");
   const [invalidSlug, setInvalidSlug] = useState("");
   const [landingUrl, setLandingUrl] = useState("");
@@ -135,7 +134,7 @@ function ApplyPage() {
     setSubmitting(true);
 
     const referral_source: "referral_link" | "manual" =
-      originalReferral && recruiter && originalReferral.id === recruiter.id
+      originalReferral && recruiter && !recruiter.custom && originalReferral.id === recruiter.id
         ? "referral_link"
         : "manual";
 
@@ -151,7 +150,8 @@ function ApplyPage() {
           instagram_handle: form.instagram_handle.trim(),
           why_text: form.why_text.trim(),
           consent_contact: true,
-          referred_by_profile_id: recruiter!.id,
+          referred_by_profile_id: recruiter && !recruiter.custom ? recruiter.id : "",
+          referred_by_name: recruiter?.custom ? (recruiter.full_name ?? "") : "",
           original_referral_profile_id: originalReferral?.id ?? "",
           referral_slug: referralSlug,
           referral_source,
@@ -260,8 +260,8 @@ function ApplyPage() {
             />
             {invalidSlug && !recruiter && (
               <p className="mt-2 text-[12.5px] text-apex-muted">
-                We couldn't match that referral link — please search and select the agent who
-                referred you.
+                We couldn't match that referral link — search below, or type your recruiter's name
+                and choose "Add" if they aren't listed yet.
               </p>
             )}
           </Field>

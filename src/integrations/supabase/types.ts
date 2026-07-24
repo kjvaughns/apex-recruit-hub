@@ -101,22 +101,16 @@ export type Database = {
           evaluation_completed_at: string | null
           first_name: string
           id: string
-          instagram_handle: string | null
-          invalid_referral_slug: string | null
           last_contacted_at: string | null
           last_name: string
           licensed: boolean
           licensing_status: string | null
           next_follow_up_at: string | null
           original_recruiter_id: string | null
-          original_referral_name_snapshot: string | null
-          original_referral_profile_id: string | null
           phone: string | null
           priority: string
           ref_slug: string | null
-          referral_landing_url: string | null
-          referral_source: string | null
-          referred_by_name_snapshot: string | null
+          referred_by_name: string | null
           referred_by_profile_id: string | null
           scheduled_event_end: string | null
           scheduled_event_id: string | null
@@ -152,22 +146,16 @@ export type Database = {
           evaluation_completed_at?: string | null
           first_name: string
           id?: string
-          instagram_handle?: string | null
-          invalid_referral_slug?: string | null
           last_contacted_at?: string | null
           last_name: string
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
           original_recruiter_id?: string | null
-          original_referral_name_snapshot?: string | null
-          original_referral_profile_id?: string | null
           phone?: string | null
           priority?: string
           ref_slug?: string | null
-          referral_landing_url?: string | null
-          referral_source?: string | null
-          referred_by_name_snapshot?: string | null
+          referred_by_name?: string | null
           referred_by_profile_id?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
@@ -203,22 +191,16 @@ export type Database = {
           evaluation_completed_at?: string | null
           first_name?: string
           id?: string
-          instagram_handle?: string | null
-          invalid_referral_slug?: string | null
           last_contacted_at?: string | null
           last_name?: string
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
           original_recruiter_id?: string | null
-          original_referral_name_snapshot?: string | null
-          original_referral_profile_id?: string | null
           phone?: string | null
           priority?: string
           ref_slug?: string | null
-          referral_landing_url?: string | null
-          referral_source?: string | null
-          referred_by_name_snapshot?: string | null
+          referred_by_name?: string | null
           referred_by_profile_id?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
@@ -262,6 +244,13 @@ export type Database = {
           {
             foreignKeyName: "applicants_original_recruiter_id_fkey"
             columns: ["original_recruiter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_referred_by_profile_id_fkey"
+            columns: ["referred_by_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -750,22 +739,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_recruiter_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          recruiting_slug: string
+          team_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
-      }
-      get_recruiter_by_slug: {
-        Args: { _slug: string }
-        Returns: {
-          id: string
-          full_name: string | null
-          avatar_url: string | null
-          recruiting_slug: string | null
-          team_name: string | null
-        }[]
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
@@ -776,11 +765,11 @@ export type Database = {
       search_recruiters: {
         Args: { _q: string }
         Returns: {
+          avatar_url: string
+          full_name: string
           id: string
-          full_name: string | null
-          avatar_url: string | null
-          recruiting_slug: string | null
-          team_name: string | null
+          recruiting_slug: string
+          team_name: string
         }[]
       }
       submit_application: { Args: { payload: Json }; Returns: Json }
