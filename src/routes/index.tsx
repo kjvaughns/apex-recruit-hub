@@ -241,23 +241,32 @@ const licensedSteps = [
 
 const testimonials = [
   {
-    quote: "I replaced my salary in 90 days and now run a team of nine agents.",
-    name: "Marcus T.",
-    role: "Agency Director",
-    initials: "MT",
+    quote:
+      "I've had multiple months taking home over $15K just off personal production — with no prior life insurance experience. The training is A1. As soon as I hit the field, I was selling consistently, every day.",
+    name: "Chudi",
+    role: "APEX Agent",
+    initials: "CH",
   },
   {
     quote:
-      "The lead system changed everything. I'm not chasing anyone — I'm talking to people every day.",
-    name: "Dana R.",
-    role: "Senior Agent",
-    initials: "DR",
+      "I used the resources APEX provided and hit $40K in production in one month. This opportunity gave me the freedom to travel — I took a fully paid trip to Hawaii with my family.",
+    name: "Obi",
+    role: "APEX Agent",
+    initials: "OB",
   },
   {
-    quote: "I came in with zero experience. APEX licensed and trained me start to finish.",
-    name: "Luis M.",
-    role: "Field Agent",
-    initials: "LM",
+    quote:
+      "Before APEX, I was about to quit insurance. Since joining, I've done over $15K in sales in six days. It completely changed my trajectory.",
+    name: "Aisha",
+    role: "APEX Agent",
+    initials: "AI",
+  },
+  {
+    quote:
+      "My first month ever in insurance, with zero experience, I did $31K in sales — while being able to work from anywhere. I locked in with an open mind and won.",
+    name: "Zay",
+    role: "APEX Agent",
+    initials: "ZA",
   },
 ];
 
@@ -616,10 +625,10 @@ function LandingPage() {
 
       {/* TESTIMONIALS */}
       <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
-        <SectionHead kicker="Agent Voices" title="People who bet on themselves" />
-        <div className="grid gap-4 md:grid-cols-3">
+        <SectionHead kicker="Agent Voices" title="Results from our agents" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {testimonials.map((t) => (
-            <div key={t.name} className="apx-card flex flex-col gap-6 p-7">
+            <div key={t.name} className="apx-card flex flex-col justify-between gap-6 p-7">
               <p className="text-[16px] leading-relaxed text-apex-fog">"{t.quote}"</p>
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-apex-gold/15 font-display text-apex-gold">
