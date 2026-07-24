@@ -38,22 +38,43 @@ export function AuroraBackdrop() {
 
 export function PublicNav() {
   return (
-    <div className="sticky top-0 z-50 border-b border-white/[0.07] backdrop-blur-xl" style={{ background: "rgba(7,7,7,0.55)" }}>
+    <div
+      className="sticky top-0 z-50 border-b border-white/[0.07] backdrop-blur-xl"
+      style={{ background: "rgba(7,7,7,0.55)" }}
+    >
       <div className="mx-auto flex h-[76px] max-w-[1240px] items-center justify-between gap-6 px-6 md:px-8">
         <Link to="/" className="flex items-center">
           <ApexLogo className="h-[42px] w-auto" />
         </Link>
         <nav className="flex items-center gap-4 md:gap-6">
-          <a href="/#how" className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline">
-            How It Works
+          <a
+            href="/#about"
+            className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline"
+          >
+            About
           </a>
-          <a href="/#earnings" className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline">
-            Earnings
+          <a
+            href="/#system"
+            className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline"
+          >
+            The System
           </a>
-          <a href="/#faq" className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline">
+          <a
+            href="/#compensation"
+            className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline"
+          >
+            Compensation
+          </a>
+          <a
+            href="/#faq"
+            className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline"
+          >
             FAQ
           </a>
-          <Link to="/login" className="text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory">
+          <Link
+            to="/login"
+            className="text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory"
+          >
             Agent Login
           </Link>
           <Link to="/apply" className="apx-btn-primary px-5 py-[11px] text-[14px]">

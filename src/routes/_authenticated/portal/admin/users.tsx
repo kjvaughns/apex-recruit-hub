@@ -30,6 +30,15 @@ function UsersPage() {
     mutationFn: (v: { id: string; is_active: boolean }) => updateProfile({ data: v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
   });
+  const receiveMut = useMutation({
+    mutationFn: (v: { id: string; can_receive_applicants: boolean }) => updateProfile({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
+  });
+  const slugMut = useMutation({
+    mutationFn: (v: { id: string; recruiting_slug: string }) => updateProfile({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
+    onError: (e: unknown) => alert((e as Error).message || "Could not update slug (it may already be taken)."),
+  });
 
   const users = (data?.users ?? []).filter((u: any) => {
     if (!q.trim()) return true;
@@ -61,6 +70,7 @@ function UsersPage() {
                   <th className="px-5 py-3">Name</th>
                   <th className="px-5 py-3">Email</th>
                   <th className="px-5 py-3">Roles</th>
+                  <th className="px-5 py-3">Recruiting link</th>
                   <th className="px-5 py-3">Status</th>
                 </tr>
               </thead>
@@ -93,6 +103,21 @@ function UsersPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4">
+                      <SlugCell
+                        slug={u.recruiting_slug ?? ""}
+                        disabled={slugMut.isPending}
+                        onSave={(slug) => slugMut.mutate({ id: u.id, recruiting_slug: slug })}
+                      />
+                      <label className="mt-2 inline-flex items-center gap-2 text-[12px] text-apex-dim">
+                        <input
+                          type="checkbox"
+                          checked={u.can_receive_applicants !== false}
+                          onChange={(e) => receiveMut.mutate({ id: u.id, can_receive_applicants: e.target.checked })}
+                        />
+                        Can receive applicants
+                      </label>
+                    </td>
+                    <td className="px-5 py-4">
                       <label className="inline-flex items-center gap-2 text-[13px] text-apex-dim">
                         <input
                           type="checkbox"
@@ -105,7 +130,7 @@ function UsersPage() {
                   </tr>
                 ))}
                 {users.length === 0 && (
-                  <tr><td colSpan={4} className="px-5 py-10 text-center text-apex-dim">No users match.</td></tr>
+                  <tr><td colSpan={5} className="px-5 py-10 text-center text-apex-dim">No users match.</td></tr>
                 )}
               </tbody>
             </table>
@@ -113,5 +138,30 @@ function UsersPage() {
         )}
       </div>
     </PortalShell>
+  );
+}
+
+function SlugCell({ slug, disabled, onSave }: { slug: string; disabled: boolean; onSave: (slug: string) => void }) {
+  const [value, setValue] = useState(slug);
+  const dirty = value.trim() !== slug;
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        className="apx-input h-9 w-40 text-[13px]"
+        value={value}
+        placeholder="recruiting-slug"
+        disabled={disabled}
+        onChange={(e) => setValue(e.target.value)}
+      />
+      {dirty && value.trim() && (
+        <button
+          onClick={() => onSave(value.trim().toLowerCase())}
+          disabled={disabled}
+          className="text-[12px] text-apex-gold hover:underline disabled:opacity-50"
+        >
+          Save
+        </button>
+      )}
+    </div>
   );
 }
