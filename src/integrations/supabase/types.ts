@@ -110,6 +110,8 @@ export type Database = {
           phone: string | null
           priority: string
           ref_slug: string | null
+          referred_by_name: string | null
+          referred_by_profile_id: string | null
           scheduled_event_end: string | null
           scheduled_event_id: string | null
           scheduled_event_start: string | null
@@ -153,6 +155,8 @@ export type Database = {
           phone?: string | null
           priority?: string
           ref_slug?: string | null
+          referred_by_name?: string | null
+          referred_by_profile_id?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -196,6 +200,8 @@ export type Database = {
           phone?: string | null
           priority?: string
           ref_slug?: string | null
+          referred_by_name?: string | null
+          referred_by_profile_id?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -238,6 +244,13 @@ export type Database = {
           {
             foreignKeyName: "applicants_original_recruiter_id_fkey"
             columns: ["original_recruiter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_referred_by_profile_id_fkey"
+            columns: ["referred_by_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -368,6 +381,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          can_receive_applicants: boolean
           can_schedule_licensed: boolean
           created_at: string
           email: string | null
@@ -386,6 +400,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          can_receive_applicants?: boolean
           can_schedule_licensed?: boolean
           created_at?: string
           email?: string | null
@@ -404,6 +419,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          can_receive_applicants?: boolean
           can_schedule_licensed?: boolean
           created_at?: string
           email?: string | null
