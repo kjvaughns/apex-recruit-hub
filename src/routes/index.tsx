@@ -93,20 +93,13 @@ function LandingPage() {
                 className="relative aspect-video w-full overflow-hidden rounded-[22px] border border-apex-gold/30"
                 style={{ boxShadow: "0 1px 0 rgba(255,255,255,0.08) inset, 0 30px 80px rgba(0,0,0,0.55), 0 0 60px rgba(201,168,76,0.1)" }}
               >
-                <div
-                  className="flex h-full w-full items-center justify-center"
-                  style={{
-                    background:
-                      "repeating-linear-gradient(135deg,rgba(255,255,255,0.025) 0 14px,transparent 14px 28px),radial-gradient(circle at 50% 42%,#161616 0%,#070707 72%)",
-                  }}
-                >
-                  <div className="flex h-[84px] w-[84px] items-center justify-center rounded-full bg-apex-gold pl-1.5 text-[26px] text-apex-card shadow-[0_12px_40px_rgba(0,0,0,0.5),0_0_50px_rgba(201,168,76,0.4)]">
-                    ▶
-                  </div>
-                  <div className="pointer-events-none absolute bottom-4 left-4 font-mono text-[11px] uppercase tracking-wide text-apex-faint">
-                    VSL — drop video embed here
-                  </div>
-                </div>
+                <iframe
+                  src="https://www.youtube.com/embed/E2VJ1v85IRE"
+                  title="APEX Financial — Watch This First"
+                  className="absolute inset-0 h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
               </div>
             </div>
 
