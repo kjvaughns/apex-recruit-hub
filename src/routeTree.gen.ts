@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
+import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
 import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenticated/portal/tasks'
 import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
@@ -81,6 +82,12 @@ const AuthenticatedPortalIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const ApplicationCompleteUnlicensedTokenRoute =
+  ApplicationCompleteUnlicensedTokenRouteImport.update({
+    id: '/unlicensed/$token',
+    path: '/unlicensed/$token',
+    getParentRoute: () => ApplicationCompleteRoute,
   } as any)
 const AuthenticatedPortalTasksRoute =
   AuthenticatedPortalTasksRouteImport.update({
@@ -187,7 +194,7 @@ const AuthenticatedPortalAdminSettingsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/application-complete': typeof ApplicationCompleteRoute
+  '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
@@ -214,7 +222,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/application-complete': typeof ApplicationCompleteRoute
+  '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
@@ -223,6 +231,7 @@ export interface FileRoutesByTo {
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
@@ -239,7 +248,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/application-complete': typeof ApplicationCompleteRoute
+  '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
@@ -252,6 +261,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/_authenticated/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/portal/leaderboard'
     | '/portal/pipeline'
     | '/portal/tasks'
+    | '/application-complete/unlicensed/$token'
     | '/portal/'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/portal/leaderboard'
     | '/portal/pipeline'
     | '/portal/tasks'
+    | '/application-complete/unlicensed/$token'
     | '/portal'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
@@ -332,6 +344,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/pipeline'
     | '/_authenticated/portal/tasks'
+    | '/application-complete/unlicensed/$token'
     | '/_authenticated/portal/'
     | '/_authenticated/portal/admin/settings'
     | '/_authenticated/portal/admin/stages'
@@ -348,7 +361,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  ApplicationCompleteRoute: typeof ApplicationCompleteRoute
+  ApplicationCompleteRoute: typeof ApplicationCompleteRouteWithChildren
   ApplyRoute: typeof ApplyRoute
   EvaluationRoute: typeof EvaluationRoute
   LoginRoute: typeof LoginRoute
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/'
       preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/application-complete/unlicensed/$token': {
+      id: '/application-complete/unlicensed/$token'
+      path: '/unlicensed/$token'
+      fullPath: '/application-complete/unlicensed/$token'
+      preLoaderRoute: typeof ApplicationCompleteUnlicensedTokenRouteImport
+      parentRoute: typeof ApplicationCompleteRoute
     }
     '/_authenticated/portal/tasks': {
       id: '/_authenticated/portal/tasks'
@@ -646,10 +666,22 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApplicationCompleteRouteChildren {
+  ApplicationCompleteUnlicensedTokenRoute: typeof ApplicationCompleteUnlicensedTokenRoute
+}
+
+const ApplicationCompleteRouteChildren: ApplicationCompleteRouteChildren = {
+  ApplicationCompleteUnlicensedTokenRoute:
+    ApplicationCompleteUnlicensedTokenRoute,
+}
+
+const ApplicationCompleteRouteWithChildren =
+  ApplicationCompleteRoute._addFileChildren(ApplicationCompleteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  ApplicationCompleteRoute: ApplicationCompleteRoute,
+  ApplicationCompleteRoute: ApplicationCompleteRouteWithChildren,
   ApplyRoute: ApplyRoute,
   EvaluationRoute: EvaluationRoute,
   LoginRoute: LoginRoute,
