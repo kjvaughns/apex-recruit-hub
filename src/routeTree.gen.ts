@@ -31,6 +31,7 @@ import { Route as AuthenticatedPortalAdminRouteRouteImport } from './routes/_aut
 import { Route as AuthenticatedPortalResourcesIndexRouteImport } from './routes/_authenticated/portal/resources/index'
 import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
 import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
+import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
 import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
 import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
 import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
@@ -163,6 +164,12 @@ const AuthenticatedPortalAdminIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
+const ApiPublicWebhooksCalendlyRoute =
+  ApiPublicWebhooksCalendlyRouteImport.update({
+    id: '/api/public/webhooks/calendly',
+    path: '/api/public/webhooks/calendly',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPortalResourcesPresentationsRoute =
   AuthenticatedPortalResourcesPresentationsRouteImport.update({
     id: '/presentations',
@@ -232,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
   '/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
@@ -258,6 +266,7 @@ export interface FileRoutesByTo {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/portal/admin': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm': typeof AuthenticatedPortalCrmIndexRoute
   '/portal/resources': typeof AuthenticatedPortalResourcesIndexRoute
@@ -290,6 +299,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/_authenticated/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/_authenticated/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
   '/_authenticated/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/webhooks/calendly'
     | '/portal/admin/'
     | '/portal/crm/'
     | '/portal/resources/'
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/webhooks/calendly'
     | '/portal/admin'
     | '/portal/crm'
     | '/portal/resources'
@@ -379,6 +391,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/admin'
     | '/_authenticated/portal/resources/library'
     | '/_authenticated/portal/resources/presentations'
+    | '/api/public/webhooks/calendly'
     | '/_authenticated/portal/admin/'
     | '/_authenticated/portal/crm/'
     | '/_authenticated/portal/resources/'
@@ -392,6 +405,7 @@ export interface RootRouteChildren {
   EvaluationRoute: typeof EvaluationRoute
   LoginRoute: typeof LoginRoute
   ScheduleRoute: typeof ScheduleRoute
+  ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -549,6 +563,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/admin/'
       preLoaderRoute: typeof AuthenticatedPortalAdminIndexRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/api/public/webhooks/calendly': {
+      id: '/api/public/webhooks/calendly'
+      path: '/api/public/webhooks/calendly'
+      fullPath: '/api/public/webhooks/calendly'
+      preLoaderRoute: typeof ApiPublicWebhooksCalendlyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal/resources/presentations': {
       id: '/_authenticated/portal/resources/presentations'
@@ -730,6 +751,7 @@ const rootRouteChildren: RootRouteChildren = {
   EvaluationRoute: EvaluationRoute,
   LoginRoute: LoginRoute,
   ScheduleRoute: ScheduleRoute,
+  ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
