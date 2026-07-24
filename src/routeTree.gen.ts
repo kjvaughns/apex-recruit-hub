@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
+import { Route as ApplicationCompleteLicensedTokenRouteImport } from './routes/application-complete/licensed.$token'
 import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenticated/portal/tasks'
 import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
@@ -87,6 +88,12 @@ const ApplicationCompleteUnlicensedTokenRoute =
   ApplicationCompleteUnlicensedTokenRouteImport.update({
     id: '/unlicensed/$token',
     path: '/unlicensed/$token',
+    getParentRoute: () => ApplicationCompleteRoute,
+  } as any)
+const ApplicationCompleteLicensedTokenRoute =
+  ApplicationCompleteLicensedTokenRouteImport.update({
+    id: '/licensed/$token',
+    path: '/licensed/$token',
     getParentRoute: () => ApplicationCompleteRoute,
   } as any)
 const AuthenticatedPortalTasksRoute =
@@ -207,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
@@ -231,6 +239,7 @@ export interface FileRoutesByTo {
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
@@ -261,6 +270,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/_authenticated/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/portal/leaderboard'
     | '/portal/pipeline'
     | '/portal/tasks'
+    | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/portal/'
     | '/portal/admin/settings'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/portal/leaderboard'
     | '/portal/pipeline'
     | '/portal/tasks'
+    | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/portal'
     | '/portal/admin/settings'
@@ -344,6 +356,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/pipeline'
     | '/_authenticated/portal/tasks'
+    | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/_authenticated/portal/'
     | '/_authenticated/portal/admin/settings'
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/unlicensed/$token'
       fullPath: '/application-complete/unlicensed/$token'
       preLoaderRoute: typeof ApplicationCompleteUnlicensedTokenRouteImport
+      parentRoute: typeof ApplicationCompleteRoute
+    }
+    '/application-complete/licensed/$token': {
+      id: '/application-complete/licensed/$token'
+      path: '/licensed/$token'
+      fullPath: '/application-complete/licensed/$token'
+      preLoaderRoute: typeof ApplicationCompleteLicensedTokenRouteImport
       parentRoute: typeof ApplicationCompleteRoute
     }
     '/_authenticated/portal/tasks': {
@@ -667,10 +687,12 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ApplicationCompleteRouteChildren {
+  ApplicationCompleteLicensedTokenRoute: typeof ApplicationCompleteLicensedTokenRoute
   ApplicationCompleteUnlicensedTokenRoute: typeof ApplicationCompleteUnlicensedTokenRoute
 }
 
 const ApplicationCompleteRouteChildren: ApplicationCompleteRouteChildren = {
+  ApplicationCompleteLicensedTokenRoute: ApplicationCompleteLicensedTokenRoute,
   ApplicationCompleteUnlicensedTokenRoute:
     ApplicationCompleteUnlicensedTokenRoute,
 }
