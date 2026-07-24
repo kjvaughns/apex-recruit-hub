@@ -497,3 +497,85 @@ export const deleteResource = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/* ============================================================
+   Scheduling settings (per-user)
+   ============================================================ */
+
+const calendlyUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === "" || /^https:\/\/calendly\.com\/[A-Za-z0-9\-_/?&=.%#]+$/.test(v), {
+    message: "Must be a valid https://calendly.com/... URL",
+  });
+
+export const getMySchedulingSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data } = await supabase
+      .from("profiles")
+      .select("licensed_calendly_url, can_schedule_licensed, licensed_calendly_updated_at")
+      .eq("id", userId)
+      .maybeSingle();
+    const roles = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const roleList = (roles.data ?? []).map((r) => r.role as string);
+    const isPrivileged = roleList.some((r) => r === "manager" || r === "admin" || r === "super_admin");
+    return {
+      licensed_calendly_url: data?.licensed_calendly_url ?? "",
+      can_schedule_licensed: data?.can_schedule_licensed ?? false,
+      licensed_calendly_updated_at: data?.licensed_calendly_updated_at ?? null,
+      can_edit: isPrivileged || (data?.can_schedule_licensed ?? false),
+    };
+  });
+
+export const updateMySchedulingSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ licensed_calendly_url: calendlyUrlSchema }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const roles = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const roleList = (roles.data ?? []).map((r) => r.role as string);
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("can_schedule_licensed")
+      .eq("id", userId)
+      .maybeSingle();
+    const isPrivileged = roleList.some((r) => r === "manager" || r === "admin" || r === "super_admin");
+    if (!isPrivileged && !prof?.can_schedule_licensed) {
+      throw new Error("You don't have permission to set a licensed Calendly link.");
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        licensed_calendly_url: data.licensed_calendly_url || null,
+        licensed_calendly_updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminSetAgentScheduling = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      user_id: z.string().uuid(),
+      can_schedule_licensed: z.boolean().optional(),
+      licensed_calendly_url: calendlyUrlSchema.optional(),
+    }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const patch: Record<string, unknown> = {};
+    if (data.can_schedule_licensed !== undefined) patch.can_schedule_licensed = data.can_schedule_licensed;
+    if (data.licensed_calendly_url !== undefined) {
+      patch.licensed_calendly_url = data.licensed_calendly_url || null;
+      patch.licensed_calendly_updated_at = new Date().toISOString();
+    }
+    const { error } = await supabase.from("profiles").update(patch).eq("id", data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
