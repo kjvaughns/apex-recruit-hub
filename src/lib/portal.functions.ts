@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { writeAudit } from "@/lib/audit";
 
 /** Current user profile + roles + team. */
 export const getMe = createServerFn({ method: "GET" })
@@ -11,11 +12,19 @@ export const getMe = createServerFn({ method: "GET" })
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
+    const roles = (rolesRes.data ?? []).map((r) => r.role as string);
+    const ORDER = ["super_admin", "admin", "manager", "leader", "agent"];
+    const primaryRole = ORDER.find((r) => roles.includes(r)) ?? null;
     return {
       profile: profileRes.data,
-      roles: (rolesRes.data ?? []).map((r) => r.role),
+      roles,
+      primaryRole,
     };
   });
+
+// Precedence-ordered role labels shown in the portal (owner level hidden).
+export const PORTAL_ROLES = ["admin", "manager", "leader", "agent"] as const;
+export type PortalRole = (typeof PORTAL_ROLES)[number];
 
 /** The signed-in agent's recruiting slug + how many applicants it generated. */
 export const getMyRecruitingLink = createServerFn({ method: "GET" })
@@ -48,7 +57,11 @@ export const getTeamRecruitingLinks = createServerFn({ method: "GET" })
     const roleList = (roles.data ?? []).map((r) => r.role as string);
     const isManager = roleList.some((r) => r === "manager" || r === "admin" || r === "super_admin");
     if (!isManager) return { agents: [] as TeamRecruitingLink[] };
-    const { data: me } = await supabase.from("profiles").select("team_id").eq("id", userId).maybeSingle();
+    const { data: me } = await supabase
+      .from("profiles")
+      .select("team_id")
+      .eq("id", userId)
+      .maybeSingle();
     if (!me?.team_id) return { agents: [] as TeamRecruitingLink[] };
     const { data: agents } = await supabase
       .from("profiles")
@@ -75,23 +88,47 @@ export const getDashboard = createServerFn({ method: "GET" })
     const since7 = new Date(Date.now() - 7 * 86400_000).toISOString();
 
     const [mineRes, mine7Res, scheduledRes, evalDoneRes, feedRes, stagesRes] = await Promise.all([
-      supabase.from("applicants").select("id, current_stage_id, status", { count: "exact" })
-        .eq("assigned_recruiter_id", userId).is("archived_at", null),
-      supabase.from("applicants").select("id", { count: "exact", head: true })
-        .eq("assigned_recruiter_id", userId).gte("created_at", since7),
-      supabase.from("applicants").select("id", { count: "exact", head: true })
-        .eq("assigned_recruiter_id", userId).not("calendly_scheduled_at", "is", null).gte("calendly_scheduled_at", since30),
-      supabase.from("applicants").select("id", { count: "exact", head: true })
-        .eq("assigned_recruiter_id", userId).not("evaluation_completed_at", "is", null).gte("evaluation_completed_at", since30),
-      supabase.from("applicant_activities").select("id, event_type, summary, created_at, applicant_id, applicants(first_name, last_name, assigned_recruiter_id)")
-        .order("created_at", { ascending: false }).limit(15),
-      supabase.from("pipeline_stages").select("id, name, slug, color, position").eq("is_archived", false).order("position"),
+      supabase
+        .from("applicants")
+        .select("id, current_stage_id, status", { count: "exact" })
+        .eq("assigned_recruiter_id", userId)
+        .is("archived_at", null),
+      supabase
+        .from("applicants")
+        .select("id", { count: "exact", head: true })
+        .eq("assigned_recruiter_id", userId)
+        .gte("created_at", since7),
+      supabase
+        .from("applicants")
+        .select("id", { count: "exact", head: true })
+        .eq("assigned_recruiter_id", userId)
+        .not("calendly_scheduled_at", "is", null)
+        .gte("calendly_scheduled_at", since30),
+      supabase
+        .from("applicants")
+        .select("id", { count: "exact", head: true })
+        .eq("assigned_recruiter_id", userId)
+        .not("evaluation_completed_at", "is", null)
+        .gte("evaluation_completed_at", since30),
+      supabase
+        .from("applicant_activities")
+        .select(
+          "id, event_type, summary, created_at, applicant_id, applicants(first_name, last_name, assigned_recruiter_id)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(15),
+      supabase
+        .from("pipeline_stages")
+        .select("id, name, slug, color, position")
+        .eq("is_archived", false)
+        .order("position"),
     ]);
 
     const stages = stagesRes.data ?? [];
     const stageCounts: Record<string, number> = {};
     for (const a of mineRes.data ?? []) {
-      if (a.current_stage_id) stageCounts[a.current_stage_id] = (stageCounts[a.current_stage_id] ?? 0) + 1;
+      if (a.current_stage_id)
+        stageCounts[a.current_stage_id] = (stageCounts[a.current_stage_id] ?? 0) + 1;
     }
 
     return {
@@ -105,7 +142,8 @@ export const getDashboard = createServerFn({ method: "GET" })
       stageCounts,
       feed: (feedRes.data ?? []).filter((f) => {
         // Show items for own applicants; managers/admins see all via RLS
-        const rec = (f.applicants as { assigned_recruiter_id: string | null } | null)?.assigned_recruiter_id;
+        const rec = (f.applicants as { assigned_recruiter_id: string | null } | null)
+          ?.assigned_recruiter_id;
         return !rec || rec === userId || true;
       }),
     };
@@ -114,7 +152,7 @@ export const getDashboard = createServerFn({ method: "GET" })
 const listInput = z.object({
   q: z.string().optional().default(""),
   stage: z.string().optional().default(""),
-  scope: z.enum(["mine", "team", "all"]).optional().default("mine"),
+  scope: z.enum(["mine", "direct", "downline", "all"]).optional().default("mine"),
   limit: z.number().int().min(1).max(200).optional().default(100),
 });
 
@@ -125,12 +163,25 @@ export const listApplicants = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     let query = supabase
       .from("applicants")
-      .select("id, first_name, last_name, email, phone, state, city, priority, status, current_stage_id, assigned_recruiter_id, evaluation_completed_at, calendly_scheduled_at, licensed, created_at, updated_at, stage_entered_at")
+      .select(
+        "id, first_name, last_name, email, phone, state, city, priority, status, current_stage_id, assigned_recruiter_id, evaluation_completed_at, calendly_scheduled_at, licensed, created_at, updated_at, stage_entered_at",
+      )
       .is("archived_at", null)
       .order("updated_at", { ascending: false })
       .limit(data.limit);
 
-    if (data.scope === "mine") query = query.eq("assigned_recruiter_id", userId);
+    // Scope: mine = own only; direct = self + direct reports; downline/all rely
+    // on hierarchy RLS (own + full downline; admins see everything).
+    if (data.scope === "mine") {
+      query = query.eq("assigned_recruiter_id", userId);
+    } else if (data.scope === "direct") {
+      const { data: reports } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("parent_user_id", userId);
+      const ids = [userId, ...((reports ?? []) as { id: string }[]).map((r) => r.id)];
+      query = query.in("assigned_recruiter_id", ids);
+    }
     if (data.stage) query = query.eq("current_stage_id", data.stage);
     if (data.q.trim()) {
       const q = data.q.trim();
@@ -141,7 +192,11 @@ export const listApplicants = createServerFn({ method: "POST" })
 
     const [aRes, stagesRes] = await Promise.all([
       query,
-      supabase.from("pipeline_stages").select("id, name, slug, color, position").eq("is_archived", false).order("position"),
+      supabase
+        .from("pipeline_stages")
+        .select("id, name, slug, color, position")
+        .eq("is_archived", false)
+        .order("position"),
     ]);
 
     return { applicants: aRes.data ?? [], stages: stagesRes.data ?? [] };
@@ -154,9 +209,22 @@ export const getApplicant = createServerFn({ method: "POST" })
     const { supabase } = context;
     const [aRes, actsRes, evalRes, stagesRes] = await Promise.all([
       supabase.from("applicants").select("*").eq("id", data.id).maybeSingle(),
-      supabase.from("applicant_activities").select("id, event_type, summary, created_at, data").eq("applicant_id", data.id).order("created_at", { ascending: false }).limit(50),
-      supabase.from("evaluations").select("id, email, answers, matched, created_at").eq("applicant_id", data.id).order("created_at", { ascending: false }),
-      supabase.from("pipeline_stages").select("id, name, slug, color, position").eq("is_archived", false).order("position"),
+      supabase
+        .from("applicant_activities")
+        .select("id, event_type, summary, created_at, data")
+        .eq("applicant_id", data.id)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("evaluations")
+        .select("id, email, answers, matched, created_at")
+        .eq("applicant_id", data.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("pipeline_stages")
+        .select("id, name, slug, color, position")
+        .eq("is_archived", false)
+        .order("position"),
     ]);
     if (!aRes.data) throw new Error("Applicant not found");
     return {
@@ -169,7 +237,9 @@ export const getApplicant = createServerFn({ method: "POST" })
 
 export const updateApplicantStage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), stage_id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), stage_id: z.string().uuid() }).parse(d),
+  )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { error } = await supabase
@@ -189,7 +259,9 @@ export const updateApplicantStage = createServerFn({ method: "POST" })
 
 export const addApplicantNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), note: z.string().trim().min(1).max(2000) }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), note: z.string().trim().min(1).max(2000) }).parse(d),
+  )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     await supabase.from("applicant_activities").insert({
@@ -198,7 +270,10 @@ export const addApplicantNote = createServerFn({ method: "POST" })
       summary: data.note,
       actor_id: userId,
     });
-    await supabase.from("applicants").update({ last_contacted_at: new Date().toISOString() }).eq("id", data.id);
+    await supabase
+      .from("applicants")
+      .update({ last_contacted_at: new Date().toISOString() })
+      .eq("id", data.id);
     return { ok: true };
   });
 
@@ -213,6 +288,19 @@ async function assertAdmin(supabase: any, userId: string) {
     throw new Error("Forbidden: admin only");
   }
   return roles;
+}
+
+// Admins, or managers/leaders granted can_manage_resources, may write resources.
+async function assertCanManageResources(supabase: any, userId: string) {
+  const [{ data: roleRows }, { data: prof }] = await Promise.all([
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+    supabase.from("profiles").select("can_manage_resources").eq("id", userId).maybeSingle(),
+  ]);
+  const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+  const isAdmin = roles.some((r: string) => r === "admin" || r === "super_admin");
+  if (!isAdmin && !prof?.can_manage_resources) {
+    throw new Error("Forbidden: you are not permitted to manage resources");
+  }
 }
 
 export const adminListUsers = createServerFn({ method: "GET" })
@@ -238,42 +326,63 @@ export const adminListUsers = createServerFn({ method: "GET" })
 export const adminSetUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({
-      user_id: z.string().uuid(),
-      role: z.enum(["agent", "manager", "admin", "super_admin"]),
-      grant: z.boolean(),
-    }).parse(d),
+    z
+      .object({
+        user_id: z.string().uuid(),
+        // super_admin is a protected internal owner level and is never selectable.
+        role: z.enum(["agent", "leader", "manager", "admin"]),
+        grant: z.boolean(),
+      })
+      .parse(d),
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
     if (data.grant) {
-      await supabase.from("user_roles").upsert({ user_id: data.user_id, role: data.role }, { onConflict: "user_id,role" });
+      await supabase
+        .from("user_roles")
+        .upsert({ user_id: data.user_id, role: data.role }, { onConflict: "user_id,role" });
     } else {
       await supabase.from("user_roles").delete().eq("user_id", data.user_id).eq("role", data.role);
     }
+    await writeAudit(supabase, {
+      action: data.grant ? "role_granted" : "role_revoked",
+      actor_id: userId,
+      target_user_id: data.user_id,
+      new_value: { role: data.role },
+    });
     return { ok: true };
   });
 
 export const adminUpdateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({
-      id: z.string().uuid(),
-      first_name: z.string().optional(),
-      last_name: z.string().optional(),
-      phone: z.string().optional(),
-      team_id: z.string().uuid().nullable().optional(),
-      is_active: z.boolean().optional(),
-      can_receive_applicants: z.boolean().optional(),
-      recruiting_slug: z
-        .string()
-        .trim()
-        .toLowerCase()
-        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug may only contain lowercase letters, numbers and hyphens")
-        .max(120)
-        .optional(),
-    }).parse(d),
+    z
+      .object({
+        id: z.string().uuid(),
+        first_name: z.string().optional(),
+        last_name: z.string().optional(),
+        phone: z.string().optional(),
+        team_id: z.string().uuid().nullable().optional(),
+        parent_user_id: z.string().uuid().nullable().optional(),
+        is_active: z.boolean().optional(),
+        status: z.enum(["active", "inactive"]).optional(),
+        can_receive_applicants: z.boolean().optional(),
+        can_invite_agents: z.boolean().optional(),
+        can_invite_leaders: z.boolean().optional(),
+        can_manage_resources: z.boolean().optional(),
+        recruiting_slug: z
+          .string()
+          .trim()
+          .toLowerCase()
+          .regex(
+            /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+            "Slug may only contain lowercase letters, numbers and hyphens",
+          )
+          .max(120)
+          .optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -283,7 +392,6 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-
 
 export const adminListStages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -297,14 +405,16 @@ export const adminListStages = createServerFn({ method: "GET" })
 export const adminUpsertStage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({
-      id: z.string().uuid().optional(),
-      name: z.string().min(1),
-      slug: z.string().min(1),
-      color: z.string().optional(),
-      position: z.number().int(),
-      is_archived: z.boolean().optional(),
-    }).parse(d),
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        name: z.string().min(1),
+        slug: z.string().min(1),
+        color: z.string().optional(),
+        position: z.number().int(),
+        is_archived: z.boolean().optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
@@ -330,9 +440,7 @@ export const adminGetSettings = createServerFn({ method: "GET" })
 
 export const adminSetSetting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ key: z.string().min(1), value: z.any() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ key: z.string().min(1), value: z.any() }).parse(d))
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
@@ -359,7 +467,9 @@ export const listTasks = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     let q = supabase
       .from("tasks")
-      .select("id, title, notes, due_at, completed_at, priority, assigned_to, created_by, applicant_id, created_at, applicants(first_name, last_name)")
+      .select(
+        "id, title, notes, due_at, completed_at, priority, assigned_to, created_by, applicant_id, created_at, applicants(first_name, last_name)",
+      )
       .order("completed_at", { ascending: true, nullsFirst: true })
       .order("due_at", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: false })
@@ -374,14 +484,18 @@ export const listTasks = createServerFn({ method: "POST" })
 
 export const createTask = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
-    title: z.string().trim().min(1).max(200),
-    notes: z.string().max(2000).optional(),
-    due_at: z.string().datetime().optional().nullable(),
-    priority: z.enum(["low", "normal", "high"]).optional().default("normal"),
-    assigned_to: z.string().uuid().optional().nullable(),
-    applicant_id: z.string().uuid().optional().nullable(),
-  }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        title: z.string().trim().min(1).max(200),
+        notes: z.string().max(2000).optional(),
+        due_at: z.string().datetime().optional().nullable(),
+        priority: z.enum(["low", "normal", "high"]).optional().default("normal"),
+        assigned_to: z.string().uuid().optional().nullable(),
+        applicant_id: z.string().uuid().optional().nullable(),
+      })
+      .parse(d),
+  )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const { error } = await supabase.from("tasks").insert({
@@ -426,11 +540,15 @@ export const deleteTask = createServerFn({ method: "POST" })
 
 export const getCalendar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
-    from: z.string().datetime(),
-    to: z.string().datetime(),
-    scope: z.enum(["mine", "all"]).optional().default("mine"),
-  }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        from: z.string().datetime(),
+        to: z.string().datetime(),
+        scope: z.enum(["mine", "all"]).optional().default("mine"),
+      })
+      .parse(d),
+  )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     let apps = supabase
@@ -459,42 +577,74 @@ export const getCalendar = createServerFn({ method: "POST" })
 
 export const getLeaderboard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
-    window: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
-  }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        window: z.enum(["7d", "30d", "90d", "all"]).optional().default("30d"),
+      })
+      .parse(d),
+  )
   .handler(async ({ context, data }) => {
     const { supabase } = context;
-    const days = data.window === "7d" ? 7 : data.window === "30d" ? 30 : data.window === "90d" ? 90 : 3650;
+    const days =
+      data.window === "7d" ? 7 : data.window === "30d" ? 30 : data.window === "90d" ? 90 : 3650;
     const since = new Date(Date.now() - days * 86400_000).toISOString();
 
     const [appsRes, profilesRes] = await Promise.all([
       supabase
         .from("applicants")
-        .select("assigned_recruiter_id, calendly_scheduled_at, evaluation_completed_at, created_at, current_stage_id, pipeline_stages(is_completed_stage)")
+        .select(
+          "assigned_recruiter_id, calendly_scheduled_at, evaluation_completed_at, created_at, current_stage_id, pipeline_stages(is_completed_stage)",
+        )
         .gte("created_at", since)
         .not("assigned_recruiter_id", "is", null),
-      supabase.from("profiles").select("id, first_name, last_name, avatar_url").eq("is_active", true),
+      supabase
+        .from("profiles")
+        .select("id, first_name, last_name, avatar_url")
+        .eq("is_active", true),
     ]);
 
-    const byUser: Record<string, { user_id: string; applicants: number; scheduled: number; evaluated: number; onboarded: number }> = {};
+    const byUser: Record<
+      string,
+      {
+        user_id: string;
+        applicants: number;
+        scheduled: number;
+        evaluated: number;
+        onboarded: number;
+      }
+    > = {};
     for (const p of profilesRes.data ?? []) {
       byUser[p.id] = { user_id: p.id, applicants: 0, scheduled: 0, evaluated: 0, onboarded: 0 };
     }
     for (const a of appsRes.data ?? []) {
       const uid = a.assigned_recruiter_id as string | null;
       if (!uid) continue;
-      const row = (byUser[uid] ??= { user_id: uid, applicants: 0, scheduled: 0, evaluated: 0, onboarded: 0 });
+      const row = (byUser[uid] ??= {
+        user_id: uid,
+        applicants: 0,
+        scheduled: 0,
+        evaluated: 0,
+        onboarded: 0,
+      });
       row.applicants += 1;
       if (a.calendly_scheduled_at) row.scheduled += 1;
       if (a.evaluation_completed_at) row.evaluated += 1;
       const stage = a.pipeline_stages as { is_completed_stage: boolean } | null;
       if (stage?.is_completed_stage) row.onboarded += 1;
     }
-    const profileMap: Record<string, { first_name: string | null; last_name: string | null; avatar_url: string | null }> = {};
+    const profileMap: Record<
+      string,
+      { first_name: string | null; last_name: string | null; avatar_url: string | null }
+    > = {};
     for (const p of profilesRes.data ?? []) profileMap[p.id] = p;
 
     const rows = Object.values(byUser)
-      .map((r) => ({ ...r, profile: profileMap[r.user_id] ?? null, score: r.onboarded * 10 + r.evaluated * 3 + r.scheduled * 2 + r.applicants }))
+      .map((r) => ({
+        ...r,
+        profile: profileMap[r.user_id] ?? null,
+        score: r.onboarded * 10 + r.evaluated * 3 + r.scheduled * 2 + r.applicants,
+      }))
       .filter((r) => r.applicants > 0 || r.scheduled > 0 || r.evaluated > 0 || r.onboarded > 0)
       .sort((a, b) => b.score - a.score);
 
@@ -519,27 +669,48 @@ export const listResources = createServerFn({ method: "GET" })
 
 export const upsertResource = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({
-    id: z.string().uuid().optional(),
-    title: z.string().min(1),
-    description: z.string().optional().nullable(),
-    category: z.string().min(1),
-    url: z.string().url().optional().nullable(),
-    kind: z.enum(["link", "doc", "video"]).optional().default("link"),
-    position: z.number().int().optional().default(0),
-    is_published: z.boolean().optional().default(true),
-  }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        title: z.string().min(1),
+        description: z.string().optional().nullable(),
+        category: z.string().min(1),
+        url: z.string().url().optional().nullable(),
+        kind: z.enum(["link", "doc", "video"]).optional().default("link"),
+        position: z.number().int().optional().default(0),
+        is_published: z.boolean().optional().default(true),
+      })
+      .parse(d),
+  )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    // Admins manage all resources; managers granted can_manage_resources manage
+    // their own (RLS enforces ownership on write for non-admins).
+    await assertCanManageResources(supabase, userId);
     if (data.id) {
       const { id, ...rest } = data;
-      const { error } = await supabase.from("resources").update(rest).eq("id", id);
+      const patch: Record<string, unknown> = { ...rest, updated_by: userId };
+      if (rest.is_published) patch.published_by = userId;
+      const { error } = await supabase
+        .from("resources")
+        .update(patch as never)
+        .eq("id", id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabase.from("resources").insert({ ...data, created_by: userId });
+      const { error } = await supabase.from("resources").insert({
+        ...data,
+        created_by: userId,
+        updated_by: userId,
+        published_by: data.is_published ? userId : null,
+      } as never);
       if (error) throw new Error(error.message);
     }
+    await writeAudit(supabase, {
+      action: data.is_published ? "resource_published" : "resource_saved",
+      actor_id: userId,
+      new_value: { title: data.title, category: data.category },
+    });
     return { ok: true };
   });
 
@@ -577,7 +748,9 @@ export const getMySchedulingSettings = createServerFn({ method: "GET" })
       .maybeSingle();
     const roles = await supabase.from("user_roles").select("role").eq("user_id", userId);
     const roleList = (roles.data ?? []).map((r) => r.role as string);
-    const isPrivileged = roleList.some((r) => r === "manager" || r === "admin" || r === "super_admin");
+    const isPrivileged = roleList.some(
+      (r) => r === "manager" || r === "admin" || r === "super_admin",
+    );
     return {
       licensed_calendly_url: data?.licensed_calendly_url ?? "",
       can_schedule_licensed: data?.can_schedule_licensed ?? false,
@@ -598,7 +771,9 @@ export const updateMySchedulingSettings = createServerFn({ method: "POST" })
       .select("can_schedule_licensed")
       .eq("id", userId)
       .maybeSingle();
-    const isPrivileged = roleList.some((r) => r === "manager" || r === "admin" || r === "super_admin");
+    const isPrivileged = roleList.some(
+      (r) => r === "manager" || r === "admin" || r === "super_admin",
+    );
     if (!isPrivileged && !prof?.can_schedule_licensed) {
       throw new Error("You don't have permission to set a licensed Calendly link.");
     }
@@ -616,17 +791,24 @@ export const updateMySchedulingSettings = createServerFn({ method: "POST" })
 export const adminSetAgentScheduling = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({
-      user_id: z.string().uuid(),
-      can_schedule_licensed: z.boolean().optional(),
-      licensed_calendly_url: calendlyUrlSchema.optional(),
-    }).parse(d),
+    z
+      .object({
+        user_id: z.string().uuid(),
+        can_schedule_licensed: z.boolean().optional(),
+        licensed_calendly_url: calendlyUrlSchema.optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const patch: { can_schedule_licensed?: boolean; licensed_calendly_url?: string | null; licensed_calendly_updated_at?: string } = {};
-    if (data.can_schedule_licensed !== undefined) patch.can_schedule_licensed = data.can_schedule_licensed;
+    const patch: {
+      can_schedule_licensed?: boolean;
+      licensed_calendly_url?: string | null;
+      licensed_calendly_updated_at?: string;
+    } = {};
+    if (data.can_schedule_licensed !== undefined)
+      patch.can_schedule_licensed = data.can_schedule_licensed;
     if (data.licensed_calendly_url !== undefined) {
       patch.licensed_calendly_url = data.licensed_calendly_url || null;
       patch.licensed_calendly_updated_at = new Date().toISOString();
@@ -637,3 +819,264 @@ export const adminSetAgentScheduling = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---- Manual applicant entry (Phase 4) ------------------------------------
+
+/** Users the caller may assign applicants to: self + downline (admins: all). */
+export const getAssignableRecruiters = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roles = (roleRows ?? []).map((r) => r.role as string);
+    const isAdmin = roles.some((r) => r === "admin" || r === "super_admin");
+
+    let q = supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email")
+      .eq("is_active", true);
+    if (!isAdmin) {
+      const { data: desc } = await (supabase as any).rpc("descendant_ids", { _root: userId });
+      const ids = [userId, ...((desc ?? []) as { id: string }[]).map((d) => d.id)];
+      q = q.in("id", ids);
+    }
+    const { data: profs } = await q;
+    const recruiters = ((profs ?? []) as any[]).map((p) => ({
+      id: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed",
+    }));
+    const [{ data: teams }, { data: sources }, { data: stages }] = await Promise.all([
+      supabase.from("teams").select("id, name").order("name"),
+      supabase.from("applicant_sources").select("id, slug, label").eq("is_active", true),
+      supabase
+        .from("pipeline_stages")
+        .select("id, name, slug, color, position")
+        .eq("is_archived", false)
+        .order("position"),
+    ]);
+    return {
+      recruiters,
+      teams: teams ?? [],
+      sources: sources ?? [],
+      stages: stages ?? [],
+      defaultRecruiterId: userId,
+    };
+  });
+
+const manualApplicantSchema = z.object({
+  first_name: z.string().trim().min(1).max(80),
+  last_name: z.string().trim().min(1).max(80),
+  email: z.string().trim().email().max(200),
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  state: z.string().trim().max(4).optional().or(z.literal("")),
+  licensed: z.boolean().optional(),
+  instagram_handle: z.string().trim().max(80).optional().or(z.literal("")),
+  why_text: z.string().trim().max(2000).optional().or(z.literal("")),
+  assigned_recruiter_id: z.string().uuid(),
+  referred_by_profile_id: z.string().uuid().optional().or(z.literal("")),
+  team_id: z.string().uuid().optional().or(z.literal("")),
+  source_id: z.string().uuid().optional().or(z.literal("")),
+  stage_id: z.string().uuid().optional().or(z.literal("")),
+  priority: z.enum(["low", "normal", "high"]).optional(),
+  next_follow_up_at: z.string().optional().or(z.literal("")),
+  notes: z.string().trim().max(2000).optional().or(z.literal("")),
+});
+
+/** Manually create an applicant assigned within the caller's permission scope.
+ *  Row-level security enforces that the assignee is self / downline / admin. */
+export const createApplicantManual = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => manualApplicantSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const assigned = data.assigned_recruiter_id;
+    const referred = data.referred_by_profile_id || assigned;
+
+    let stageId = data.stage_id || "";
+    if (!stageId) {
+      const { data: st } = await supabase
+        .from("pipeline_stages")
+        .select("id")
+        .eq("slug", "new-applicant")
+        .maybeSingle();
+      stageId = st?.id ?? "";
+    }
+
+    const insert: Record<string, unknown> = {
+      first_name: data.first_name.trim(),
+      last_name: data.last_name.trim(),
+      email: data.email.trim().toLowerCase(),
+      phone: data.phone || null,
+      state: data.state ? data.state.toUpperCase() : null,
+      licensed: data.licensed ?? false,
+      licensing_status: data.licensed ? "licensed" : "unlicensed",
+      instagram_handle: data.instagram_handle || null,
+      why_text: data.why_text || null,
+      consent_contact: true,
+      assigned_recruiter_id: assigned,
+      original_recruiter_id: referred,
+      referred_by_profile_id: referred,
+      referral_source: "manual",
+      team_id: data.team_id || null,
+      source_id: data.source_id || null,
+      current_stage_id: stageId || null,
+      stage_entered_at: new Date().toISOString(),
+      priority: data.priority ?? "normal",
+      next_follow_up_at: data.next_follow_up_at || null,
+    };
+
+    const { data: created, error } = await supabase
+      .from("applicants")
+      .insert(insert as never)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    await supabase.from("applicant_activities").insert({
+      applicant_id: created.id,
+      event_type: "manual_applicant_created",
+      summary: "Applicant added manually",
+    } as never);
+    if (data.notes && data.notes.trim()) {
+      await supabase.from("applicant_activities").insert({
+        applicant_id: created.id,
+        event_type: "note",
+        summary: data.notes.trim(),
+      } as never);
+    }
+
+    return { id: created.id as string };
+  });
+
+// ---- Company-wide leaderboard (Phase 6) ----------------------------------
+
+export const getCompanyLeaderboard = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        metric: z
+          .enum([
+            "new_applicants",
+            "contacted",
+            "interviews_scheduled",
+            "interviews_completed",
+            "promoted",
+          ])
+          .optional()
+          .default("new_applicants"),
+        period: z
+          .enum(["today", "week", "month", "quarter", "year", "all"])
+          .optional()
+          .default("month"),
+        role: z.enum(["agent", "leader", "manager", "admin"]).optional().or(z.literal("")),
+        team_id: z.string().uuid().optional().or(z.literal("")),
+        state: z.string().trim().max(4).optional().or(z.literal("")),
+      })
+      .parse(d ?? {}),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: rows, error } = await (supabase as any).rpc("company_leaderboard", {
+      payload: data,
+    });
+    if (error) throw new Error(error.message);
+    // Filter options (teams) for the UI.
+    const { data: teams } = await supabase.from("teams").select("id, name").order("name");
+    return { rows: (rows ?? []) as CompanyLeaderboardRow[], meId: userId, teams: teams ?? [] };
+  });
+
+export type CompanyLeaderboardRow = {
+  profile_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string | null;
+  team_name: string | null;
+  manager_name: string | null;
+  new_count: number;
+  contacted_count: number;
+  scheduled_count: number;
+  completed_count: number;
+  promoted_count: number;
+  conversion: number;
+  total: number;
+  prev_total: number;
+};
+
+// ---- Organization tree + audit log (Phase 7) -----------------------------
+
+export type OrgNode = {
+  id: string;
+  name: string;
+  role: string | null;
+  parent_user_id: string | null;
+  team_name: string | null;
+};
+
+/** Flat list of the caller's org (self + full downline); admins get everyone. */
+export const getOrganizationTree = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roles = (roleRows ?? []).map((r) => r.role as string);
+    const isAdmin = roles.some((r) => r === "admin" || r === "super_admin");
+
+    let q = supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email, parent_user_id, team_id, teams(name)")
+      .eq("is_active", true);
+    if (!isAdmin) {
+      const { data: desc } = await (supabase as any).rpc("descendant_ids", { _root: userId });
+      const ids = [userId, ...((desc ?? []) as { id: string }[]).map((d) => d.id)];
+      q = q.in("id", ids);
+    }
+    const { data: profs } = await q;
+
+    // Resolve each person's primary role in one pass.
+    const ids = ((profs ?? []) as any[]).map((p) => p.id);
+    const { data: allRoles } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .in("user_id", ids);
+    const roleOrder = ["super_admin", "admin", "manager", "leader", "agent"];
+    const roleByUser: Record<string, string> = {};
+    for (const r of (allRoles ?? []) as { user_id: string; role: string }[]) {
+      const cur = roleByUser[r.user_id];
+      if (!cur || roleOrder.indexOf(r.role) < roleOrder.indexOf(cur))
+        roleByUser[r.user_id] = r.role;
+    }
+
+    const nodes: OrgNode[] = ((profs ?? []) as any[]).map((p) => ({
+      id: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed",
+      role: roleByUser[p.id] === "super_admin" ? "admin" : (roleByUser[p.id] ?? null),
+      parent_user_id: p.parent_user_id,
+      team_name: (p.teams as { name: string } | null)?.name ?? null,
+    }));
+    return { nodes, rootId: isAdmin ? null : userId };
+  });
+
+export const getAuditLogs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ action: z.string().optional().or(z.literal("")) }).parse(d ?? {}),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    let q = (supabase as any)
+      .from("audit_logs")
+      .select("id, action, actor_id, target_user_id, target_applicant_id, new_value, created_at")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (data.action) q = q.eq("action", data.action);
+    const { data: logs, error } = await q;
+    if (error) throw new Error(error.message);
+    return { logs: logs ?? [] };
+  });

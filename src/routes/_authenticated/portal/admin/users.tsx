@@ -10,8 +10,9 @@ export const Route = createFileRoute("/_authenticated/portal/admin/users")({
   component: UsersPage,
 });
 
-const ROLES = ["agent", "manager", "admin", "super_admin"] as const;
-type RoleName = typeof ROLES[number];
+// super_admin is a protected internal owner level and is never selectable here.
+const ROLES = ["agent", "leader", "manager", "admin"] as const;
+type RoleName = (typeof ROLES)[number];
 
 function UsersPage() {
   const list = useServerFn(adminListUsers);
@@ -21,26 +22,20 @@ function UsersPage() {
   const [q, setQ] = useState("");
 
   const { data, isLoading } = useQuery({ queryKey: ["admin", "users"], queryFn: () => list() });
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "users"] });
 
   const roleMut = useMutation({
     mutationFn: (v: { user_id: string; role: RoleName; grant: boolean }) => setRole({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
+    onSuccess: invalidate,
   });
-  const activeMut = useMutation({
-    mutationFn: (v: { id: string; is_active: boolean }) => updateProfile({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
-  });
-  const receiveMut = useMutation({
-    mutationFn: (v: { id: string; can_receive_applicants: boolean }) => updateProfile({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
-  });
-  const slugMut = useMutation({
-    mutationFn: (v: { id: string; recruiting_slug: string }) => updateProfile({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "users"] }),
-    onError: (e: unknown) => alert((e as Error).message || "Could not update slug (it may already be taken)."),
+  const profileMut = useMutation({
+    mutationFn: (v: Record<string, unknown> & { id: string }) => updateProfile({ data: v }),
+    onSuccess: invalidate,
+    onError: (e: unknown) => alert((e as Error).message || "Update failed."),
   });
 
-  const users = (data?.users ?? []).filter((u: any) => {
+  const allUsers = data?.users ?? [];
+  const users = allUsers.filter((u: any) => {
     if (!q.trim()) return true;
     const n = `${u.first_name ?? ""} ${u.last_name ?? ""} ${u.email ?? ""}`.toLowerCase();
     return n.includes(q.toLowerCase());
@@ -63,24 +58,32 @@ function UsersPage() {
         {isLoading ? (
           <div className="apx-card p-10 text-center text-apex-dim">Loading…</div>
         ) : (
-          <div className="apx-card overflow-hidden">
-            <table className="w-full text-left text-[14px]">
+          <div className="apx-card overflow-x-auto">
+            <table className="w-full min-w-[900px] text-left text-[14px]">
               <thead className="bg-white/[0.02] text-[11px] uppercase tracking-[0.12em] text-apex-faint">
                 <tr>
                   <th className="px-5 py-3">Name</th>
-                  <th className="px-5 py-3">Email</th>
-                  <th className="px-5 py-3">Roles</th>
+                  <th className="px-5 py-3">Role</th>
+                  <th className="px-5 py-3">Reports to</th>
+                  <th className="px-5 py-3">Permissions</th>
                   <th className="px-5 py-3">Recruiting link</th>
                   <th className="px-5 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u: any) => (
-                  <tr key={u.id} className="border-t border-white/[0.05]">
-                    <td className="px-5 py-4 font-medium text-apex-ivory">
-                      {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
+                  <tr key={u.id} className="border-t border-white/[0.05] align-top">
+                    <td className="px-5 py-4">
+                      <div className="font-medium text-apex-ivory">
+                        {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
+                      </div>
+                      <div className="text-[12px] text-apex-faint">{u.email}</div>
+                      {u.roles.includes("super_admin") && (
+                        <span className="mt-1 inline-block rounded-full border border-apex-gold/40 bg-apex-gold/10 px-2 py-0.5 text-[10.5px] font-semibold text-apex-gold">
+                          Owner
+                        </span>
+                      )}
                     </td>
-                    <td className="px-5 py-4 text-apex-dim">{u.email}</td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-1.5">
                         {ROLES.map((r) => {
@@ -90,7 +93,7 @@ function UsersPage() {
                               key={r}
                               disabled={roleMut.isPending}
                               onClick={() => roleMut.mutate({ user_id: u.id, role: r, grant: !on })}
-                              className={`rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition ${
+                              className={`rounded-full border px-2.5 py-1 text-[11.5px] font-medium capitalize transition ${
                                 on
                                   ? "border-apex-gold/40 bg-apex-gold/10 text-apex-gold"
                                   : "border-white/10 text-apex-faint hover:border-white/25 hover:text-apex-ivory"
@@ -103,26 +106,62 @@ function UsersPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4">
+                      <select
+                        className="apx-input h-9 w-44 text-[13px]"
+                        value={u.parent_user_id ?? ""}
+                        onChange={(e) =>
+                          profileMut.mutate({ id: u.id, parent_user_id: e.target.value || null })
+                        }
+                      >
+                        <option value="">— none —</option>
+                        {allUsers
+                          .filter((p: any) => p.id !== u.id)
+                          .map((p: any) => (
+                            <option key={p.id} value={p.id}>
+                              {[p.first_name, p.last_name].filter(Boolean).join(" ") || p.email}
+                            </option>
+                          ))}
+                      </select>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1.5 text-[12px] text-apex-dim">
+                        <PermToggle
+                          label="Invite agents"
+                          checked={!!u.can_invite_agents}
+                          onChange={(v) => profileMut.mutate({ id: u.id, can_invite_agents: v })}
+                        />
+                        <PermToggle
+                          label="Invite leaders"
+                          checked={!!u.can_invite_leaders}
+                          onChange={(v) => profileMut.mutate({ id: u.id, can_invite_leaders: v })}
+                        />
+                        <PermToggle
+                          label="Manage resources"
+                          checked={!!u.can_manage_resources}
+                          onChange={(v) => profileMut.mutate({ id: u.id, can_manage_resources: v })}
+                        />
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
                       <SlugCell
                         slug={u.recruiting_slug ?? ""}
-                        disabled={slugMut.isPending}
-                        onSave={(slug) => slugMut.mutate({ id: u.id, recruiting_slug: slug })}
+                        disabled={profileMut.isPending}
+                        onSave={(slug) => profileMut.mutate({ id: u.id, recruiting_slug: slug })}
                       />
-                      <label className="mt-2 inline-flex items-center gap-2 text-[12px] text-apex-dim">
-                        <input
-                          type="checkbox"
-                          checked={u.can_receive_applicants !== false}
-                          onChange={(e) => receiveMut.mutate({ id: u.id, can_receive_applicants: e.target.checked })}
-                        />
-                        Can receive applicants
-                      </label>
+                      <PermToggle
+                        label="Can receive applicants"
+                        checked={u.can_receive_applicants !== false}
+                        onChange={(v) => profileMut.mutate({ id: u.id, can_receive_applicants: v })}
+                      />
                     </td>
                     <td className="px-5 py-4">
                       <label className="inline-flex items-center gap-2 text-[13px] text-apex-dim">
                         <input
                           type="checkbox"
                           checked={u.is_active !== false}
-                          onChange={(e) => activeMut.mutate({ id: u.id, is_active: e.target.checked })}
+                          onChange={(e) =>
+                            profileMut.mutate({ id: u.id, is_active: e.target.checked })
+                          }
                         />
                         {u.is_active !== false ? "Active" : "Inactive"}
                       </label>
@@ -130,7 +169,11 @@ function UsersPage() {
                   </tr>
                 ))}
                 {users.length === 0 && (
-                  <tr><td colSpan={5} className="px-5 py-10 text-center text-apex-dim">No users match.</td></tr>
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-apex-dim">
+                      No users match.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -141,7 +184,32 @@ function UsersPage() {
   );
 }
 
-function SlugCell({ slug, disabled, onSave }: { slug: string; disabled: boolean; onSave: (slug: string) => void }) {
+function PermToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="inline-flex items-center gap-2 text-[12px] text-apex-dim">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      {label}
+    </label>
+  );
+}
+
+function SlugCell({
+  slug,
+  disabled,
+  onSave,
+}: {
+  slug: string;
+  disabled: boolean;
+  onSave: (slug: string) => void;
+}) {
   const [value, setValue] = useState(slug);
   const dirty = value.trim() !== slug;
   return (

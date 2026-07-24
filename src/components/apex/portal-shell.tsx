@@ -14,9 +14,9 @@ const NAV = [
   { to: "/portal/calendar", label: "Calendar", icon: "◗" },
   { to: "/portal/leaderboard", label: "Leaderboard", icon: "★" },
   { to: "/portal/resources", label: "Resources", icon: "▤" },
+  { to: "/portal/organization", label: "Organization", icon: "⚇" },
   { to: "/portal/settings", label: "My Settings", icon: "⚙" },
 ];
-
 
 export function PortalShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
@@ -43,9 +43,20 @@ export function PortalShell({ children }: { children: ReactNode }) {
   }
 
   const profile = meQ.data?.profile;
-  const isAdmin = (meQ.data?.roles ?? []).some((r) => r === "admin" || r === "super_admin");
-  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || profile?.email || "Agent";
-  const initials = ((profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "")).toUpperCase() || "A";
+  const roles = meQ.data?.roles ?? [];
+  const isAdmin = roles.some((r) => r === "admin" || r === "super_admin");
+  const isManager = roles.includes("manager");
+  const isLeader = roles.includes("leader");
+  const canInvite =
+    isAdmin ||
+    isManager ||
+    (isLeader && (!!profile?.can_invite_agents || !!profile?.can_invite_leaders));
+  const displayName =
+    [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
+    profile?.email ||
+    "Agent";
+  const initials =
+    ((profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "")).toUpperCase() || "A";
 
   return (
     <div className="relative min-h-screen bg-black text-apex-ivory">
@@ -53,9 +64,16 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
       {/* Mobile top bar */}
       <div className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[0.06] bg-black/70 px-4 py-3 backdrop-blur-xl md:hidden">
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="apx-btn-ghost px-3 py-2 text-sm">☰</button>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="apx-btn-ghost px-3 py-2 text-sm"
+        >
+          ☰
+        </button>
         <ApexLogo className="h-7 w-auto" />
-        <div className="h-8 w-8 rounded-full bg-apex-gold/15 text-center leading-8 font-display text-apex-gold">{initials}</div>
+        <div className="h-8 w-8 rounded-full bg-apex-gold/15 text-center leading-8 font-display text-apex-gold">
+          {initials}
+        </div>
       </div>
 
       <div className="relative flex">
@@ -65,7 +83,11 @@ export function PortalShell({ children }: { children: ReactNode }) {
         >
           <div className="flex h-[76px] items-center gap-3 border-b border-white/[0.06] px-5">
             <ApexLogo className={collapsed ? "h-8 w-auto" : "h-9 w-auto"} />
-            {!collapsed && <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.22em] text-apex-gold">Portal</span>}
+            {!collapsed && (
+              <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.22em] text-apex-gold">
+                Portal
+              </span>
+            )}
           </div>
           <nav className="flex-1 overflow-y-auto p-3">
             {NAV.map((n) => {
@@ -86,9 +108,34 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 </Link>
               );
             })}
+            {canInvite && (
+              <>
+                <div
+                  className={`mt-5 mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-apex-faint ${collapsed && "hidden"}`}
+                >
+                  Management
+                </div>
+                <Link
+                  to="/portal/invitations"
+                  onClick={() => setMobileOpen(false)}
+                  className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition ${
+                    path.startsWith("/portal/invitations")
+                      ? "bg-apex-gold/10 text-apex-gold border border-apex-gold/25"
+                      : "border border-transparent text-apex-dim hover:bg-white/[0.03] hover:text-apex-ivory"
+                  }`}
+                >
+                  <span className="w-5 text-center">✉</span>
+                  {!collapsed && <span>Invitations</span>}
+                </Link>
+              </>
+            )}
             {isAdmin && (
               <>
-                <div className={`mt-5 mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-apex-faint ${collapsed && "hidden"}`}>Admin</div>
+                <div
+                  className={`mt-5 mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-apex-faint ${collapsed && "hidden"}`}
+                >
+                  Admin
+                </div>
                 <Link
                   to="/portal/admin"
                   onClick={() => setMobileOpen(false)}
@@ -101,21 +148,42 @@ export function PortalShell({ children }: { children: ReactNode }) {
                   <span className="w-5 text-center">⚙</span>
                   {!collapsed && <span>Admin</span>}
                 </Link>
+                <Link
+                  to="/portal/admin/audit"
+                  onClick={() => setMobileOpen(false)}
+                  className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition ${
+                    path.startsWith("/portal/admin/audit")
+                      ? "bg-apex-gold/10 text-apex-gold border border-apex-gold/25"
+                      : "border border-transparent text-apex-dim hover:bg-white/[0.03] hover:text-apex-ivory"
+                  }`}
+                >
+                  <span className="w-5 text-center">◫</span>
+                  {!collapsed && <span>Audit Log</span>}
+                </Link>
               </>
             )}
           </nav>
           <div className="border-t border-white/[0.06] p-3">
-            <div className={`flex items-center gap-3 rounded-[10px] p-2 ${collapsed ? "justify-center" : ""}`}>
-              <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-apex-gold/15 font-display text-apex-gold">{initials}</div>
+            <div
+              className={`flex items-center gap-3 rounded-[10px] p-2 ${collapsed ? "justify-center" : ""}`}
+            >
+              <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-apex-gold/15 font-display text-apex-gold">
+                {initials}
+              </div>
               {!collapsed && (
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13.5px] font-semibold text-apex-ivory">{displayName}</div>
+                  <div className="truncate text-[13.5px] font-semibold text-apex-ivory">
+                    {displayName}
+                  </div>
                   <div className="truncate text-[11.5px] text-apex-faint">{profile?.email}</div>
                 </div>
               )}
             </div>
             {!collapsed && (
-              <button onClick={signOut} className="mt-2 w-full rounded-[10px] border border-white/10 px-3 py-2 text-[12.5px] text-apex-dim transition hover:border-apex-gold/30 hover:text-apex-ivory">
+              <button
+                onClick={signOut}
+                className="mt-2 w-full rounded-[10px] border border-white/10 px-3 py-2 text-[12.5px] text-apex-dim transition hover:border-apex-gold/30 hover:text-apex-ivory"
+              >
                 Sign out
               </button>
             )}
@@ -129,7 +197,10 @@ export function PortalShell({ children }: { children: ReactNode }) {
         </aside>
 
         {mobileOpen && (
-          <div className="fixed inset-0 z-40 bg-black/70 md:hidden" onClick={() => setMobileOpen(false)} />
+          <div
+            className="fixed inset-0 z-40 bg-black/70 md:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
         )}
 
         <main className="min-w-0 flex-1">{children}</main>
@@ -138,7 +209,15 @@ export function PortalShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function PortalHeader({ title, kicker, actions }: { title: string; kicker?: string; actions?: ReactNode }) {
+export function PortalHeader({
+  title,
+  kicker,
+  actions,
+}: {
+  title: string;
+  kicker?: string;
+  actions?: ReactNode;
+}) {
   return (
     <div className="border-b border-white/[0.06] bg-black/40 px-6 pt-8 pb-6 backdrop-blur-md md:px-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
