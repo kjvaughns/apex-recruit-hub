@@ -134,7 +134,7 @@ function ApplyPage() {
     setSubmitting(true);
 
     const referral_source: "referral_link" | "manual" =
-      originalReferral && recruiter && originalReferral.id === recruiter.id
+      originalReferral && recruiter && !recruiter.custom && originalReferral.id === recruiter.id
         ? "referral_link"
         : "manual";
 
@@ -150,7 +150,8 @@ function ApplyPage() {
           instagram_handle: form.instagram_handle.trim(),
           why_text: form.why_text.trim(),
           consent_contact: true,
-          referred_by_profile_id: recruiter!.id,
+          referred_by_profile_id: recruiter && !recruiter.custom ? recruiter.id : "",
+          referred_by_name: recruiter?.custom ? (recruiter.full_name ?? "") : "",
           original_referral_profile_id: originalReferral?.id ?? "",
           referral_slug: referralSlug,
           referral_source,
