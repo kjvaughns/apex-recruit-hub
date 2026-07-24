@@ -568,13 +568,14 @@ export const adminSetAgentScheduling = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const patch: Record<string, unknown> = {};
+    const patch: { can_schedule_licensed?: boolean; licensed_calendly_url?: string | null; licensed_calendly_updated_at?: string } = {};
     if (data.can_schedule_licensed !== undefined) patch.can_schedule_licensed = data.can_schedule_licensed;
     if (data.licensed_calendly_url !== undefined) {
       patch.licensed_calendly_url = data.licensed_calendly_url || null;
       patch.licensed_calendly_updated_at = new Date().toISOString();
     }
     const { error } = await supabase.from("profiles").update(patch).eq("id", data.user_id);
+
     if (error) throw new Error(error.message);
     return { ok: true };
   });
