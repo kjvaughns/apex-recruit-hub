@@ -260,8 +260,8 @@ function ApplyPage() {
             />
             {invalidSlug && !recruiter && (
               <p className="mt-2 text-[12.5px] text-apex-muted">
-                We couldn't match that referral link — please search and select the agent who
-                referred you.
+                We couldn't match that referral link — search below, or type your recruiter's name
+                and choose "Add" if they aren't listed yet.
               </p>
             )}
           </Field>
