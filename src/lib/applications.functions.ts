@@ -45,8 +45,9 @@ export const submitApplication = createServerFn({ method: "POST" })
       payload: data as never,
     });
     if (error) throw new Error(error.message);
-    return result as { id: string; recruiter_id: string | null };
+    return result as { id: string; token: string; success_page_type: "licensed" | "unlicensed"; recruiter_id: string | null };
   });
+
 
 const evaluationSchema = z.object({
   email: z.string().trim().email().max(200),
