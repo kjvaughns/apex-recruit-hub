@@ -69,8 +69,8 @@ function ApplyPage() {
   const [form, setForm] = useState<Form>(initial);
   // Final selected recruiter (what gets submitted) + the original referral-link
   // recruiter (kept for attribution audit even if the applicant changes it).
-  const [recruiter, setRecruiter] = useState<RecruiterOption | null>(null);
-  const [originalReferral, setOriginalReferral] = useState<RecruiterOption | null>(null);
+  const [recruiter, setRecruiter] = useState<RecruiterSelection | null>(null);
+  const [originalReferral, setOriginalReferral] = useState<RecruiterSelection | null>(null);
   const [referralSlug, setReferralSlug] = useState("");
   const [invalidSlug, setInvalidSlug] = useState("");
   const [landingUrl, setLandingUrl] = useState("");
