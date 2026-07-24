@@ -50,14 +50,8 @@ function SchedulePage() {
           Pick a time below. {email && (<>We've also emailed this link to <span className="text-apex-fog">{email}</span>.</>)}
         </p>
 
-        <div className="apx-card mt-10 overflow-hidden p-2">
-          <iframe
-            src={url}
-            title="Schedule an overview call"
-            className="h-[720px] w-full rounded-[14px]"
-            style={{ border: 0 }}
-          />
-        </div>
+        <CalendlyInline url={url} />
+
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <a href={url} target="_blank" rel="noreferrer noopener" className="apx-btn-ghost px-6 py-3.5 text-[15px]">
@@ -74,5 +68,32 @@ function SchedulePage() {
         </div>
       </div>
     </PublicShell>
+  );
+}
+
+function CalendlyInline({ url }: { url: string }) {
+  useEffect(() => {
+    const SRC = "https://assets.calendly.com/assets/external/widget.js";
+    const w = window as unknown as { Calendly?: { initInlineWidgets?: () => void } };
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${SRC}"]`);
+    if (existing) {
+      w.Calendly?.initInlineWidgets?.();
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = SRC;
+    s.async = true;
+    s.onload = () => w.Calendly?.initInlineWidgets?.();
+    document.body.appendChild(s);
+  }, [url]);
+
+  return (
+    <div className="apx-card mt-10 overflow-hidden p-2">
+      <div
+        className="calendly-inline-widget rounded-[14px]"
+        data-url={url}
+        style={{ minWidth: 320, height: 720 }}
+      />
+    </div>
   );
 }

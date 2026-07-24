@@ -94,7 +94,7 @@ export const getCalendlyUrl = createServerFn({ method: "GET" }).handler(async ()
     .select("value")
     .eq("key", "calendly_url")
     .maybeSingle();
-  return { url: data?.value ?? "https://calendly.com/apex-financial/overview" };
+  return { url: data?.value ?? "https://calendly.com/kjvaughns1/overview?hide_event_type_details=1&hide_gdpr_banner=1&primary_color=e6b400" };
 });
 
 export const markScheduled = createServerFn({ method: "POST" })
