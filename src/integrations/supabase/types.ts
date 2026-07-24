@@ -723,6 +723,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_recruiter_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          recruiting_slug: string
+          team_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -736,6 +746,16 @@ export type Database = {
       mark_licensed_fallback: { Args: { _token: string }; Returns: Json }
       mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
       resolve_scheduling_context: { Args: { _token: string }; Returns: Json }
+      search_recruiters: {
+        Args: { _q: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          recruiting_slug: string
+          team_name: string
+        }[]
+      }
       submit_application: { Args: { payload: Json }; Returns: Json }
       submit_evaluation: { Args: { payload: Json }; Returns: Json }
     }
