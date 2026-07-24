@@ -21,6 +21,7 @@ import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenti
 import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
 import { Route as ApplicationCompleteLicensedTokenRouteImport } from './routes/application-complete/licensed.$token'
 import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenticated/portal/tasks'
+import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
 import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authenticated/portal/calendar'
@@ -100,6 +101,12 @@ const AuthenticatedPortalTasksRoute =
   AuthenticatedPortalTasksRouteImport.update({
     id: '/tasks',
     path: '/tasks',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalSettingsRoute =
+  AuthenticatedPortalSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalPipelineRoute =
@@ -213,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
+  '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
@@ -238,6 +246,7 @@ export interface FileRoutesByTo {
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
+  '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
@@ -269,6 +278,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
+  '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/tasks': typeof AuthenticatedPortalTasksRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/pipeline'
+    | '/portal/settings'
     | '/portal/tasks'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/pipeline'
+    | '/portal/settings'
     | '/portal/tasks'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
@@ -355,6 +367,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/calendar'
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/pipeline'
+    | '/_authenticated/portal/settings'
     | '/_authenticated/portal/tasks'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/portal/tasks'
       preLoaderRoute: typeof AuthenticatedPortalTasksRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/settings': {
+      id: '/_authenticated/portal/settings'
+      path: '/settings'
+      fullPath: '/portal/settings'
+      preLoaderRoute: typeof AuthenticatedPortalSettingsRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/_authenticated/portal/pipeline': {
@@ -651,6 +671,7 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalCalendarRoute: typeof AuthenticatedPortalCalendarRoute
   AuthenticatedPortalLeaderboardRoute: typeof AuthenticatedPortalLeaderboardRoute
   AuthenticatedPortalPipelineRoute: typeof AuthenticatedPortalPipelineRoute
+  AuthenticatedPortalSettingsRoute: typeof AuthenticatedPortalSettingsRoute
   AuthenticatedPortalTasksRoute: typeof AuthenticatedPortalTasksRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
 }
@@ -666,6 +687,7 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalCalendarRoute: AuthenticatedPortalCalendarRoute,
     AuthenticatedPortalLeaderboardRoute: AuthenticatedPortalLeaderboardRoute,
     AuthenticatedPortalPipelineRoute: AuthenticatedPortalPipelineRoute,
+    AuthenticatedPortalSettingsRoute: AuthenticatedPortalSettingsRoute,
     AuthenticatedPortalTasksRoute: AuthenticatedPortalTasksRoute,
     AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
   }
