@@ -54,16 +54,10 @@ export function PublicNav() {
             About
           </a>
           <a
-            href="/#system"
+            href="/#overview"
             className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline"
           >
-            The System
-          </a>
-          <a
-            href="/#compensation"
-            className="hidden text-[13.5px] font-semibold text-apex-dim transition hover:text-apex-ivory md:inline"
-          >
-            Compensation
+            The Overview
           </a>
           <a
             href="/#faq"
