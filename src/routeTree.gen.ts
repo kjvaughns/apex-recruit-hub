@@ -16,6 +16,7 @@ import { Route as ApplyRouteImport } from './routes/apply'
 import { Route as ApplicationCompleteRouteImport } from './routes/application-complete'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApplicationCompleteIndexRouteImport } from './routes/application-complete/index'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
@@ -74,6 +75,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplicationCompleteIndexRoute =
+  ApplicationCompleteIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ApplicationCompleteRoute,
+  } as any)
 const AuthenticatedPortalRouteRoute =
   AuthenticatedPortalRouteRouteImport.update({
     id: '/portal',
@@ -221,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
   '/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
   '/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
@@ -246,11 +254,11 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
+  '/application-complete': typeof ApplicationCompleteIndexRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/_authenticated/portal/admin': typeof AuthenticatedPortalAdminRouteRouteWithChildren
   '/_authenticated/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
   '/_authenticated/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/schedule'
     | '/portal'
+    | '/application-complete/'
     | '/portal/admin'
     | '/portal/crm'
     | '/portal/resources'
@@ -339,11 +349,11 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/application-complete'
     | '/apply'
     | '/evaluation'
     | '/login'
     | '/schedule'
+    | '/application-complete'
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/pipeline'
@@ -373,6 +383,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/schedule'
     | '/_authenticated/portal'
+    | '/application-complete/'
     | '/_authenticated/portal/admin'
     | '/_authenticated/portal/crm'
     | '/_authenticated/portal/resources'
@@ -458,6 +469,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/application-complete/': {
+      id: '/application-complete/'
+      path: '/'
+      fullPath: '/application-complete/'
+      preLoaderRoute: typeof ApplicationCompleteIndexRouteImport
+      parentRoute: typeof ApplicationCompleteRoute
     }
     '/_authenticated/portal': {
       id: '/_authenticated/portal'
@@ -730,11 +748,13 @@ const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ApplicationCompleteRouteChildren {
+  ApplicationCompleteIndexRoute: typeof ApplicationCompleteIndexRoute
   ApplicationCompleteLicensedTokenRoute: typeof ApplicationCompleteLicensedTokenRoute
   ApplicationCompleteUnlicensedTokenRoute: typeof ApplicationCompleteUnlicensedTokenRoute
 }
 
 const ApplicationCompleteRouteChildren: ApplicationCompleteRouteChildren = {
+  ApplicationCompleteIndexRoute: ApplicationCompleteIndexRoute,
   ApplicationCompleteLicensedTokenRoute: ApplicationCompleteLicensedTokenRoute,
   ApplicationCompleteUnlicensedTokenRoute:
     ApplicationCompleteUnlicensedTokenRoute,
