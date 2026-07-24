@@ -1,19 +1,44 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 import { listApplicants } from "@/lib/portal.functions";
+import { AddApplicantModal } from "@/components/apex/add-applicant-modal";
 
 export const Route = createFileRoute("/_authenticated/portal/crm/")({
   head: () => ({ meta: [{ title: "CRM — APEX Portal" }, { name: "robots", content: "noindex" }] }),
   component: CRMListPage,
 });
 
+type Scope = "mine" | "direct" | "downline" | "all";
+const SCOPE_LABELS: Record<Scope, string> = {
+  mine: "Mine",
+  direct: "Direct",
+  downline: "Downline",
+  all: "All",
+};
+
 function CRMListPage() {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const [q, setQ] = useState("");
-  const [scope, setScope] = useState<"mine" | "team" | "all">("mine");
+  const [scope, setScope] = useState<Scope>("mine");
   const [stage, setStage] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+
+  // Remember the last selected CRM scope per user session.
+  useEffect(() => {
+    const saved =
+      typeof window !== "undefined"
+        ? (localStorage.getItem("apex_crm_scope") as Scope | null)
+        : null;
+    if (saved && ["mine", "direct", "downline", "all"].includes(saved)) setScope(saved);
+  }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("apex_crm_scope", scope);
+  }, [scope]);
+
   const fn = useServerFn(listApplicants);
   const { data, isLoading } = useQuery({
     queryKey: ["applicants", { q, scope, stage }],
@@ -34,18 +59,26 @@ function CRMListPage() {
         actions={
           <div className="flex items-center gap-2">
             <div className="flex overflow-hidden rounded-[10px] border border-white/10">
-              {(["mine", "team", "all"] as const).map((s) => (
+              {(["mine", "direct", "downline", "all"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => setScope(s)}
-                  className={`px-3 py-2 text-[12.5px] capitalize transition ${
-                    scope === s ? "bg-apex-gold text-apex-card" : "bg-transparent text-apex-dim hover:bg-white/5"
+                  className={`px-3 py-2 text-[12.5px] transition ${
+                    scope === s
+                      ? "bg-apex-gold text-apex-card"
+                      : "bg-transparent text-apex-dim hover:bg-white/5"
                   }`}
                 >
-                  {s}
+                  {SCOPE_LABELS[s]}
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => setAddOpen(true)}
+              className="apx-btn-primary px-3 py-2 text-[12.5px]"
+            >
+              + Add Applicant
+            </button>
           </div>
         }
       />
@@ -58,10 +91,16 @@ function CRMListPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
-          <select className="apx-input max-w-[220px]" value={stage} onChange={(e) => setStage(e.target.value)}>
+          <select
+            className="apx-input max-w-[220px]"
+            value={stage}
+            onChange={(e) => setStage(e.target.value)}
+          >
             <option value="">All stages</option>
             {(data?.stages ?? []).map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
           </select>
         </div>
@@ -79,7 +118,11 @@ function CRMListPage() {
             <div className="p-6 text-[13px] text-apex-faint">Loading…</div>
           ) : (data?.applicants ?? []).length === 0 ? (
             <div className="p-10 text-center text-[13.5px] text-apex-faint">
-              No applicants match the filters. Try switching scope to <button className="text-apex-gold hover:underline" onClick={() => setScope("all")}>All</button>.
+              No applicants match the filters. Try switching scope to{" "}
+              <button className="text-apex-gold hover:underline" onClick={() => setScope("all")}>
+                All
+              </button>
+              .
             </div>
           ) : (
             <div className="flex flex-col">
@@ -93,8 +136,13 @@ function CRMListPage() {
                     className="grid grid-cols-1 gap-1 border-b border-white/[0.04] px-5 py-4 transition hover:bg-white/[0.02] md:grid-cols-[1.6fr_1.3fr_1fr_1fr_0.8fr] md:items-center md:gap-4"
                   >
                     <div>
-                      <div className="text-[14.5px] font-semibold text-apex-ivory">{a.first_name} {a.last_name}</div>
-                      <div className="text-[12px] text-apex-faint">{a.city || "—"}{a.state ? `, ${a.state}` : ""}</div>
+                      <div className="text-[14.5px] font-semibold text-apex-ivory">
+                        {a.first_name} {a.last_name}
+                      </div>
+                      <div className="text-[12px] text-apex-faint">
+                        {a.city || "—"}
+                        {a.state ? `, ${a.state}` : ""}
+                      </div>
                     </div>
                     <div className="text-[13px] text-apex-dim">
                       <div className="truncate">{a.email}</div>
@@ -104,9 +152,16 @@ function CRMListPage() {
                       {s ? (
                         <span
                           className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-                          style={{ borderColor: `${s.color}55`, background: `${s.color}18`, color: s.color }}
+                          style={{
+                            borderColor: `${s.color}55`,
+                            background: `${s.color}18`,
+                            color: s.color,
+                          }}
                         >
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
+                          <span
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{ background: s.color }}
+                          />
                           {s.name}
                         </span>
                       ) : (
@@ -118,7 +173,9 @@ function CRMListPage() {
                       {a.evaluation_completed_at && <Chip>Evaluated</Chip>}
                       {a.calendly_scheduled_at && <Chip>Scheduled</Chip>}
                     </div>
-                    <div className="text-right text-[11.5px] text-apex-faint">{relative(a.updated_at)}</div>
+                    <div className="text-right text-[11.5px] text-apex-faint">
+                      {relative(a.updated_at)}
+                    </div>
                   </Link>
                 );
               })}
@@ -126,6 +183,16 @@ function CRMListPage() {
           )}
         </div>
       </div>
+      {addOpen && (
+        <AddApplicantModal
+          onClose={() => setAddOpen(false)}
+          onCreated={(id) => {
+            setAddOpen(false);
+            qc.invalidateQueries({ queryKey: ["applicants"] });
+            navigate({ to: "/portal/crm/$applicantId", params: { applicantId: id } });
+          }}
+        />
+      )}
     </PortalShell>
   );
 }
