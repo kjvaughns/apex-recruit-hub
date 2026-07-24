@@ -1,26 +1,29 @@
-## Problem
+## Apply pending SQL migrations
 
-The Calendly iframe on `/application-complete/{licensed,unlicensed}/$token` shows a "redirected you too many times" error on our own `lovableproject.com` domain — not Calendly.
+Eight migration files exist in `supabase/migrations/` that have not yet been executed against the database. The DB currently has 14 tables and is missing the hierarchy fields, invitations, stage history, audit log, and related functions defined in these files.
 
-Root cause: `system_settings.value` rows for Calendly URLs are stored JSON-encoded (with literal wrapping `"` characters), e.g. `"https://calendly.com/kjvaughns1/overview?..."`. The RPC `resolve_scheduling_context` reads the raw text and passes it straight through, so `ctx.calendly_url` starts with `"`. The browser treats that malformed src as a relative path on the app's own host and re-serves the same page inside the iframe → infinite redirect.
+### Migrations to apply (in order)
 
-Query confirming the issue:
-```
-key: calendly_url                        value: "https://calendly.com/kjvaughns1/overview?..."
-key: unlicensed_overview_calendly_url    value: "https://calendly.com/kjvaughns1/overview?..."
-```
+1. `20260724120000_recruiter_attribution.sql` — recruiter slugs, `can_receive_applicants`, safe public recruiter search RPC (may be partially applied; will run idempotently).
+2. `20260724130000_add_leader_role.sql` — adds `leader` value to `app_role` enum (must run alone so the new enum is committed before later migrations reference it).
+3. `20260724130100_hierarchy_foundation.sql` — Admin > Manager > Leader > Agent hierarchy columns, helpers, RLS updates.
+4. `20260724130200_invitations.sql` — `invitations` table + RPCs for invite/accept flow.
+5. `20260724130300_promote_applicant.sql` — RPC to promote an applicant to an invited agent.
+6. `20260724130400_stage_history.sql` — `applicant_stage_history` table + trigger.
+7. `20260724130500_company_leaderboard.sql` — company-wide leaderboard SECURITY DEFINER RPCs.
+8. `20260724130600_audit_and_resources.sql` — `audit_log` table + resource authorship/publish fields.
 
-## Fix
+### Execution approach
 
-Single migration:
+Because migration #2 adds an enum value that later migrations reference, it must be committed before #3–#8 run. I will submit them as **two separate `supabase--migration` calls**:
 
-1. **Normalize stored values.** `UPDATE public.system_settings SET value = trim(both '"' from value) WHERE value LIKE '"%"';` — strips wrapping double-quotes from every setting that has them, without touching well-formed values.
-2. **Harden the RPC.** In `public.resolve_scheduling_context`, wrap every `system_settings` lookup with `trim(both '"' from …)` so any future JSON-encoded write can't break the flow again.
+- Call A: files #1 and #2 concatenated (enum add is the final statement so it commits before the next batch).
+- Call B: files #3 through #8 concatenated in order.
 
-No frontend changes needed — `CalendlyInline` already URL-parses the incoming string; once the leading `"` is gone, `new URL()` succeeds and the iframe loads Calendly.
+Each call goes through the standard approval + auto-run flow. After both are applied I will run `supabase--linter` and address any warnings tied to these migrations.
 
-## Verification
+### Notes / risks
 
-- Re-run `SELECT key, value FROM system_settings WHERE key LIKE '%calendly%';` → values start with `https://`, no quotes.
-- Reload `/application-complete/unlicensed/<existing token>` → Calendly widget renders in the iframe, no redirect error.
-- Same for the licensed page when a recruiter/manager link is configured.
+- All files use `IF NOT EXISTS` / `CREATE OR REPLACE` patterns where I spot-checked, so re-running the already-partially-applied recruiter attribution file should be safe.
+- No application code changes are needed in this step — the code already references these tables/RPCs (`invitations.functions.ts`, `audit.ts`, stage history, leaderboard).
+- No data is dropped; these are additive schema changes.
