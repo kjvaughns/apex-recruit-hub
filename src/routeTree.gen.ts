@@ -9,64 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as ApplicationCompleteRouteImport } from './routes/application-complete'
-import { Route as ApplyRouteImport } from './routes/apply'
-import { Route as EvaluationRouteImport } from './routes/evaluation'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as ScheduleRouteImport } from './routes/schedule'
-import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as EvaluationRouteImport } from './routes/evaluation'
+import { Route as ApplyRouteImport } from './routes/apply'
+import { Route as ApplicationCompleteRouteImport } from './routes/application-complete'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApplicationCompleteIndexRouteImport } from './routes/application-complete/index'
 import { Route as PortalInviteTokenRouteImport } from './routes/portal-invite/$token'
+import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
-import { Route as AuthenticatedPortalAdminRouteRouteImport } from './routes/_authenticated/portal/admin/route'
-import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authenticated/portal/calendar'
-import { Route as AuthenticatedPortalCrmRouteRouteImport } from './routes/_authenticated/portal/crm/route'
-import { Route as AuthenticatedPortalInvitationsRouteImport } from './routes/_authenticated/portal/invitations'
-import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
-import { Route as AuthenticatedPortalOrganizationRouteImport } from './routes/_authenticated/portal/organization'
-import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
-import { Route as AuthenticatedPortalResourcesRouteRouteImport } from './routes/_authenticated/portal/resources/route'
-import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
-import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenticated/portal/tasks'
-import { Route as ApplicationCompleteLicensedTokenRouteImport } from './routes/application-complete/licensed.$token'
 import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
-import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
-import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
-import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
-import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
-import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
-import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
-import { Route as AuthenticatedPortalCrmApplicantIdRouteImport } from './routes/_authenticated/portal/crm/$applicantId'
+import { Route as ApplicationCompleteLicensedTokenRouteImport } from './routes/application-complete/licensed.$token'
+import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenticated/portal/tasks'
+import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
+import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
+import { Route as AuthenticatedPortalOrganizationRouteImport } from './routes/_authenticated/portal/organization'
+import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
+import { Route as AuthenticatedPortalInvitationsRouteImport } from './routes/_authenticated/portal/invitations'
+import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authenticated/portal/calendar'
+import { Route as AuthenticatedPortalResourcesRouteRouteImport } from './routes/_authenticated/portal/resources/route'
+import { Route as AuthenticatedPortalCrmRouteRouteImport } from './routes/_authenticated/portal/crm/route'
+import { Route as AuthenticatedPortalAdminRouteRouteImport } from './routes/_authenticated/portal/admin/route'
 import { Route as AuthenticatedPortalResourcesIndexRouteImport } from './routes/_authenticated/portal/resources/index'
-import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
-import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
-import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
+import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
+import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
 import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
+import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
+import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
+import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
+import { Route as AuthenticatedPortalCrmApplicantIdRouteImport } from './routes/_authenticated/portal/crm/$applicantId'
+import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
+import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
+import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
+import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApplicationCompleteRoute = ApplicationCompleteRouteImport.update({
-  id: '/application-complete',
-  path: '/application-complete',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApplyRoute = ApplyRouteImport.update({
-  id: '/apply',
-  path: '/apply',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EvaluationRoute = EvaluationRouteImport.update({
-  id: '/evaluation',
-  path: '/evaluation',
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -74,17 +55,30 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ScheduleRoute = ScheduleRouteImport.update({
-  id: '/schedule',
-  path: '/schedule',
+const EvaluationRoute = EvaluationRouteImport.update({
+  id: '/evaluation',
+  path: '/evaluation',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedPortalRouteRoute =
-  AuthenticatedPortalRouteRouteImport.update({
-    id: '/portal',
-    path: '/portal',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+const ApplyRoute = ApplyRouteImport.update({
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplicationCompleteRoute = ApplicationCompleteRouteImport.update({
+  id: '/application-complete',
+  path: '/application-complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApplicationCompleteIndexRoute =
   ApplicationCompleteIndexRouteImport.update({
     id: '/',
@@ -96,58 +90,34 @@ const PortalInviteTokenRoute = PortalInviteTokenRouteImport.update({
   path: '/portal-invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPortalRouteRoute =
+  AuthenticatedPortalRouteRouteImport.update({
+    id: '/portal',
+    path: '/portal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPortalIndexRoute =
   AuthenticatedPortalIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedPortalAdminRouteRoute =
-  AuthenticatedPortalAdminRouteRouteImport.update({
-    id: '/admin',
-    path: '/admin',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
+const ApplicationCompleteUnlicensedTokenRoute =
+  ApplicationCompleteUnlicensedTokenRouteImport.update({
+    id: '/unlicensed/$token',
+    path: '/unlicensed/$token',
+    getParentRoute: () => ApplicationCompleteRoute,
   } as any)
-const AuthenticatedPortalCalendarRoute =
-  AuthenticatedPortalCalendarRouteImport.update({
-    id: '/calendar',
-    path: '/calendar',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
+const ApplicationCompleteLicensedTokenRoute =
+  ApplicationCompleteLicensedTokenRouteImport.update({
+    id: '/licensed/$token',
+    path: '/licensed/$token',
+    getParentRoute: () => ApplicationCompleteRoute,
   } as any)
-const AuthenticatedPortalCrmRouteRoute =
-  AuthenticatedPortalCrmRouteRouteImport.update({
-    id: '/crm',
-    path: '/crm',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalInvitationsRoute =
-  AuthenticatedPortalInvitationsRouteImport.update({
-    id: '/invitations',
-    path: '/invitations',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalLeaderboardRoute =
-  AuthenticatedPortalLeaderboardRouteImport.update({
-    id: '/leaderboard',
-    path: '/leaderboard',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalOrganizationRoute =
-  AuthenticatedPortalOrganizationRouteImport.update({
-    id: '/organization',
-    path: '/organization',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalPipelineRoute =
-  AuthenticatedPortalPipelineRouteImport.update({
-    id: '/pipeline',
-    path: '/pipeline',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalResourcesRouteRoute =
-  AuthenticatedPortalResourcesRouteRouteImport.update({
-    id: '/resources',
-    path: '/resources',
+const AuthenticatedPortalTasksRoute =
+  AuthenticatedPortalTasksRouteImport.update({
+    id: '/tasks',
+    path: '/tasks',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalSettingsRoute =
@@ -156,65 +126,53 @@ const AuthenticatedPortalSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedPortalTasksRoute =
-  AuthenticatedPortalTasksRouteImport.update({
-    id: '/tasks',
-    path: '/tasks',
+const AuthenticatedPortalPipelineRoute =
+  AuthenticatedPortalPipelineRouteImport.update({
+    id: '/pipeline',
+    path: '/pipeline',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const ApplicationCompleteLicensedTokenRoute =
-  ApplicationCompleteLicensedTokenRouteImport.update({
-    id: '/licensed/$token',
-    path: '/licensed/$token',
-    getParentRoute: () => ApplicationCompleteRoute,
+const AuthenticatedPortalOrganizationRoute =
+  AuthenticatedPortalOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const ApplicationCompleteUnlicensedTokenRoute =
-  ApplicationCompleteUnlicensedTokenRouteImport.update({
-    id: '/unlicensed/$token',
-    path: '/unlicensed/$token',
-    getParentRoute: () => ApplicationCompleteRoute,
+const AuthenticatedPortalLeaderboardRoute =
+  AuthenticatedPortalLeaderboardRouteImport.update({
+    id: '/leaderboard',
+    path: '/leaderboard',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedPortalAdminIndexRoute =
-  AuthenticatedPortalAdminIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+const AuthenticatedPortalInvitationsRoute =
+  AuthenticatedPortalInvitationsRouteImport.update({
+    id: '/invitations',
+    path: '/invitations',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedPortalAdminAuditRoute =
-  AuthenticatedPortalAdminAuditRouteImport.update({
-    id: '/audit',
-    path: '/audit',
-    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+const AuthenticatedPortalCalendarRoute =
+  AuthenticatedPortalCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedPortalAdminSettingsRoute =
-  AuthenticatedPortalAdminSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+const AuthenticatedPortalResourcesRouteRoute =
+  AuthenticatedPortalResourcesRouteRouteImport.update({
+    id: '/resources',
+    path: '/resources',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedPortalAdminStagesRoute =
-  AuthenticatedPortalAdminStagesRouteImport.update({
-    id: '/stages',
-    path: '/stages',
-    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+const AuthenticatedPortalCrmRouteRoute =
+  AuthenticatedPortalCrmRouteRouteImport.update({
+    id: '/crm',
+    path: '/crm',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedPortalAdminUsersRoute =
-  AuthenticatedPortalAdminUsersRouteImport.update({
-    id: '/users',
-    path: '/users',
-    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
-  } as any)
-const AuthenticatedPortalCrmIndexRoute =
-  AuthenticatedPortalCrmIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedPortalCrmRouteRoute,
-  } as any)
-const AuthenticatedPortalCrmApplicantIdRoute =
-  AuthenticatedPortalCrmApplicantIdRouteImport.update({
-    id: '/$applicantId',
-    path: '/$applicantId',
-    getParentRoute: () => AuthenticatedPortalCrmRouteRoute,
+const AuthenticatedPortalAdminRouteRoute =
+  AuthenticatedPortalAdminRouteRouteImport.update({
+    id: '/admin',
+    path: '/admin',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalResourcesIndexRoute =
   AuthenticatedPortalResourcesIndexRouteImport.update({
@@ -222,10 +180,28 @@ const AuthenticatedPortalResourcesIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
   } as any)
-const AuthenticatedPortalResourcesAdminRoute =
-  AuthenticatedPortalResourcesAdminRouteImport.update({
-    id: '/admin',
-    path: '/admin',
+const AuthenticatedPortalCrmIndexRoute =
+  AuthenticatedPortalCrmIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalCrmRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminIndexRoute =
+  AuthenticatedPortalAdminIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const ApiPublicWebhooksCalendlyRoute =
+  ApiPublicWebhooksCalendlyRouteImport.update({
+    id: '/api/public/webhooks/calendly',
+    path: '/api/public/webhooks/calendly',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedPortalResourcesPresentationsRoute =
+  AuthenticatedPortalResourcesPresentationsRouteImport.update({
+    id: '/presentations',
+    path: '/presentations',
     getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
   } as any)
 const AuthenticatedPortalResourcesLibraryRoute =
@@ -234,17 +210,41 @@ const AuthenticatedPortalResourcesLibraryRoute =
     path: '/library',
     getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
   } as any)
-const AuthenticatedPortalResourcesPresentationsRoute =
-  AuthenticatedPortalResourcesPresentationsRouteImport.update({
-    id: '/presentations',
-    path: '/presentations',
+const AuthenticatedPortalResourcesAdminRoute =
+  AuthenticatedPortalResourcesAdminRouteImport.update({
+    id: '/admin',
+    path: '/admin',
     getParentRoute: () => AuthenticatedPortalResourcesRouteRoute,
   } as any)
-const ApiPublicWebhooksCalendlyRoute =
-  ApiPublicWebhooksCalendlyRouteImport.update({
-    id: '/api/public/webhooks/calendly',
-    path: '/api/public/webhooks/calendly',
-    getParentRoute: () => rootRouteImport,
+const AuthenticatedPortalCrmApplicantIdRoute =
+  AuthenticatedPortalCrmApplicantIdRouteImport.update({
+    id: '/$applicantId',
+    path: '/$applicantId',
+    getParentRoute: () => AuthenticatedPortalCrmRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminUsersRoute =
+  AuthenticatedPortalAdminUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminStagesRoute =
+  AuthenticatedPortalAdminStagesRouteImport.update({
+    id: '/stages',
+    path: '/stages',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminSettingsRoute =
+  AuthenticatedPortalAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminAuditRoute =
+  AuthenticatedPortalAdminAuditRouteImport.update({
+    id: '/audit',
+    path: '/audit',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -473,39 +473,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/application-complete': {
-      id: '/application-complete'
-      path: '/application-complete'
-      fullPath: '/application-complete'
-      preLoaderRoute: typeof ApplicationCompleteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/apply': {
-      id: '/apply'
-      path: '/apply'
-      fullPath: '/apply'
-      preLoaderRoute: typeof ApplyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/evaluation': {
-      id: '/evaluation'
-      path: '/evaluation'
-      fullPath: '/evaluation'
-      preLoaderRoute: typeof EvaluationRouteImport
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -515,19 +487,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/schedule': {
-      id: '/schedule'
-      path: '/schedule'
-      fullPath: '/schedule'
-      preLoaderRoute: typeof ScheduleRouteImport
+    '/evaluation': {
+      id: '/evaluation'
+      path: '/evaluation'
+      fullPath: '/evaluation'
+      preLoaderRoute: typeof EvaluationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/portal': {
-      id: '/_authenticated/portal'
-      path: '/portal'
-      fullPath: '/portal'
-      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/apply': {
+      id: '/apply'
+      path: '/apply'
+      fullPath: '/apply'
+      preLoaderRoute: typeof ApplyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/application-complete': {
+      id: '/application-complete'
+      path: '/application-complete'
+      fullPath: '/application-complete'
+      preLoaderRoute: typeof ApplicationCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/application-complete/': {
       id: '/application-complete/'
@@ -543,6 +536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portal/': {
       id: '/_authenticated/portal/'
       path: '/'
@@ -550,60 +550,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/_authenticated/portal/admin': {
-      id: '/_authenticated/portal/admin'
-      path: '/admin'
-      fullPath: '/portal/admin'
-      preLoaderRoute: typeof AuthenticatedPortalAdminRouteRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
+    '/application-complete/unlicensed/$token': {
+      id: '/application-complete/unlicensed/$token'
+      path: '/unlicensed/$token'
+      fullPath: '/application-complete/unlicensed/$token'
+      preLoaderRoute: typeof ApplicationCompleteUnlicensedTokenRouteImport
+      parentRoute: typeof ApplicationCompleteRoute
     }
-    '/_authenticated/portal/calendar': {
-      id: '/_authenticated/portal/calendar'
-      path: '/calendar'
-      fullPath: '/portal/calendar'
-      preLoaderRoute: typeof AuthenticatedPortalCalendarRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
+    '/application-complete/licensed/$token': {
+      id: '/application-complete/licensed/$token'
+      path: '/licensed/$token'
+      fullPath: '/application-complete/licensed/$token'
+      preLoaderRoute: typeof ApplicationCompleteLicensedTokenRouteImport
+      parentRoute: typeof ApplicationCompleteRoute
     }
-    '/_authenticated/portal/crm': {
-      id: '/_authenticated/portal/crm'
-      path: '/crm'
-      fullPath: '/portal/crm'
-      preLoaderRoute: typeof AuthenticatedPortalCrmRouteRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/invitations': {
-      id: '/_authenticated/portal/invitations'
-      path: '/invitations'
-      fullPath: '/portal/invitations'
-      preLoaderRoute: typeof AuthenticatedPortalInvitationsRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/leaderboard': {
-      id: '/_authenticated/portal/leaderboard'
-      path: '/leaderboard'
-      fullPath: '/portal/leaderboard'
-      preLoaderRoute: typeof AuthenticatedPortalLeaderboardRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/organization': {
-      id: '/_authenticated/portal/organization'
-      path: '/organization'
-      fullPath: '/portal/organization'
-      preLoaderRoute: typeof AuthenticatedPortalOrganizationRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/pipeline': {
-      id: '/_authenticated/portal/pipeline'
-      path: '/pipeline'
-      fullPath: '/portal/pipeline'
-      preLoaderRoute: typeof AuthenticatedPortalPipelineRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/resources': {
-      id: '/_authenticated/portal/resources'
-      path: '/resources'
-      fullPath: '/portal/resources'
-      preLoaderRoute: typeof AuthenticatedPortalResourcesRouteRouteImport
+    '/_authenticated/portal/tasks': {
+      id: '/_authenticated/portal/tasks'
+      path: '/tasks'
+      fullPath: '/portal/tasks'
+      preLoaderRoute: typeof AuthenticatedPortalTasksRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/_authenticated/portal/settings': {
@@ -613,75 +578,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalSettingsRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/_authenticated/portal/tasks': {
-      id: '/_authenticated/portal/tasks'
-      path: '/tasks'
-      fullPath: '/portal/tasks'
-      preLoaderRoute: typeof AuthenticatedPortalTasksRouteImport
+    '/_authenticated/portal/pipeline': {
+      id: '/_authenticated/portal/pipeline'
+      path: '/pipeline'
+      fullPath: '/portal/pipeline'
+      preLoaderRoute: typeof AuthenticatedPortalPipelineRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/application-complete/licensed/$token': {
-      id: '/application-complete/licensed/$token'
-      path: '/licensed/$token'
-      fullPath: '/application-complete/licensed/$token'
-      preLoaderRoute: typeof ApplicationCompleteLicensedTokenRouteImport
-      parentRoute: typeof ApplicationCompleteRoute
+    '/_authenticated/portal/organization': {
+      id: '/_authenticated/portal/organization'
+      path: '/organization'
+      fullPath: '/portal/organization'
+      preLoaderRoute: typeof AuthenticatedPortalOrganizationRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/application-complete/unlicensed/$token': {
-      id: '/application-complete/unlicensed/$token'
-      path: '/unlicensed/$token'
-      fullPath: '/application-complete/unlicensed/$token'
-      preLoaderRoute: typeof ApplicationCompleteUnlicensedTokenRouteImport
-      parentRoute: typeof ApplicationCompleteRoute
+    '/_authenticated/portal/leaderboard': {
+      id: '/_authenticated/portal/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/portal/leaderboard'
+      preLoaderRoute: typeof AuthenticatedPortalLeaderboardRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/_authenticated/portal/admin/': {
-      id: '/_authenticated/portal/admin/'
-      path: '/'
-      fullPath: '/portal/admin/'
-      preLoaderRoute: typeof AuthenticatedPortalAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    '/_authenticated/portal/invitations': {
+      id: '/_authenticated/portal/invitations'
+      path: '/invitations'
+      fullPath: '/portal/invitations'
+      preLoaderRoute: typeof AuthenticatedPortalInvitationsRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/_authenticated/portal/admin/audit': {
-      id: '/_authenticated/portal/admin/audit'
-      path: '/audit'
-      fullPath: '/portal/admin/audit'
-      preLoaderRoute: typeof AuthenticatedPortalAdminAuditRouteImport
-      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    '/_authenticated/portal/calendar': {
+      id: '/_authenticated/portal/calendar'
+      path: '/calendar'
+      fullPath: '/portal/calendar'
+      preLoaderRoute: typeof AuthenticatedPortalCalendarRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/_authenticated/portal/admin/settings': {
-      id: '/_authenticated/portal/admin/settings'
-      path: '/settings'
-      fullPath: '/portal/admin/settings'
-      preLoaderRoute: typeof AuthenticatedPortalAdminSettingsRouteImport
-      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    '/_authenticated/portal/resources': {
+      id: '/_authenticated/portal/resources'
+      path: '/resources'
+      fullPath: '/portal/resources'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesRouteRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/_authenticated/portal/admin/stages': {
-      id: '/_authenticated/portal/admin/stages'
-      path: '/stages'
-      fullPath: '/portal/admin/stages'
-      preLoaderRoute: typeof AuthenticatedPortalAdminStagesRouteImport
-      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    '/_authenticated/portal/crm': {
+      id: '/_authenticated/portal/crm'
+      path: '/crm'
+      fullPath: '/portal/crm'
+      preLoaderRoute: typeof AuthenticatedPortalCrmRouteRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
-    '/_authenticated/portal/admin/users': {
-      id: '/_authenticated/portal/admin/users'
-      path: '/users'
-      fullPath: '/portal/admin/users'
-      preLoaderRoute: typeof AuthenticatedPortalAdminUsersRouteImport
-      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
-    }
-    '/_authenticated/portal/crm/': {
-      id: '/_authenticated/portal/crm/'
-      path: '/'
-      fullPath: '/portal/crm/'
-      preLoaderRoute: typeof AuthenticatedPortalCrmIndexRouteImport
-      parentRoute: typeof AuthenticatedPortalCrmRouteRoute
-    }
-    '/_authenticated/portal/crm/$applicantId': {
-      id: '/_authenticated/portal/crm/$applicantId'
-      path: '/$applicantId'
-      fullPath: '/portal/crm/$applicantId'
-      preLoaderRoute: typeof AuthenticatedPortalCrmApplicantIdRouteImport
-      parentRoute: typeof AuthenticatedPortalCrmRouteRoute
+    '/_authenticated/portal/admin': {
+      id: '/_authenticated/portal/admin'
+      path: '/admin'
+      fullPath: '/portal/admin'
+      preLoaderRoute: typeof AuthenticatedPortalAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/_authenticated/portal/resources/': {
       id: '/_authenticated/portal/resources/'
@@ -690,11 +641,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalResourcesIndexRouteImport
       parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
     }
-    '/_authenticated/portal/resources/admin': {
-      id: '/_authenticated/portal/resources/admin'
-      path: '/admin'
-      fullPath: '/portal/resources/admin'
-      preLoaderRoute: typeof AuthenticatedPortalResourcesAdminRouteImport
+    '/_authenticated/portal/crm/': {
+      id: '/_authenticated/portal/crm/'
+      path: '/'
+      fullPath: '/portal/crm/'
+      preLoaderRoute: typeof AuthenticatedPortalCrmIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalCrmRouteRoute
+    }
+    '/_authenticated/portal/admin/': {
+      id: '/_authenticated/portal/admin/'
+      path: '/'
+      fullPath: '/portal/admin/'
+      preLoaderRoute: typeof AuthenticatedPortalAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/api/public/webhooks/calendly': {
+      id: '/api/public/webhooks/calendly'
+      path: '/api/public/webhooks/calendly'
+      fullPath: '/api/public/webhooks/calendly'
+      preLoaderRoute: typeof ApiPublicWebhooksCalendlyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/portal/resources/presentations': {
+      id: '/_authenticated/portal/resources/presentations'
+      path: '/presentations'
+      fullPath: '/portal/resources/presentations'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesPresentationsRouteImport
       parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
     }
     '/_authenticated/portal/resources/library': {
@@ -704,19 +676,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalResourcesLibraryRouteImport
       parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
     }
-    '/_authenticated/portal/resources/presentations': {
-      id: '/_authenticated/portal/resources/presentations'
-      path: '/presentations'
-      fullPath: '/portal/resources/presentations'
-      preLoaderRoute: typeof AuthenticatedPortalResourcesPresentationsRouteImport
+    '/_authenticated/portal/resources/admin': {
+      id: '/_authenticated/portal/resources/admin'
+      path: '/admin'
+      fullPath: '/portal/resources/admin'
+      preLoaderRoute: typeof AuthenticatedPortalResourcesAdminRouteImport
       parentRoute: typeof AuthenticatedPortalResourcesRouteRoute
     }
-    '/api/public/webhooks/calendly': {
-      id: '/api/public/webhooks/calendly'
-      path: '/api/public/webhooks/calendly'
-      fullPath: '/api/public/webhooks/calendly'
-      preLoaderRoute: typeof ApiPublicWebhooksCalendlyRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/portal/crm/$applicantId': {
+      id: '/_authenticated/portal/crm/$applicantId'
+      path: '/$applicantId'
+      fullPath: '/portal/crm/$applicantId'
+      preLoaderRoute: typeof AuthenticatedPortalCrmApplicantIdRouteImport
+      parentRoute: typeof AuthenticatedPortalCrmRouteRoute
+    }
+    '/_authenticated/portal/admin/users': {
+      id: '/_authenticated/portal/admin/users'
+      path: '/users'
+      fullPath: '/portal/admin/users'
+      preLoaderRoute: typeof AuthenticatedPortalAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/admin/stages': {
+      id: '/_authenticated/portal/admin/stages'
+      path: '/stages'
+      fullPath: '/portal/admin/stages'
+      preLoaderRoute: typeof AuthenticatedPortalAdminStagesRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/admin/settings': {
+      id: '/_authenticated/portal/admin/settings'
+      path: '/settings'
+      fullPath: '/portal/admin/settings'
+      preLoaderRoute: typeof AuthenticatedPortalAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/admin/audit': {
+      id: '/_authenticated/portal/admin/audit'
+      path: '/audit'
+      fullPath: '/portal/admin/audit'
+      preLoaderRoute: typeof AuthenticatedPortalAdminAuditRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
     }
   }
 }
@@ -863,13 +863,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
