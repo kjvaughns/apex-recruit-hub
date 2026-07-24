@@ -101,16 +101,23 @@ export type Database = {
           evaluation_completed_at: string | null
           first_name: string
           id: string
+          instagram_handle: string | null
+          invalid_referral_slug: string | null
           last_contacted_at: string | null
           last_name: string
           licensed: boolean
           licensing_status: string | null
           next_follow_up_at: string | null
           original_recruiter_id: string | null
+          original_referral_name_snapshot: string | null
+          original_referral_profile_id: string | null
           phone: string | null
           priority: string
           ref_slug: string | null
+          referral_landing_url: string | null
+          referral_source: string | null
           referred_by_name: string | null
+          referred_by_name_snapshot: string | null
           referred_by_profile_id: string | null
           scheduled_event_end: string | null
           scheduled_event_id: string | null
@@ -146,16 +153,23 @@ export type Database = {
           evaluation_completed_at?: string | null
           first_name: string
           id?: string
+          instagram_handle?: string | null
+          invalid_referral_slug?: string | null
           last_contacted_at?: string | null
           last_name: string
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
           original_recruiter_id?: string | null
+          original_referral_name_snapshot?: string | null
+          original_referral_profile_id?: string | null
           phone?: string | null
           priority?: string
           ref_slug?: string | null
+          referral_landing_url?: string | null
+          referral_source?: string | null
           referred_by_name?: string | null
+          referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
@@ -191,16 +205,23 @@ export type Database = {
           evaluation_completed_at?: string | null
           first_name?: string
           id?: string
+          instagram_handle?: string | null
+          invalid_referral_slug?: string | null
           last_contacted_at?: string | null
           last_name?: string
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
           original_recruiter_id?: string | null
+          original_referral_name_snapshot?: string | null
+          original_referral_profile_id?: string | null
           phone?: string | null
           priority?: string
           ref_slug?: string | null
+          referral_landing_url?: string | null
+          referral_source?: string | null
           referred_by_name?: string | null
+          referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
@@ -244,6 +265,13 @@ export type Database = {
           {
             foreignKeyName: "applicants_original_recruiter_id_fkey"
             columns: ["original_recruiter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_original_referral_profile_id_fkey"
+            columns: ["original_referral_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -772,11 +800,12 @@ export type Database = {
           team_name: string
         }[]
       }
+      slugify_name: { Args: { _text: string }; Returns: string }
       submit_application: { Args: { payload: Json }; Returns: Json }
       submit_evaluation: { Args: { payload: Json }; Returns: Json }
     }
     Enums: {
-      app_role: "agent" | "manager" | "admin" | "super_admin"
+      app_role: "agent" | "manager" | "admin" | "super_admin" | "leader"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -904,7 +933,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["agent", "manager", "admin", "super_admin"],
+      app_role: ["agent", "manager", "admin", "super_admin", "leader"],
     },
   },
 } as const
