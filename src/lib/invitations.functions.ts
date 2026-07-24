@@ -257,4 +257,31 @@ export const acceptInvitation = createServerFn({ method: "POST" })
     return { ok: true, email };
   });
 
+const promoteSchema = z.object({
+  applicant_id: z.string().uuid(),
+  role: z.enum(["agent", "leader"]).optional(),
+  parent_user_id: z.string().uuid().optional().or(z.literal("")),
+  team_id: z.string().uuid().optional().or(z.literal("")),
+  first_name: z.string().trim().max(80).optional().or(z.literal("")),
+  last_name: z.string().trim().max(80).optional().or(z.literal("")),
+  email: z.string().trim().email().max(200).optional().or(z.literal("")),
+  phone: z.string().trim().max(40).optional().or(z.literal("")),
+  state: z.string().trim().max(4).optional().or(z.literal("")),
+  licensed: z.boolean().optional(),
+});
+
+/** Promote an applicant to an agent: creates a secure invitation + moves the
+ *  applicant to Active Agent. Never creates the portal account directly. */
+export const promoteApplicantToAgent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => promoteSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: res, error } = await (supabase as any).rpc("promote_applicant_to_agent", {
+      payload: data,
+    });
+    if (error) throw new Error(error.message);
+    return res as { ok: boolean; invitation_id: string; token: string };
+  });
+
 export { ROLE_RANK };

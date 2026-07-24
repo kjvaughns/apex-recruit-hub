@@ -108,6 +108,10 @@ export type Database = {
           next_follow_up_at: string | null
           original_recruiter_id: string | null
           phone: string | null
+          portal_invitation_id: string | null
+          portal_profile_id: string | null
+          promoted_by_user_id: string | null
+          promoted_to_agent_at: string | null
           priority: string
           ref_slug: string | null
           referred_by_name: string | null
@@ -153,6 +157,10 @@ export type Database = {
           next_follow_up_at?: string | null
           original_recruiter_id?: string | null
           phone?: string | null
+          portal_invitation_id?: string | null
+          portal_profile_id?: string | null
+          promoted_by_user_id?: string | null
+          promoted_to_agent_at?: string | null
           priority?: string
           ref_slug?: string | null
           referred_by_name?: string | null
@@ -198,6 +206,10 @@ export type Database = {
           next_follow_up_at?: string | null
           original_recruiter_id?: string | null
           phone?: string | null
+          portal_invitation_id?: string | null
+          portal_profile_id?: string | null
+          promoted_by_user_id?: string | null
+          promoted_to_agent_at?: string | null
           priority?: string
           ref_slug?: string | null
           referred_by_name?: string | null
