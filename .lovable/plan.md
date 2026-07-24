@@ -1,23 +1,26 @@
 ## Problem
 
-`CalendlyInline` mounts the `calendly-inline-widget` div and injects `assets.calendly.com/external/widget.js`. Two issues:
+The Calendly iframe on `/application-complete/{licensed,unlicensed}/$token` shows a "redirected you too many times" error on our own `lovableproject.com` domain — not Calendly.
 
-1. **Not rendering on client-side navigation.** When applicants land on `/application-complete/{licensed,unlicensed}/$token` via `useNavigate`, the widget script has often already loaded on a previous page. Our fallback path calls `window.Calendly.initInlineWidgets()`, but that helper only scans widgets present at initial script load — on a new SPA route it silently does nothing, so the embed area stays blank.
-2. **Too tall.** Fixed `height = 720` overflows the viewport on laptops and small windows, and the wrapping `.apx-card` adds extra padding that makes it look oversized.
+Root cause: `system_settings.value` rows for Calendly URLs are stored JSON-encoded (with literal wrapping `"` characters), e.g. `"https://calendly.com/kjvaughns1/overview?..."`. The RPC `resolve_scheduling_context` reads the raw text and passes it straight through, so `ctx.calendly_url` starts with `"`. The browser treats that malformed src as a relative path on the app's own host and re-serves the same page inside the iframe → infinite redirect.
+
+Query confirming the issue:
+```
+key: calendly_url                        value: "https://calendly.com/kjvaughns1/overview?..."
+key: unlicensed_overview_calendly_url    value: "https://calendly.com/kjvaughns1/overview?..."
+```
 
 ## Fix
 
-Replace the script-based `calendly-inline-widget` approach with a direct `<iframe>` — it's the pattern Calendly documents for SPA/embedded use and it works identically on first paint and after client navigation, with no global script needed.
+Single migration:
 
-`src/components/apex/calendly-inline.tsx`:
-- Render `<iframe src={calendlyUrl}>` where `calendlyUrl` appends `embed_domain=<window.location.host>&embed_type=Inline` plus the existing branding params already on the URL (`hide_event_type_details=1&hide_gdpr_banner=1&primary_color=e6b400`).
-- Default `height` down to `630`, and make it responsive: `min(80vh, height)` so it never overflows the viewport.
-- Drop the `.apx-card` padding wrapper; keep a thin gold border only, so the frame doesn't visually inflate the widget.
-- Keep the same `{ url, height? }` prop signature so all three call sites (`unlicensed.$token.tsx`, `licensed.$token.tsx`, `portal/settings.tsx` preview) work unchanged.
+1. **Normalize stored values.** `UPDATE public.system_settings SET value = trim(both '"' from value) WHERE value LIKE '"%"';` — strips wrapping double-quotes from every setting that has them, without touching well-formed values.
+2. **Harden the RPC.** In `public.resolve_scheduling_context`, wrap every `system_settings` lookup with `trim(both '"' from …)` so any future JSON-encoded write can't break the flow again.
+
+No frontend changes needed — `CalendlyInline` already URL-parses the incoming string; once the leading `"` is gone, `new URL()` succeeds and the iframe loads Calendly.
 
 ## Verification
 
-- Submit `/apply` as unlicensed → land on `/application-complete/unlicensed/<token>` → Calendly loads immediately, fits within the viewport.
-- Same for licensed flow.
-- Portal `Settings → Preview` still shows the agent's own Calendly.
-- Refresh each page → still renders (no dependency on script load ordering).
+- Re-run `SELECT key, value FROM system_settings WHERE key LIKE '%calendly%';` → values start with `https://`, no quotes.
+- Reload `/application-complete/unlicensed/<existing token>` → Calendly widget renders in the iframe, no redirect error.
+- Same for the licensed page when a recruiter/manager link is configured.
