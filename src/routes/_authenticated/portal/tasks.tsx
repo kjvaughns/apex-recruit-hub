@@ -4,9 +4,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 import { listTasks, createTask, toggleTask, deleteTask } from "@/lib/portal.functions";
+import { DateTimePicker } from "@/components/apex/date-time-picker";
 
 export const Route = createFileRoute("/_authenticated/portal/tasks")({
-  head: () => ({ meta: [{ title: "Tasks — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Tasks — APEX Portal" }, { name: "robots", content: "noindex" }],
+  }),
   component: TasksPage,
 });
 
@@ -41,7 +44,10 @@ function TasksPage() {
         },
       }),
     onSuccess: () => {
-      setTitle(""); setDue(""); setNotes(""); setPriority("normal");
+      setTitle("");
+      setDue("");
+      setNotes("");
+      setPriority("normal");
       qc.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
@@ -63,7 +69,9 @@ function TasksPage() {
       <PortalHeader kicker="Focus" title="Tasks" />
       <div className="px-6 py-8 md:px-10 space-y-6">
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
-          <div className="mb-3 text-[11px] uppercase tracking-[0.2em] text-apex-faint">New task</div>
+          <div className="mb-3 text-[11px] uppercase tracking-[0.2em] text-apex-faint">
+            New task
+          </div>
           <div className="grid gap-3 md:grid-cols-[1.6fr_1fr_.8fr_auto]">
             <input
               value={title}
@@ -71,12 +79,7 @@ function TasksPage() {
               placeholder="Task title"
               className="rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-apex-ivory outline-none focus:border-apex-gold/50"
             />
-            <input
-              type="datetime-local"
-              value={due}
-              onChange={(e) => setDue(e.target.value)}
-              className="rounded-lg border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-apex-ivory outline-none focus:border-apex-gold/50"
-            />
+            <DateTimePicker value={due || null} onChange={(iso) => setDue(iso ?? "")} />
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as "low" | "normal" | "high")}
@@ -87,7 +90,15 @@ function TasksPage() {
               <option value="high">High</option>
             </select>
             <button
-              onClick={() => title.trim() && createM.mutate()}
+              onClick={() => {
+                if (!title.trim()) return;
+                // Confirm before scheduling a task in the past (spec §20).
+                if (due && new Date(due) < new Date()) {
+                  if (!window.confirm("This due date is in the past. Create the task anyway?"))
+                    return;
+                }
+                createM.mutate();
+              }}
               disabled={!title.trim() || createM.isPending}
               className="apx-btn-primary px-4 py-2.5 text-[13px] disabled:opacity-40"
             >
@@ -104,12 +115,22 @@ function TasksPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Chip active={scope === "mine"} onClick={() => setScope("mine")}>Mine</Chip>
-          <Chip active={scope === "all"} onClick={() => setScope("all")}>All</Chip>
+          <Chip active={scope === "mine"} onClick={() => setScope("mine")}>
+            Mine
+          </Chip>
+          <Chip active={scope === "all"} onClick={() => setScope("all")}>
+            All
+          </Chip>
           <div className="mx-2 h-5 w-px bg-white/10" />
-          <Chip active={status === "open"} onClick={() => setStatus("open")}>Open</Chip>
-          <Chip active={status === "done"} onClick={() => setStatus("done")}>Done</Chip>
-          <Chip active={status === "all"} onClick={() => setStatus("all")}>All</Chip>
+          <Chip active={status === "open"} onClick={() => setStatus("open")}>
+            Open
+          </Chip>
+          <Chip active={status === "done"} onClick={() => setStatus("done")}>
+            Done
+          </Chip>
+          <Chip active={status === "all"} onClick={() => setStatus("all")}>
+            All
+          </Chip>
         </div>
 
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02]">
@@ -132,7 +153,9 @@ function TasksPage() {
                       ✓
                     </button>
                     <div className="min-w-0 flex-1">
-                      <div className={`text-[14px] font-medium ${done ? "text-apex-faint line-through" : "text-apex-ivory"}`}>
+                      <div
+                        className={`text-[14px] font-medium ${done ? "text-apex-faint line-through" : "text-apex-ivory"}`}
+                      >
                         {t.title}
                       </div>
                       {t.notes && <div className="mt-1 text-[13px] text-apex-dim">{t.notes}</div>}
@@ -144,7 +167,9 @@ function TasksPage() {
                         )}
                         <span className="uppercase tracking-widest">{t.priority}</span>
                         {t.applicants && (
-                          <span>· {t.applicants.first_name} {t.applicants.last_name}</span>
+                          <span>
+                            · {t.applicants.first_name} {t.applicants.last_name}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -165,12 +190,22 @@ function TasksPage() {
   );
 }
 
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       onClick={onClick}
       className={`rounded-full border px-3.5 py-1.5 text-[12px] transition ${
-        active ? "border-apex-gold/40 bg-apex-gold/10 text-apex-gold" : "border-white/10 text-apex-dim hover:border-white/25 hover:text-apex-ivory"
+        active
+          ? "border-apex-gold/40 bg-apex-gold/10 text-apex-gold"
+          : "border-white/10 text-apex-dim hover:border-white/25 hover:text-apex-ivory"
       }`}
     >
       {children}
