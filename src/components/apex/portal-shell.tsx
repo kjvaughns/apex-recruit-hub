@@ -14,7 +14,9 @@ const NAV = [
   { to: "/portal/calendar", label: "Calendar", icon: "◗" },
   { to: "/portal/leaderboard", label: "Leaderboard", icon: "★" },
   { to: "/portal/resources", label: "Resources", icon: "▤" },
+  { to: "/portal/settings", label: "My Settings", icon: "⚙" },
 ];
+
 
 export function PortalShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });

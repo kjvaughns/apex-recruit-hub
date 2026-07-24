@@ -87,9 +87,12 @@ export type Database = {
         Row: {
           address: string | null
           archived_at: string | null
+          assigned_manager_id: string | null
           assigned_recruiter_id: string | null
           calendly_scheduled_at: string | null
+          calendly_url_used: string | null
           city: string | null
+          confirmation_token: string | null
           consent_contact: boolean
           created_at: string
           current_stage_id: string | null
@@ -107,11 +110,18 @@ export type Database = {
           phone: string | null
           priority: string
           ref_slug: string | null
+          scheduled_event_end: string | null
+          scheduled_event_id: string | null
+          scheduled_event_start: string | null
+          scheduled_event_url: string | null
+          scheduled_invitee_id: string | null
+          scheduling_status: string
           source_details: string | null
           source_id: string | null
           stage_entered_at: string
           state: string | null
           status: string
+          success_page_type: string | null
           team_id: string | null
           updated_at: string
           why_text: string | null
@@ -120,9 +130,12 @@ export type Database = {
         Insert: {
           address?: string | null
           archived_at?: string | null
+          assigned_manager_id?: string | null
           assigned_recruiter_id?: string | null
           calendly_scheduled_at?: string | null
+          calendly_url_used?: string | null
           city?: string | null
+          confirmation_token?: string | null
           consent_contact?: boolean
           created_at?: string
           current_stage_id?: string | null
@@ -140,11 +153,18 @@ export type Database = {
           phone?: string | null
           priority?: string
           ref_slug?: string | null
+          scheduled_event_end?: string | null
+          scheduled_event_id?: string | null
+          scheduled_event_start?: string | null
+          scheduled_event_url?: string | null
+          scheduled_invitee_id?: string | null
+          scheduling_status?: string
           source_details?: string | null
           source_id?: string | null
           stage_entered_at?: string
           state?: string | null
           status?: string
+          success_page_type?: string | null
           team_id?: string | null
           updated_at?: string
           why_text?: string | null
@@ -153,9 +173,12 @@ export type Database = {
         Update: {
           address?: string | null
           archived_at?: string | null
+          assigned_manager_id?: string | null
           assigned_recruiter_id?: string | null
           calendly_scheduled_at?: string | null
+          calendly_url_used?: string | null
           city?: string | null
+          confirmation_token?: string | null
           consent_contact?: boolean
           created_at?: string
           current_stage_id?: string | null
@@ -173,17 +196,31 @@ export type Database = {
           phone?: string | null
           priority?: string
           ref_slug?: string | null
+          scheduled_event_end?: string | null
+          scheduled_event_id?: string | null
+          scheduled_event_start?: string | null
+          scheduled_event_url?: string | null
+          scheduled_invitee_id?: string | null
+          scheduling_status?: string
           source_details?: string | null
           source_id?: string | null
           stage_entered_at?: string
           state?: string | null
           status?: string
+          success_page_type?: string | null
           team_id?: string | null
           updated_at?: string
           why_text?: string | null
           zip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "applicants_assigned_manager_id_fkey"
+            columns: ["assigned_manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "applicants_assigned_recruiter_id_fkey"
             columns: ["assigned_recruiter_id"]
@@ -331,6 +368,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          can_schedule_licensed: boolean
           created_at: string
           email: string | null
           first_name: string | null
@@ -338,6 +376,8 @@ export type Database = {
           id: string
           is_active: boolean
           last_name: string | null
+          licensed_calendly_updated_at: string | null
+          licensed_calendly_url: string | null
           manager_id: string | null
           phone: string | null
           recruiting_slug: string | null
@@ -346,6 +386,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          can_schedule_licensed?: boolean
           created_at?: string
           email?: string | null
           first_name?: string | null
@@ -353,6 +394,8 @@ export type Database = {
           id: string
           is_active?: boolean
           last_name?: string | null
+          licensed_calendly_updated_at?: string | null
+          licensed_calendly_url?: string | null
           manager_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
@@ -361,6 +404,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          can_schedule_licensed?: boolean
           created_at?: string
           email?: string | null
           first_name?: string | null
@@ -368,6 +412,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_name?: string | null
+          licensed_calendly_updated_at?: string | null
+          licensed_calendly_url?: string | null
           manager_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
@@ -687,6 +733,9 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       mark_applicant_scheduled: { Args: { _email: string }; Returns: Json }
+      mark_licensed_fallback: { Args: { _token: string }; Returns: Json }
+      mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
+      resolve_scheduling_context: { Args: { _token: string }; Returns: Json }
       submit_application: { Args: { payload: Json }; Returns: Json }
       submit_evaluation: { Args: { payload: Json }; Returns: Json }
     }

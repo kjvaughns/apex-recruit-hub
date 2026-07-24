@@ -18,7 +18,10 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
+import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
+import { Route as ApplicationCompleteLicensedTokenRouteImport } from './routes/application-complete/licensed.$token'
 import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenticated/portal/tasks'
+import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
 import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authenticated/portal/calendar'
@@ -28,6 +31,7 @@ import { Route as AuthenticatedPortalAdminRouteRouteImport } from './routes/_aut
 import { Route as AuthenticatedPortalResourcesIndexRouteImport } from './routes/_authenticated/portal/resources/index'
 import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
 import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
+import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
 import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
 import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
 import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
@@ -82,10 +86,28 @@ const AuthenticatedPortalIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
+const ApplicationCompleteUnlicensedTokenRoute =
+  ApplicationCompleteUnlicensedTokenRouteImport.update({
+    id: '/unlicensed/$token',
+    path: '/unlicensed/$token',
+    getParentRoute: () => ApplicationCompleteRoute,
+  } as any)
+const ApplicationCompleteLicensedTokenRoute =
+  ApplicationCompleteLicensedTokenRouteImport.update({
+    id: '/licensed/$token',
+    path: '/licensed/$token',
+    getParentRoute: () => ApplicationCompleteRoute,
+  } as any)
 const AuthenticatedPortalTasksRoute =
   AuthenticatedPortalTasksRouteImport.update({
     id: '/tasks',
     path: '/tasks',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalSettingsRoute =
+  AuthenticatedPortalSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalPipelineRoute =
@@ -142,6 +164,12 @@ const AuthenticatedPortalAdminIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
+const ApiPublicWebhooksCalendlyRoute =
+  ApiPublicWebhooksCalendlyRouteImport.update({
+    id: '/api/public/webhooks/calendly',
+    path: '/api/public/webhooks/calendly',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPortalResourcesPresentationsRoute =
   AuthenticatedPortalResourcesPresentationsRouteImport.update({
     id: '/presentations',
@@ -187,7 +215,7 @@ const AuthenticatedPortalAdminSettingsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/application-complete': typeof ApplicationCompleteRoute
+  '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
@@ -199,7 +227,10 @@ export interface FileRoutesByFullPath {
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
+  '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
+  '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
@@ -208,13 +239,14 @@ export interface FileRoutesByFullPath {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
   '/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/application-complete': typeof ApplicationCompleteRoute
+  '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
@@ -222,7 +254,10 @@ export interface FileRoutesByTo {
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
+  '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
+  '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
@@ -231,6 +266,7 @@ export interface FileRoutesByTo {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/portal/admin': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm': typeof AuthenticatedPortalCrmIndexRoute
   '/portal/resources': typeof AuthenticatedPortalResourcesIndexRoute
@@ -239,7 +275,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/application-complete': typeof ApplicationCompleteRoute
+  '/application-complete': typeof ApplicationCompleteRouteWithChildren
   '/apply': typeof ApplyRoute
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
@@ -251,7 +287,10 @@ export interface FileRoutesById {
   '/_authenticated/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
+  '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/tasks': typeof AuthenticatedPortalTasksRoute
+  '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
+  '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
@@ -260,6 +299,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/_authenticated/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/_authenticated/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
   '/_authenticated/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
@@ -280,7 +320,10 @@ export interface FileRouteTypes {
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/pipeline'
+    | '/portal/settings'
     | '/portal/tasks'
+    | '/application-complete/licensed/$token'
+    | '/application-complete/unlicensed/$token'
     | '/portal/'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
@@ -289,6 +332,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/webhooks/calendly'
     | '/portal/admin/'
     | '/portal/crm/'
     | '/portal/resources/'
@@ -303,7 +347,10 @@ export interface FileRouteTypes {
     | '/portal/calendar'
     | '/portal/leaderboard'
     | '/portal/pipeline'
+    | '/portal/settings'
     | '/portal/tasks'
+    | '/application-complete/licensed/$token'
+    | '/application-complete/unlicensed/$token'
     | '/portal'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
@@ -312,6 +359,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/webhooks/calendly'
     | '/portal/admin'
     | '/portal/crm'
     | '/portal/resources'
@@ -331,7 +379,10 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/calendar'
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/pipeline'
+    | '/_authenticated/portal/settings'
     | '/_authenticated/portal/tasks'
+    | '/application-complete/licensed/$token'
+    | '/application-complete/unlicensed/$token'
     | '/_authenticated/portal/'
     | '/_authenticated/portal/admin/settings'
     | '/_authenticated/portal/admin/stages'
@@ -340,6 +391,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/admin'
     | '/_authenticated/portal/resources/library'
     | '/_authenticated/portal/resources/presentations'
+    | '/api/public/webhooks/calendly'
     | '/_authenticated/portal/admin/'
     | '/_authenticated/portal/crm/'
     | '/_authenticated/portal/resources/'
@@ -348,11 +400,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  ApplicationCompleteRoute: typeof ApplicationCompleteRoute
+  ApplicationCompleteRoute: typeof ApplicationCompleteRouteWithChildren
   ApplyRoute: typeof ApplyRoute
   EvaluationRoute: typeof EvaluationRoute
   LoginRoute: typeof LoginRoute
   ScheduleRoute: typeof ScheduleRoute
+  ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -420,11 +473,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/application-complete/unlicensed/$token': {
+      id: '/application-complete/unlicensed/$token'
+      path: '/unlicensed/$token'
+      fullPath: '/application-complete/unlicensed/$token'
+      preLoaderRoute: typeof ApplicationCompleteUnlicensedTokenRouteImport
+      parentRoute: typeof ApplicationCompleteRoute
+    }
+    '/application-complete/licensed/$token': {
+      id: '/application-complete/licensed/$token'
+      path: '/licensed/$token'
+      fullPath: '/application-complete/licensed/$token'
+      preLoaderRoute: typeof ApplicationCompleteLicensedTokenRouteImport
+      parentRoute: typeof ApplicationCompleteRoute
+    }
     '/_authenticated/portal/tasks': {
       id: '/_authenticated/portal/tasks'
       path: '/tasks'
       fullPath: '/portal/tasks'
       preLoaderRoute: typeof AuthenticatedPortalTasksRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/settings': {
+      id: '/_authenticated/portal/settings'
+      path: '/settings'
+      fullPath: '/portal/settings'
+      preLoaderRoute: typeof AuthenticatedPortalSettingsRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/_authenticated/portal/pipeline': {
@@ -489,6 +563,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/admin/'
       preLoaderRoute: typeof AuthenticatedPortalAdminIndexRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/api/public/webhooks/calendly': {
+      id: '/api/public/webhooks/calendly'
+      path: '/api/public/webhooks/calendly'
+      fullPath: '/api/public/webhooks/calendly'
+      preLoaderRoute: typeof ApiPublicWebhooksCalendlyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal/resources/presentations': {
       id: '/_authenticated/portal/resources/presentations'
@@ -611,6 +692,7 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalCalendarRoute: typeof AuthenticatedPortalCalendarRoute
   AuthenticatedPortalLeaderboardRoute: typeof AuthenticatedPortalLeaderboardRoute
   AuthenticatedPortalPipelineRoute: typeof AuthenticatedPortalPipelineRoute
+  AuthenticatedPortalSettingsRoute: typeof AuthenticatedPortalSettingsRoute
   AuthenticatedPortalTasksRoute: typeof AuthenticatedPortalTasksRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
 }
@@ -626,6 +708,7 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalCalendarRoute: AuthenticatedPortalCalendarRoute,
     AuthenticatedPortalLeaderboardRoute: AuthenticatedPortalLeaderboardRoute,
     AuthenticatedPortalPipelineRoute: AuthenticatedPortalPipelineRoute,
+    AuthenticatedPortalSettingsRoute: AuthenticatedPortalSettingsRoute,
     AuthenticatedPortalTasksRoute: AuthenticatedPortalTasksRoute,
     AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
   }
@@ -646,14 +729,29 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApplicationCompleteRouteChildren {
+  ApplicationCompleteLicensedTokenRoute: typeof ApplicationCompleteLicensedTokenRoute
+  ApplicationCompleteUnlicensedTokenRoute: typeof ApplicationCompleteUnlicensedTokenRoute
+}
+
+const ApplicationCompleteRouteChildren: ApplicationCompleteRouteChildren = {
+  ApplicationCompleteLicensedTokenRoute: ApplicationCompleteLicensedTokenRoute,
+  ApplicationCompleteUnlicensedTokenRoute:
+    ApplicationCompleteUnlicensedTokenRoute,
+}
+
+const ApplicationCompleteRouteWithChildren =
+  ApplicationCompleteRoute._addFileChildren(ApplicationCompleteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  ApplicationCompleteRoute: ApplicationCompleteRoute,
+  ApplicationCompleteRoute: ApplicationCompleteRouteWithChildren,
   ApplyRoute: ApplyRoute,
   EvaluationRoute: EvaluationRoute,
   LoginRoute: LoginRoute,
   ScheduleRoute: ScheduleRoute,
+  ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

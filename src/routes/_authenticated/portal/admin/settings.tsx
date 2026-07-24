@@ -11,10 +11,14 @@ export const Route = createFileRoute("/_authenticated/portal/admin/settings")({
 });
 
 const KEYS = [
-  { key: "calendly_url", label: "Calendly booking URL", placeholder: "https://calendly.com/…" },
+  { key: "unlicensed_overview_calendly_url", label: "Unlicensed overview Calendly URL", placeholder: "https://calendly.com/…" },
+  { key: "licensed_fallback_calendly_url", label: "Licensed applicant fallback Calendly URL", placeholder: "https://calendly.com/…" },
+  { key: "allow_recruiter_licensed_priority", label: "Allow recruiter licensed Calendly priority (true/false)" },
+  { key: "allow_manager_licensed_priority", label: "Allow manager licensed Calendly priority (true/false)" },
   { key: "brand_tagline", label: "Brand tagline" },
   { key: "support_email", label: "Support email" },
 ];
+
 
 function SettingsPage() {
   const getFn = useServerFn(adminGetSettings);

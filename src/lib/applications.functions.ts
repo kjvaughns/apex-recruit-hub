@@ -45,8 +45,9 @@ export const submitApplication = createServerFn({ method: "POST" })
       payload: data as never,
     });
     if (error) throw new Error(error.message);
-    return result as { id: string; recruiter_id: string | null };
+    return result as { id: string; token: string; success_page_type: "licensed" | "unlicensed"; recruiter_id: string | null };
   });
+
 
 const evaluationSchema = z.object({
   email: z.string().trim().email().max(200),
@@ -87,23 +88,43 @@ export const lookupRecruiter = createServerFn({ method: "POST" })
     return { name: name || null };
   });
 
-export const getCalendlyUrl = createServerFn({ method: "GET" }).handler(async () => {
-  const supabase = serverClient();
-  const { data } = await supabase
-    .from("system_settings")
-    .select("value")
-    .eq("key", "calendly_url")
-    .maybeSingle();
-  return { url: data?.value ?? "https://calendly.com/kjvaughns1/overview?hide_event_type_details=1&hide_gdpr_banner=1&primary_color=e6b400" };
-});
+type SchedulingContext = {
+  found: boolean;
+  first_name?: string;
+  success_page_type?: "licensed" | "unlicensed";
+  calendly_url?: string | null;
+  contact_name?: string | null;
+  contact_kind?: string | null;
+  link_missing?: boolean;
+  scheduling_status?: string;
+};
 
-export const markScheduled = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => z.object({ email: z.string().email() }).parse(data))
+export const getSchedulingContext = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string().min(10).max(128) }).parse(data))
   .handler(async ({ data }) => {
     const supabase = serverClient();
-    const { data: result, error } = await supabase.rpc("mark_applicant_scheduled", {
-      _email: data.email,
+    const { data: result, error } = await supabase.rpc("resolve_scheduling_context", {
+      _token: data.token,
     });
+    if (error) throw new Error(error.message);
+    return (result ?? { found: false }) as SchedulingContext;
+  });
+
+export const markLicensedFallback = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string().min(10).max(128) }).parse(data))
+  .handler(async ({ data }) => {
+    const supabase = serverClient();
+    const { data: result, error } = await supabase.rpc("mark_licensed_fallback", { _token: data.token });
+    if (error) throw new Error(error.message);
+    return result as { ok: boolean; already?: boolean };
+  });
+
+export const markScheduled = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ token: z.string().min(10).max(128) }).parse(data))
+  .handler(async ({ data }) => {
+    const supabase = serverClient();
+    const { data: result, error } = await supabase.rpc("mark_scheduled_by_token", { _token: data.token });
     if (error) throw new Error(error.message);
     return result as { matched: boolean; id?: string };
   });
+
