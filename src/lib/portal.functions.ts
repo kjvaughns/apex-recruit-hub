@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { writeAudit } from "@/lib/audit";
 
 /** Current user profile + roles + team. */
 export const getMe = createServerFn({ method: "GET" })
@@ -289,6 +290,19 @@ async function assertAdmin(supabase: any, userId: string) {
   return roles;
 }
 
+// Admins, or managers/leaders granted can_manage_resources, may write resources.
+async function assertCanManageResources(supabase: any, userId: string) {
+  const [{ data: roleRows }, { data: prof }] = await Promise.all([
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+    supabase.from("profiles").select("can_manage_resources").eq("id", userId).maybeSingle(),
+  ]);
+  const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+  const isAdmin = roles.some((r: string) => r === "admin" || r === "super_admin");
+  if (!isAdmin && !prof?.can_manage_resources) {
+    throw new Error("Forbidden: you are not permitted to manage resources");
+  }
+}
+
 export const adminListUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -331,6 +345,12 @@ export const adminSetUserRole = createServerFn({ method: "POST" })
     } else {
       await supabase.from("user_roles").delete().eq("user_id", data.user_id).eq("role", data.role);
     }
+    await writeAudit(supabase, {
+      action: data.grant ? "role_granted" : "role_revoked",
+      actor_id: userId,
+      target_user_id: data.user_id,
+      new_value: { role: data.role },
+    });
     return { ok: true };
   });
 
@@ -665,15 +685,32 @@ export const upsertResource = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    await assertAdmin(supabase, userId);
+    // Admins manage all resources; managers granted can_manage_resources manage
+    // their own (RLS enforces ownership on write for non-admins).
+    await assertCanManageResources(supabase, userId);
     if (data.id) {
       const { id, ...rest } = data;
-      const { error } = await supabase.from("resources").update(rest).eq("id", id);
+      const patch: Record<string, unknown> = { ...rest, updated_by: userId };
+      if (rest.is_published) patch.published_by = userId;
+      const { error } = await supabase
+        .from("resources")
+        .update(patch as never)
+        .eq("id", id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabase.from("resources").insert({ ...data, created_by: userId });
+      const { error } = await supabase.from("resources").insert({
+        ...data,
+        created_by: userId,
+        updated_by: userId,
+        published_by: data.is_published ? userId : null,
+      } as never);
       if (error) throw new Error(error.message);
     }
+    await writeAudit(supabase, {
+      action: data.is_published ? "resource_published" : "resource_saved",
+      actor_id: userId,
+      new_value: { title: data.title, category: data.category },
+    });
     return { ok: true };
   });
 
@@ -967,3 +1004,79 @@ export type CompanyLeaderboardRow = {
   total: number;
   prev_total: number;
 };
+
+// ---- Organization tree + audit log (Phase 7) -----------------------------
+
+export type OrgNode = {
+  id: string;
+  name: string;
+  role: string | null;
+  parent_user_id: string | null;
+  team_name: string | null;
+};
+
+/** Flat list of the caller's org (self + full downline); admins get everyone. */
+export const getOrganizationTree = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roles = (roleRows ?? []).map((r) => r.role as string);
+    const isAdmin = roles.some((r) => r === "admin" || r === "super_admin");
+
+    let q = supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email, parent_user_id, team_id, teams(name)")
+      .eq("is_active", true);
+    if (!isAdmin) {
+      const { data: desc } = await (supabase as any).rpc("descendant_ids", { _root: userId });
+      const ids = [userId, ...((desc ?? []) as { id: string }[]).map((d) => d.id)];
+      q = q.in("id", ids);
+    }
+    const { data: profs } = await q;
+
+    // Resolve each person's primary role in one pass.
+    const ids = ((profs ?? []) as any[]).map((p) => p.id);
+    const { data: allRoles } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .in("user_id", ids);
+    const roleOrder = ["super_admin", "admin", "manager", "leader", "agent"];
+    const roleByUser: Record<string, string> = {};
+    for (const r of (allRoles ?? []) as { user_id: string; role: string }[]) {
+      const cur = roleByUser[r.user_id];
+      if (!cur || roleOrder.indexOf(r.role) < roleOrder.indexOf(cur))
+        roleByUser[r.user_id] = r.role;
+    }
+
+    const nodes: OrgNode[] = ((profs ?? []) as any[]).map((p) => ({
+      id: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed",
+      role: roleByUser[p.id] === "super_admin" ? "admin" : (roleByUser[p.id] ?? null),
+      parent_user_id: p.parent_user_id,
+      team_name: (p.teams as { name: string } | null)?.name ?? null,
+    }));
+    return { nodes, rootId: isAdmin ? null : userId };
+  });
+
+export const getAuditLogs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ action: z.string().optional().or(z.literal("")) }).parse(d ?? {}),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    let q = (supabase as any)
+      .from("audit_logs")
+      .select("id, action, actor_id, target_user_id, target_applicant_id, new_value, created_at")
+      .order("created_at", { ascending: false })
+      .limit(300);
+    if (data.action) q = q.eq("action", data.action);
+    const { data: logs, error } = await q;
+    if (error) throw new Error(error.message);
+    return { logs: logs ?? [] };
+  });

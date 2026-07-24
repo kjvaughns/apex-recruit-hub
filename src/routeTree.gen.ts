@@ -25,6 +25,7 @@ import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalCrmRouteRouteImport } from './routes/_authenticated/portal/crm/route'
 import { Route as AuthenticatedPortalInvitationsRouteImport } from './routes/_authenticated/portal/invitations'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
+import { Route as AuthenticatedPortalOrganizationRouteImport } from './routes/_authenticated/portal/organization'
 import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authenticated/portal/pipeline'
 import { Route as AuthenticatedPortalResourcesRouteRouteImport } from './routes/_authenticated/portal/resources/route'
 import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedPortalTasksRouteImport } from './routes/_authenti
 import { Route as ApplicationCompleteLicensedTokenRouteImport } from './routes/application-complete/licensed.$token'
 import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
 import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
+import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
 import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
 import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
 import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
@@ -130,6 +132,12 @@ const AuthenticatedPortalLeaderboardRoute =
     path: '/leaderboard',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
+const AuthenticatedPortalOrganizationRoute =
+  AuthenticatedPortalOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
 const AuthenticatedPortalPipelineRoute =
   AuthenticatedPortalPipelineRouteImport.update({
     id: '/pipeline',
@@ -170,6 +178,12 @@ const AuthenticatedPortalAdminIndexRoute =
   AuthenticatedPortalAdminIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminAuditRoute =
+  AuthenticatedPortalAdminAuditRouteImport.update({
+    id: '/audit',
+    path: '/audit',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
 const AuthenticatedPortalAdminSettingsRoute =
@@ -249,12 +263,14 @@ export interface FileRoutesByFullPath {
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/invitations': typeof AuthenticatedPortalInvitationsRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
+  '/portal/organization': typeof AuthenticatedPortalOrganizationRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
+  '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
@@ -278,12 +294,14 @@ export interface FileRoutesByTo {
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/portal/invitations': typeof AuthenticatedPortalInvitationsRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
+  '/portal/organization': typeof AuthenticatedPortalOrganizationRoute
   '/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/tasks': typeof AuthenticatedPortalTasksRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
+  '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
@@ -314,12 +332,14 @@ export interface FileRoutesById {
   '/_authenticated/portal/calendar': typeof AuthenticatedPortalCalendarRoute
   '/_authenticated/portal/invitations': typeof AuthenticatedPortalInvitationsRoute
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
+  '/_authenticated/portal/organization': typeof AuthenticatedPortalOrganizationRoute
   '/_authenticated/portal/pipeline': typeof AuthenticatedPortalPipelineRoute
   '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/tasks': typeof AuthenticatedPortalTasksRoute
   '/application-complete/licensed/$token': typeof ApplicationCompleteLicensedTokenRoute
   '/application-complete/unlicensed/$token': typeof ApplicationCompleteUnlicensedTokenRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
+  '/_authenticated/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
@@ -350,12 +370,14 @@ export interface FileRouteTypes {
     | '/portal/calendar'
     | '/portal/invitations'
     | '/portal/leaderboard'
+    | '/portal/organization'
     | '/portal/pipeline'
     | '/portal/settings'
     | '/portal/tasks'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/portal/'
+    | '/portal/admin/audit'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/users'
@@ -379,12 +401,14 @@ export interface FileRouteTypes {
     | '/portal/calendar'
     | '/portal/invitations'
     | '/portal/leaderboard'
+    | '/portal/organization'
     | '/portal/pipeline'
     | '/portal/settings'
     | '/portal/tasks'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/portal'
+    | '/portal/admin/audit'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/users'
@@ -414,12 +438,14 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/calendar'
     | '/_authenticated/portal/invitations'
     | '/_authenticated/portal/leaderboard'
+    | '/_authenticated/portal/organization'
     | '/_authenticated/portal/pipeline'
     | '/_authenticated/portal/settings'
     | '/_authenticated/portal/tasks'
     | '/application-complete/licensed/$token'
     | '/application-complete/unlicensed/$token'
     | '/_authenticated/portal/'
+    | '/_authenticated/portal/admin/audit'
     | '/_authenticated/portal/admin/settings'
     | '/_authenticated/portal/admin/stages'
     | '/_authenticated/portal/admin/users'
@@ -559,6 +585,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalLeaderboardRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/_authenticated/portal/organization': {
+      id: '/_authenticated/portal/organization'
+      path: '/organization'
+      fullPath: '/portal/organization'
+      preLoaderRoute: typeof AuthenticatedPortalOrganizationRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
     '/_authenticated/portal/pipeline': {
       id: '/_authenticated/portal/pipeline'
       path: '/pipeline'
@@ -606,6 +639,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/portal/admin/'
       preLoaderRoute: typeof AuthenticatedPortalAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/admin/audit': {
+      id: '/_authenticated/portal/admin/audit'
+      path: '/audit'
+      fullPath: '/portal/admin/audit'
+      preLoaderRoute: typeof AuthenticatedPortalAdminAuditRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
     }
     '/_authenticated/portal/admin/settings': {
@@ -682,6 +722,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedPortalAdminRouteRouteChildren {
+  AuthenticatedPortalAdminAuditRoute: typeof AuthenticatedPortalAdminAuditRoute
   AuthenticatedPortalAdminSettingsRoute: typeof AuthenticatedPortalAdminSettingsRoute
   AuthenticatedPortalAdminStagesRoute: typeof AuthenticatedPortalAdminStagesRoute
   AuthenticatedPortalAdminUsersRoute: typeof AuthenticatedPortalAdminUsersRoute
@@ -690,6 +731,7 @@ interface AuthenticatedPortalAdminRouteRouteChildren {
 
 const AuthenticatedPortalAdminRouteRouteChildren: AuthenticatedPortalAdminRouteRouteChildren =
   {
+    AuthenticatedPortalAdminAuditRoute: AuthenticatedPortalAdminAuditRoute,
     AuthenticatedPortalAdminSettingsRoute:
       AuthenticatedPortalAdminSettingsRoute,
     AuthenticatedPortalAdminStagesRoute: AuthenticatedPortalAdminStagesRoute,
@@ -750,6 +792,7 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalCalendarRoute: typeof AuthenticatedPortalCalendarRoute
   AuthenticatedPortalInvitationsRoute: typeof AuthenticatedPortalInvitationsRoute
   AuthenticatedPortalLeaderboardRoute: typeof AuthenticatedPortalLeaderboardRoute
+  AuthenticatedPortalOrganizationRoute: typeof AuthenticatedPortalOrganizationRoute
   AuthenticatedPortalPipelineRoute: typeof AuthenticatedPortalPipelineRoute
   AuthenticatedPortalSettingsRoute: typeof AuthenticatedPortalSettingsRoute
   AuthenticatedPortalTasksRoute: typeof AuthenticatedPortalTasksRoute
@@ -767,6 +810,7 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalCalendarRoute: AuthenticatedPortalCalendarRoute,
     AuthenticatedPortalInvitationsRoute: AuthenticatedPortalInvitationsRoute,
     AuthenticatedPortalLeaderboardRoute: AuthenticatedPortalLeaderboardRoute,
+    AuthenticatedPortalOrganizationRoute: AuthenticatedPortalOrganizationRoute,
     AuthenticatedPortalPipelineRoute: AuthenticatedPortalPipelineRoute,
     AuthenticatedPortalSettingsRoute: AuthenticatedPortalSettingsRoute,
     AuthenticatedPortalTasksRoute: AuthenticatedPortalTasksRoute,

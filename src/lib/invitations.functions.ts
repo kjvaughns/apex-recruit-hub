@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { writeAudit } from "@/lib/audit";
 
 // Anon/publishable client for public (unauthenticated) invitation reads.
 function serverClient() {
@@ -122,11 +123,16 @@ export const createInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => inviteSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     const { data: res, error } = await (supabase as any).rpc("create_invitation", {
       payload: data,
     });
     if (error) throw new Error(error.message);
+    await writeAudit(supabase, {
+      action: "user_invited",
+      actor_id: userId,
+      new_value: { email: data.email, role: data.role },
+    });
     return res as { id: string; token: string };
   });
 
@@ -276,11 +282,17 @@ export const promoteApplicantToAgent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => promoteSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
     const { data: res, error } = await (supabase as any).rpc("promote_applicant_to_agent", {
       payload: data,
     });
     if (error) throw new Error(error.message);
+    await writeAudit(supabase, {
+      action: "applicant_promoted",
+      actor_id: userId,
+      target_applicant_id: data.applicant_id,
+      new_value: { role: data.role ?? "agent" },
+    });
     return res as { ok: boolean; invitation_id: string; token: string };
   });
 

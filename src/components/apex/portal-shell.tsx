@@ -14,6 +14,7 @@ const NAV = [
   { to: "/portal/calendar", label: "Calendar", icon: "◗" },
   { to: "/portal/leaderboard", label: "Leaderboard", icon: "★" },
   { to: "/portal/resources", label: "Resources", icon: "▤" },
+  { to: "/portal/organization", label: "Organization", icon: "⚇" },
   { to: "/portal/settings", label: "My Settings", icon: "⚙" },
 ];
 
@@ -146,6 +147,18 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 >
                   <span className="w-5 text-center">⚙</span>
                   {!collapsed && <span>Admin</span>}
+                </Link>
+                <Link
+                  to="/portal/admin/audit"
+                  onClick={() => setMobileOpen(false)}
+                  className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition ${
+                    path.startsWith("/portal/admin/audit")
+                      ? "bg-apex-gold/10 text-apex-gold border border-apex-gold/25"
+                      : "border border-transparent text-apex-dim hover:bg-white/[0.03] hover:text-apex-ivory"
+                  }`}
+                >
+                  <span className="w-5 text-center">◫</span>
+                  {!collapsed && <span>Audit Log</span>}
                 </Link>
               </>
             )}
