@@ -3,7 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
-import { getMySchedulingSettings, updateMySchedulingSettings } from "@/lib/portal.functions";
+import {
+  getMySchedulingSettings,
+  updateMySchedulingSettings,
+  getMyRecruitingLink,
+  getTeamRecruitingLinks,
+} from "@/lib/portal.functions";
 import { CalendlyInline } from "@/components/apex/calendly-inline";
 
 export const Route = createFileRoute("/_authenticated/portal/settings")({
@@ -39,8 +44,10 @@ function PortalSettingsPage() {
 
   return (
     <PortalShell>
-      <PortalHeader kicker="Portal" title="My scheduling" />
-      <div className="px-6 py-8 md:px-10">
+      <PortalHeader kicker="Portal" title="My settings" />
+      <div className="space-y-6 px-6 py-8 md:px-10">
+        <RecruitingLinkCard />
+        <TeamRecruitingLinksCard />
         <div className="apx-card max-w-2xl p-6 md:p-8">
           {q.isLoading ? (
             <div className="text-apex-dim">Loading…</div>
@@ -95,5 +102,140 @@ function PortalSettingsPage() {
         </div>
       </div>
     </PortalShell>
+  );
+}
+
+function useOrigin() {
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
+  return origin;
+}
+
+function RecruitingLinkCard() {
+  const getFn = useServerFn(getMyRecruitingLink);
+  const q = useQuery({ queryKey: ["me", "recruiting-link"], queryFn: () => getFn() });
+  const origin = useOrigin();
+  const [copied, setCopied] = useState(false);
+
+  const slug = q.data?.recruiting_slug ?? null;
+  const link = slug && origin ? `${origin}/?ref=${slug}` : "";
+  const canShare = typeof navigator !== "undefined" && !!navigator.share;
+
+  async function copy() {
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard blocked — user can still select the text */
+    }
+  }
+
+  async function share() {
+    if (!link) return;
+    try {
+      await navigator.share({ title: "Apply to APEX Financial", url: link });
+    } catch {
+      /* share cancelled/unsupported */
+    }
+  }
+
+  return (
+    <div className="apx-card max-w-2xl p-6 md:p-8">
+      <div className="mb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-faint">Recruiting</div>
+      <h2 className="font-display text-[26px] leading-none">Your recruiting link</h2>
+      <p className="mt-2 text-[14px] leading-relaxed text-apex-muted">
+        Share this link with prospects. Anyone who applies through it is automatically attributed to you.
+      </p>
+
+      {q.isLoading ? (
+        <div className="mt-5 text-apex-dim">Loading…</div>
+      ) : !slug ? (
+        <p className="mt-5 text-[14px] text-apex-muted">
+          Your recruiting link isn't set up yet. Ask an administrator to enable it.
+        </p>
+      ) : (
+        <>
+          <div className="mt-5 flex flex-col gap-3 md:flex-row">
+            <input className="apx-input flex-1" readOnly value={link || "…"} onFocus={(e) => e.currentTarget.select()} />
+            <div className="flex gap-3">
+              <button onClick={copy} disabled={!link} className="apx-btn-primary px-5 disabled:opacity-60">
+                {copied ? "Copied!" : "Copy link"}
+              </button>
+              <a
+                href={link || "#"}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="apx-btn-ghost flex items-center px-5"
+              >
+                Open
+              </a>
+              {canShare && (
+                <button onClick={share} className="apx-btn-ghost px-5">
+                  Share
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-[13px]">
+            <span className="rounded-full border border-white/10 px-2.5 py-1 text-apex-fog">
+              Applicants generated: <span className="font-semibold text-apex-ivory">{q.data?.applicant_count ?? 0}</span>
+            </span>
+            {!q.data?.can_receive_applicants && (
+              <span className="text-apex-faint">Note: new applicants are currently paused for your profile.</span>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TeamRecruitingLinksCard() {
+  const getFn = useServerFn(getTeamRecruitingLinks);
+  const q = useQuery({ queryKey: ["team", "recruiting-links"], queryFn: () => getFn() });
+  const origin = useOrigin();
+  const agents = q.data?.agents ?? [];
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  if (q.isLoading || agents.length === 0) return null;
+
+  async function copy(id: string, link: string) {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1600);
+    } catch {
+      /* noop */
+    }
+  }
+
+  return (
+    <div className="apx-card max-w-2xl p-6 md:p-8">
+      <div className="mb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-faint">Team</div>
+      <h2 className="font-display text-[26px] leading-none">Team recruiting links</h2>
+      <p className="mt-2 text-[14px] leading-relaxed text-apex-muted">Referral links for active agents on your team.</p>
+      <div className="mt-5 divide-y divide-white/5">
+        {agents.map((a) => {
+          const link = a.recruiting_slug && origin ? `${origin}/?ref=${a.recruiting_slug}` : "";
+          return (
+            <div key={a.id} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <div className="truncate text-[14px] text-apex-ivory">{a.full_name || "Unnamed agent"}</div>
+                <div className="truncate text-[12.5px] text-apex-faint">{link || "No link"}</div>
+              </div>
+              <button
+                onClick={() => copy(a.id, link)}
+                disabled={!link}
+                className="apx-btn-ghost shrink-0 px-4 py-2 text-[13px] disabled:opacity-50"
+              >
+                {copiedId === a.id ? "Copied!" : "Copy"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

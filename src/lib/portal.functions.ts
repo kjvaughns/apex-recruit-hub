@@ -17,6 +17,55 @@ export const getMe = createServerFn({ method: "GET" })
     };
   });
 
+/** The signed-in agent's recruiting slug + how many applicants it generated. */
+export const getMyRecruitingLink = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("recruiting_slug, is_active, can_receive_applicants")
+      .eq("id", userId)
+      .maybeSingle();
+    const { count } = await supabase
+      .from("applicants")
+      .select("id", { count: "exact", head: true })
+      .eq("referred_by_profile_id", userId);
+    return {
+      recruiting_slug: prof?.recruiting_slug ?? null,
+      is_active: prof?.is_active ?? false,
+      can_receive_applicants: prof?.can_receive_applicants ?? false,
+      applicant_count: count ?? 0,
+    };
+  });
+
+/** Managers/admins: recruiting links of active agents on their team. */
+export const getTeamRecruitingLinks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const roles = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    const roleList = (roles.data ?? []).map((r) => r.role as string);
+    const isManager = roleList.some((r) => r === "manager" || r === "admin" || r === "super_admin");
+    if (!isManager) return { agents: [] as TeamRecruitingLink[] };
+    const { data: me } = await supabase.from("profiles").select("team_id").eq("id", userId).maybeSingle();
+    if (!me?.team_id) return { agents: [] as TeamRecruitingLink[] };
+    const { data: agents } = await supabase
+      .from("profiles")
+      .select("id, full_name, recruiting_slug, can_receive_applicants")
+      .eq("team_id", me.team_id)
+      .eq("is_active", true)
+      .order("full_name");
+    return { agents: (agents ?? []) as TeamRecruitingLink[] };
+  });
+
+type TeamRecruitingLink = {
+  id: string;
+  full_name: string | null;
+  recruiting_slug: string | null;
+  can_receive_applicants: boolean;
+};
+
 /** Dashboard KPIs + activity feed for the signed-in user. */
 export const getDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -216,6 +265,14 @@ export const adminUpdateProfile = createServerFn({ method: "POST" })
       phone: z.string().optional(),
       team_id: z.string().uuid().nullable().optional(),
       is_active: z.boolean().optional(),
+      can_receive_applicants: z.boolean().optional(),
+      recruiting_slug: z
+        .string()
+        .trim()
+        .toLowerCase()
+        .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug may only contain lowercase letters, numbers and hyphens")
+        .max(120)
+        .optional(),
     }).parse(d),
   )
   .handler(async ({ context, data }) => {

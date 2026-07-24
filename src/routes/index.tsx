@@ -1,8 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import { PublicShell } from "@/components/apex/brand";
+import { getRecruiterBySlug } from "@/lib/applications.functions";
+import { saveReferral } from "@/lib/referral";
+
+const searchSchema = z.object({ ref: z.string().optional() });
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search) => searchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "APEX Financial Empire — Build your empire in insurance sales" },
@@ -67,7 +74,26 @@ const faqs = [
 ];
 
 function LandingPage() {
+  const { ref } = Route.useSearch();
+  const resolveRecruiter = useServerFn(getRecruiterBySlug);
   const [openFaq, setOpenFaq] = useState(0);
+
+  // Capture referral attribution for this recruiting session. The visitor stays
+  // on the normal landing page; the recruiter is preselected later on /apply.
+  useEffect(() => {
+    if (!ref) return;
+    const landing_url = typeof window !== "undefined" ? window.location.href : "";
+    resolveRecruiter({ data: { slug: ref } })
+      .then((recruiter) => {
+        saveReferral({ slug: ref, recruiter, landing_url, invalid: !recruiter });
+      })
+      .catch(() => {
+        saveReferral({ slug: ref, recruiter: null, landing_url, invalid: true });
+      });
+  }, [ref, resolveRecruiter]);
+
+  // Carry the ref through to the application so it works even without storage.
+  const applySearch = ref ? { ref } : undefined;
 
   return (
     <PublicShell>
@@ -107,7 +133,7 @@ function LandingPage() {
               Uncapped commissions paid weekly, warm inbound leads, and free licensing &amp; training. No experience needed — we build producers from the ground up.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3.5">
-              <Link to="/apply" className="apx-btn-primary px-7 py-4 text-[16px]">
+              <Link to="/apply" search={applySearch} className="apx-btn-primary px-7 py-4 text-[16px]">
                 Start Your Application <span>→</span>
               </Link>
               <a href="#how" className="apx-btn-ghost px-7 py-4 text-[16px]">
@@ -281,13 +307,13 @@ function LandingPage() {
               ))}
             </div>
           </div>
-          <div className="flex flex-col justify-center gap-4">
-            <Link to="/apply" className="apx-btn-primary w-full px-8 py-5 text-[17px]">
+          <div className="flex flex-col items-center justify-center gap-4 text-center">
+            <Link to="/apply" search={applySearch} className="apx-btn-primary w-full px-8 py-5 text-[17px]">
               Start Your Application <span>→</span>
             </Link>
-            <Link to="/login" className="apx-btn-ghost w-full px-8 py-5 text-[15px]">
-              Agent login
-            </Link>
+            <p className="text-[13px] text-apex-faint">
+              No résumé required — just a few quick details.
+            </p>
           </div>
         </div>
       </div>

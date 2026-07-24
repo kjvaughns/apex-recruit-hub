@@ -26,15 +26,18 @@ const applicationSchema = z.object({
   last_name: z.string().trim().min(1).max(80),
   email: z.string().trim().email().max(200),
   phone: z.string().trim().min(7).max(40),
-  date_of_birth: z.string().trim().optional().or(z.literal("")),
-  address: z.string().trim().max(200).optional().or(z.literal("")),
-  city: z.string().trim().max(80).optional().or(z.literal("")),
-  state: z.string().trim().max(4).optional().or(z.literal("")),
-  zip: z.string().trim().max(12).optional().or(z.literal("")),
-  licensed: z.boolean().optional(),
-  why_text: z.string().trim().max(2000).optional().or(z.literal("")),
-  consent_contact: z.boolean(),
-  ref_slug: z.string().trim().max(80).optional().or(z.literal("")),
+  state: z.string().trim().length(2),
+  licensed: z.boolean(),
+  instagram_handle: z.string().trim().max(80).optional().or(z.literal("")),
+  why_text: z.string().trim().min(10).max(2000),
+  consent_contact: z.literal(true),
+  // Attribution — a valid recruiter must be selected.
+  referred_by_profile_id: z.string().uuid(),
+  original_referral_profile_id: z.string().uuid().optional().or(z.literal("")),
+  referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
+  referral_source: z.enum(["referral_link", "manual", "direct"]).optional(),
+  referral_landing_url: z.string().trim().max(600).optional().or(z.literal("")),
+  invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
 export const submitApplication = createServerFn({ method: "POST" })
@@ -65,27 +68,39 @@ export const submitEvaluation = createServerFn({ method: "POST" })
     return result as { id: string; matched: boolean };
   });
 
-const recruiterLookupSchema = z.object({
-  slug: z.string().trim().min(1).max(80),
-});
+export type RecruiterOption = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  recruiting_slug: string | null;
+  team_name: string | null;
+};
 
-export const lookupRecruiter = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => recruiterLookupSchema.parse(data))
+// Safe, debounced recruiter directory search for the public application form.
+// Backed by the SECURITY DEFINER search_recruiters RPC (active + recruiting
+// agents only, no PII). Never exposes the profiles table to the public.
+export const searchRecruiters = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({ q: z.string().trim().max(80).optional().or(z.literal("")) }).parse(data),
+  )
   .handler(async ({ data }) => {
-    // Public read of a limited profile field would require an anon SELECT
-    // policy; instead we query staff-side and return only the display name.
-    // Since profiles is staff-only, we route through a service-role read
-    // strictly for the display name — no PII.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row } = await supabaseAdmin
-      .from("profiles")
-      .select("first_name, last_name")
-      .ilike("recruiting_slug", data.slug)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (!row) return { name: null };
-    const name = `${row.first_name ?? ""} ${row.last_name ?? ""}`.trim();
-    return { name: name || null };
+    const supabase = serverClient();
+    const { data: rows, error } = await supabase.rpc("search_recruiters", { _q: data.q ?? "" });
+    if (error) throw new Error(error.message);
+    return (rows ?? []) as RecruiterOption[];
+  });
+
+// Resolve a single active recruiter from a referral slug (for link preselect).
+export const getRecruiterBySlug = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({ slug: z.string().trim().min(1).max(120) }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const supabase = serverClient();
+    const { data: rows, error } = await supabase.rpc("get_recruiter_by_slug", { _slug: data.slug });
+    if (error) throw new Error(error.message);
+    const row = (rows ?? [])[0];
+    return (row ?? null) as RecruiterOption | null;
   });
 
 type SchedulingContext = {
