@@ -83,6 +83,52 @@ export type Database = {
         }
         Relationships: []
       }
+      applicant_stage_history: {
+        Row: {
+          applicant_id: string
+          changed_by: string | null
+          entered_at: string
+          id: string
+          stage_id: string | null
+        }
+        Insert: {
+          applicant_id: string
+          changed_by?: string | null
+          entered_at?: string
+          id?: string
+          stage_id?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          changed_by?: string | null
+          entered_at?: string
+          id?: string
+          stage_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_stage_history_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicant_stage_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicant_stage_history_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applicants: {
         Row: {
           address: string | null
@@ -112,7 +158,11 @@ export type Database = {
           original_referral_name_snapshot: string | null
           original_referral_profile_id: string | null
           phone: string | null
+          portal_invitation_id: string | null
+          portal_profile_id: string | null
           priority: string
+          promoted_by_user_id: string | null
+          promoted_to_agent_at: string | null
           ref_slug: string | null
           referral_landing_url: string | null
           referral_source: string | null
@@ -164,7 +214,11 @@ export type Database = {
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
           phone?: string | null
+          portal_invitation_id?: string | null
+          portal_profile_id?: string | null
           priority?: string
+          promoted_by_user_id?: string | null
+          promoted_to_agent_at?: string | null
           ref_slug?: string | null
           referral_landing_url?: string | null
           referral_source?: string | null
@@ -216,7 +270,11 @@ export type Database = {
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
           phone?: string | null
+          portal_invitation_id?: string | null
+          portal_profile_id?: string | null
           priority?: string
+          promoted_by_user_id?: string | null
+          promoted_to_agent_at?: string | null
           ref_slug?: string | null
           referral_landing_url?: string | null
           referral_source?: string | null
@@ -277,6 +335,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "applicants_portal_invitation_id_fkey"
+            columns: ["portal_invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_portal_profile_id_fkey"
+            columns: ["portal_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applicants_promoted_by_user_id_fkey"
+            columns: ["promoted_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "applicants_referred_by_profile_id_fkey"
             columns: ["referred_by_profile_id"]
             isOneToOne: false
@@ -295,6 +374,64 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          new_value: Json | null
+          previous_value: Json | null
+          target_applicant_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          previous_value?: Json | null
+          target_applicant_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          new_value?: Json | null
+          previous_value?: Json | null
+          target_applicant_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_target_applicant_id_fkey"
+            columns: ["target_applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -330,6 +467,136 @@ export type Database = {
             columns: ["applicant_id"]
             isOneToOne: false
             referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_profile_id: string | null
+          applicant_id: string | null
+          can_invite_agents: boolean
+          can_invite_leaders: boolean
+          can_manage_resources: boolean
+          created_at: string
+          email: string
+          expires_at: string
+          first_name: string | null
+          id: string
+          instagram_handle: string | null
+          invited_by: string | null
+          last_name: string | null
+          licensed: boolean
+          manager_id: string | null
+          notes: string | null
+          npn: string | null
+          parent_user_id: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          state: string | null
+          status: string
+          team_id: string | null
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_profile_id?: string | null
+          applicant_id?: string | null
+          can_invite_agents?: boolean
+          can_invite_leaders?: boolean
+          can_manage_resources?: boolean
+          created_at?: string
+          email: string
+          expires_at?: string
+          first_name?: string | null
+          id?: string
+          instagram_handle?: string | null
+          invited_by?: string | null
+          last_name?: string | null
+          licensed?: boolean
+          manager_id?: string | null
+          notes?: string | null
+          npn?: string | null
+          parent_user_id?: string | null
+          phone?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          state?: string | null
+          status?: string
+          team_id?: string | null
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_profile_id?: string | null
+          applicant_id?: string | null
+          can_invite_agents?: boolean
+          can_invite_leaders?: boolean
+          can_manage_resources?: boolean
+          created_at?: string
+          email?: string
+          expires_at?: string
+          first_name?: string | null
+          id?: string
+          instagram_handle?: string | null
+          invited_by?: string | null
+          last_name?: string | null
+          licensed?: boolean
+          manager_id?: string | null
+          notes?: string | null
+          npn?: string | null
+          parent_user_id?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          state?: string | null
+          status?: string
+          team_id?: string | null
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_accepted_profile_id_fkey"
+            columns: ["accepted_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_parent_user_id_fkey"
+            columns: ["parent_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
@@ -409,6 +676,9 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          can_invite_agents: boolean
+          can_invite_leaders: boolean
+          can_manage_resources: boolean
           can_receive_applicants: boolean
           can_schedule_licensed: boolean
           created_at: string
@@ -416,18 +686,29 @@ export type Database = {
           first_name: string | null
           full_name: string | null
           id: string
+          instagram_handle: string | null
           is_active: boolean
           last_name: string | null
+          licensed: boolean
           licensed_calendly_updated_at: string | null
           licensed_calendly_url: string | null
           manager_id: string | null
+          npn: string | null
+          organization_path: string | null
+          parent_user_id: string | null
           phone: string | null
           recruiting_slug: string | null
+          state: string | null
+          status: string
           team_id: string | null
+          timezone: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
+          can_invite_agents?: boolean
+          can_invite_leaders?: boolean
+          can_manage_resources?: boolean
           can_receive_applicants?: boolean
           can_schedule_licensed?: boolean
           created_at?: string
@@ -435,18 +716,29 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id: string
+          instagram_handle?: string | null
           is_active?: boolean
           last_name?: string | null
+          licensed?: boolean
           licensed_calendly_updated_at?: string | null
           licensed_calendly_url?: string | null
           manager_id?: string | null
+          npn?: string | null
+          organization_path?: string | null
+          parent_user_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
+          state?: string | null
+          status?: string
           team_id?: string | null
+          timezone?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
+          can_invite_agents?: boolean
+          can_invite_leaders?: boolean
+          can_manage_resources?: boolean
           can_receive_applicants?: boolean
           can_schedule_licensed?: boolean
           created_at?: string
@@ -454,20 +746,35 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id?: string
+          instagram_handle?: string | null
           is_active?: boolean
           last_name?: string | null
+          licensed?: boolean
           licensed_calendly_updated_at?: string | null
           licensed_calendly_url?: string | null
           manager_id?: string | null
+          npn?: string | null
+          organization_path?: string | null
+          parent_user_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
+          state?: string | null
+          status?: string
           team_id?: string | null
+          timezone?: string | null
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "profiles_manager_id_fkey"
             columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_parent_user_id_fkey"
+            columns: ["parent_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -585,10 +892,12 @@ export type Database = {
           long: string | null
           meta: string | null
           position: number
+          published_by: string | null
           tags: string[]
           title: string
           type: string
           updated_at: string
+          updated_by: string | null
           url: string | null
         }
         Insert: {
@@ -605,10 +914,12 @@ export type Database = {
           long?: string | null
           meta?: string | null
           position?: number
+          published_by?: string | null
           tags?: string[]
           title: string
           type?: string
           updated_at?: string
+          updated_by?: string | null
           url?: string | null
         }
         Update: {
@@ -625,16 +936,32 @@ export type Database = {
           long?: string | null
           meta?: string | null
           position?: number
+          published_by?: string | null
           tags?: string[]
           title?: string
           type?: string
           updated_at?: string
+          updated_by?: string | null
           url?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "resources_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resources_updated_by_fkey"
+            columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -767,6 +1094,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_user: {
+        Args: { _target: string; _viewer: string }
+        Returns: boolean
+      }
+      can_invite_role: {
+        Args: { _inviter: string; _role: string }
+        Returns: boolean
+      }
+      cancel_invitation: { Args: { _id: string }; Returns: Json }
+      company_leaderboard: {
+        Args: { payload: Json }
+        Returns: {
+          avatar_url: string
+          completed_count: number
+          contacted_count: number
+          conversion: number
+          full_name: string
+          manager_name: string
+          new_count: number
+          prev_total: number
+          profile_id: string
+          promoted_count: number
+          role: string
+          scheduled_count: number
+          team_name: string
+          total: number
+        }[]
+      }
+      create_invitation: { Args: { payload: Json }; Returns: Json }
+      descendant_ids: {
+        Args: { _root: string }
+        Returns: {
+          id: string
+        }[]
+      }
+      finalize_invitation_acceptance: { Args: { payload: Json }; Returns: Json }
+      get_invitation_public: { Args: { _token: string }; Returns: Json }
+      get_primary_role: { Args: { _user_id: string }; Returns: string }
       get_recruiter_by_slug: {
         Args: { _slug: string }
         Returns: {
@@ -785,10 +1150,16 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_descendant: {
+        Args: { _ancestor: string; _target: string }
+        Returns: boolean
+      }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       mark_applicant_scheduled: { Args: { _email: string }; Returns: Json }
       mark_licensed_fallback: { Args: { _token: string }; Returns: Json }
       mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
+      promote_applicant_to_agent: { Args: { payload: Json }; Returns: Json }
+      resend_invitation: { Args: { _id: string }; Returns: Json }
       resolve_scheduling_context: { Args: { _token: string }; Returns: Json }
       search_recruiters: {
         Args: { _q: string }
