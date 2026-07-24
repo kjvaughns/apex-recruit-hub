@@ -5,11 +5,10 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { PublicShell } from "@/components/apex/brand";
 import { StateCombobox } from "@/components/apex/state-combobox";
-import { RecruiterCombobox } from "@/components/apex/recruiter-combobox";
+import { RecruiterCombobox, type RecruiterSelection } from "@/components/apex/recruiter-combobox";
 import {
   submitApplication,
   getRecruiterBySlug,
-  type RecruiterOption,
 } from "@/lib/applications.functions";
 import { getReferral } from "@/lib/referral";
 
