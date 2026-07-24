@@ -78,7 +78,7 @@ function ApplyPage() {
     setErrors([]);
     setSubmitting(true);
     try {
-      await submit({
+      const res = await submit({
         data: {
           first_name: form.first_name.trim(),
           last_name: form.last_name.trim(),
@@ -95,15 +95,19 @@ function ApplyPage() {
           ref_slug: ref ?? "",
         },
       });
-      sessionStorage.setItem("apex_applicant_email", form.email.trim());
       sessionStorage.setItem("apex_applicant_first", form.first_name.trim());
-      navigate({ to: "/schedule" });
+      if (res.success_page_type === "licensed") {
+        navigate({ to: "/application-complete/licensed/$token", params: { token: res.token } });
+      } else {
+        navigate({ to: "/application-complete/unlicensed/$token", params: { token: res.token } });
+      }
     } catch (e) {
       setErrors([(e as Error).message || "Something went wrong. Try again."]);
     } finally {
       setSubmitting(false);
     }
   }
+
 
   return (
     <PublicShell>
