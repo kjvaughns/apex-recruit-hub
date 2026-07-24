@@ -21,24 +21,32 @@ function serverClient() {
   });
 }
 
-const applicationSchema = z.object({
-  first_name: z.string().trim().min(1).max(80),
-  last_name: z.string().trim().min(1).max(80),
-  email: z.string().trim().email().max(200),
-  phone: z.string().trim().min(7).max(40),
-  state: z.string().trim().length(2),
-  licensed: z.boolean(),
-  instagram_handle: z.string().trim().max(80).optional().or(z.literal("")),
-  why_text: z.string().trim().min(10).max(2000),
-  consent_contact: z.literal(true),
-  // Attribution — a valid recruiter must be selected.
-  referred_by_profile_id: z.string().uuid(),
-  original_referral_profile_id: z.string().uuid().optional().or(z.literal("")),
-  referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
-  referral_source: z.enum(["referral_link", "manual", "direct"]).optional(),
-  referral_landing_url: z.string().trim().max(600).optional().or(z.literal("")),
-  invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
-});
+const applicationSchema = z
+  .object({
+    first_name: z.string().trim().min(1).max(80),
+    last_name: z.string().trim().min(1).max(80),
+    email: z.string().trim().email().max(200),
+    phone: z.string().trim().min(7).max(40),
+    state: z.string().trim().length(2),
+    licensed: z.boolean(),
+    instagram_handle: z.string().trim().max(80).optional().or(z.literal("")),
+    why_text: z.string().trim().min(10).max(2000),
+    consent_contact: z.literal(true),
+    // Attribution — either an existing recruiter uuid OR a typed name.
+    referred_by_profile_id: z.string().uuid().optional().or(z.literal("")),
+    referred_by_name: z.string().trim().max(160).optional().or(z.literal("")),
+    original_referral_profile_id: z.string().uuid().optional().or(z.literal("")),
+    referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
+    referral_source: z.enum(["referral_link", "manual", "direct"]).optional(),
+    referral_landing_url: z.string().trim().max(600).optional().or(z.literal("")),
+    invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
+  })
+  .refine(
+    (d) =>
+      (typeof d.referred_by_profile_id === "string" && d.referred_by_profile_id.length > 0) ||
+      (typeof d.referred_by_name === "string" && d.referred_by_name.length > 0),
+    { message: "Provide a recruiter", path: ["referred_by_profile_id"] },
+  );
 
 export const submitApplication = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => applicationSchema.parse(data))
