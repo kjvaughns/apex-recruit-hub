@@ -120,28 +120,28 @@ const whoFor = [
 const testimonials = [
   {
     quote:
-      "I've had multiple months taking home over $15K just off personal production — with no prior life insurance experience. The training is A1. As soon as I hit the field, I was selling consistently, every day.",
-    name: "Chudi",
+      "My first month ever in sales, I wrote nearly $50K in business and deposited more than $20,000. The systems here make that kind of start possible.",
+    name: "Marquay",
     role: "Vantage Agent",
-    initials: "CH",
+    initials: "MA",
   },
   {
     quote:
-      "I used the resources Vantage provided and hit $40K in production in one month. This opportunity gave me the freedom to travel — I took a fully paid trip to Hawaii with my family.",
-    name: "Obi",
+      "At my previous company, my biggest month ever was $8K. My very first month at Vantage I did over $30K — hands down the best leadership and systems I've ever been around.",
+    name: "Danny",
     role: "Vantage Agent",
-    initials: "OB",
+    initials: "DA",
   },
   {
     quote:
-      "Before Vantage, I was about to quit insurance. Since joining, I've done over $15K in sales in six days. It completely changed my trajectory.",
-    name: "Aisha",
+      "Vantage is my first company in insurance. I did over $29K my first month and already have my own team. The best systems in the world.",
+    name: "Pranav",
     role: "Vantage Agent",
-    initials: "AI",
+    initials: "PR",
   },
   {
     quote:
-      "My first month ever in insurance, with zero experience, I did $31K in sales — while being able to work from anywhere. I locked in with an open mind and won.",
+      "My first month ever in insurance, with zero experience, I did $31K in sales — all while working from anywhere. I locked in with an open mind and won.",
     name: "Zay",
     role: "Vantage Agent",
     initials: "ZA",
@@ -393,8 +393,8 @@ function LandingPage() {
               See the full Vantage opportunity
             </h2>
             <p className="mt-5 text-[16.5px] leading-relaxed text-apex-muted">
-              The website gives you the highlights. The Vantage Company Overview explains the complete
-              opportunity.
+              The website gives you the highlights. The Vantage Company Overview explains the
+              complete opportunity.
             </p>
             <div className="mt-6 flex flex-col gap-2.5">
               {overviewCovers.map((c) => (
@@ -442,8 +442,8 @@ function LandingPage() {
             ))}
           </div>
           <p className="mt-6 border-t border-white/[0.08] pt-6 text-[14px] leading-relaxed text-apex-muted">
-            Vantage is not designed for people looking for guaranteed income, passive work, or a casual
-            way to test the industry.
+            Vantage is not designed for people looking for guaranteed income, passive work, or a
+            casual way to test the industry.
           </p>
         </div>
       </div>
@@ -510,8 +510,8 @@ function LandingPage() {
             </h2>
             <p className="mt-5 text-[16.5px] leading-relaxed text-apex-muted">
               Complete the short application and tell us why you believe you would be a strong fit
-              for Vantage. Licensed applicants are contacted quickly. Unlicensed applicants receive the
-              licensing steps and reserve a seat for the next Monday company overview.
+              for Vantage. Licensed applicants are contacted quickly. Unlicensed applicants receive
+              the licensing steps and reserve a seat for the next Monday company overview.
             </p>
           </div>
           <div className="flex flex-col items-center justify-center gap-4 text-center">
