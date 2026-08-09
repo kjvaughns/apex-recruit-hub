@@ -6,7 +6,7 @@ import { adminListUsers, adminSetUserRole, adminUpdateProfile } from "@/lib/port
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
-  head: () => ({ meta: [{ title: "Users — APEX Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Users — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
   component: UsersPage,
 });
 

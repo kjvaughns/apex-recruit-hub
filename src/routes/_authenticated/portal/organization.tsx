@@ -7,7 +7,7 @@ import { getOrganizationTree, type OrgNode } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/organization")({
   head: () => ({
-    meta: [{ title: "Organization — APEX Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Organization — Vantage Portal" }, { name: "robots", content: "noindex" }],
   }),
   component: OrganizationPage,
 });

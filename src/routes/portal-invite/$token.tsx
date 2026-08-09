@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/portal-invite/$token")({
   head: () => ({
-    meta: [{ title: "Set up your APEX portal account" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Set up your Vantage portal account" }, { name: "robots", content: "noindex" }],
   }),
   loader: async ({ params }) => {
     const invitation = await getInvitationPublic({ data: { token: params.token } });
@@ -103,13 +103,13 @@ function InviteAcceptPage() {
     <PublicShell>
       <div className="mx-auto max-w-[720px] px-6 pt-14 pb-24 md:px-8">
         <div className="text-center">
-          <div className="apx-eyebrow-pill mb-5 inline-flex">APEX Portal</div>
+          <div className="apx-eyebrow-pill mb-5 inline-flex">Vantage Portal</div>
           <h1 className="font-display text-[clamp(38px,6vw,64px)] leading-none">
             Set up your account
           </h1>
           <p className="mx-auto mt-4 max-w-[520px] text-[16px] leading-relaxed text-apex-muted">
             Welcome{fullName ? `, ${fullName}` : ""}. Create your password and confirm your details
-            to access your APEX portal, CRM, pipeline, and recruiting link.
+            to access your Vantage portal, CRM, pipeline, and recruiting link.
           </p>
           <p className="mt-2 text-[13px] text-apex-faint">
             Signing up as <span className="text-apex-fog capitalize">{invitation.role}</span> ·{" "}
@@ -189,7 +189,7 @@ function InviteAcceptPage() {
               onChange={(e) => setTerms(e.target.checked)}
               className="mt-1 h-4 w-4 accent-apex-gold"
             />
-            I accept the APEX portal terms and confirm my information is accurate.
+            I accept the Vantage portal terms and confirm my information is accurate.
           </label>
 
           {errors.length > 0 && (

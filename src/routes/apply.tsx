@@ -19,12 +19,12 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/apply")({
   head: () => ({
     meta: [
-      { title: "Apply — APEX Financial Empire" },
+      { title: "Apply — Vantage Financial" },
       {
         name: "description",
-        content: "Apply to join the APEX Financial recruiting team. Three minutes, no résumé.",
+        content: "Apply to join the Vantage Financial recruiting team. Three minutes, no résumé.",
       },
-      { property: "og:title", content: "Apply to APEX Financial" },
+      { property: "og:title", content: "Apply to Vantage Financial" },
       {
         property: "og:description",
         content: "Three minutes. No résumé. A team lead follows up within one business day.",
@@ -182,7 +182,7 @@ function ApplyPage() {
         <div className="apx-reveal text-center">
           <div className="apx-eyebrow-pill mb-5 inline-flex">Join the team</div>
           <h1 className="font-display text-[clamp(40px,6vw,68px)] leading-none">
-            Your APEX application
+            Your Vantage application
           </h1>
           <p className="mx-auto mt-4 max-w-[520px] text-[16px] leading-relaxed text-apex-muted">
             Three minutes. After you apply, you'll book a short overview call and we'll email you
@@ -277,7 +277,7 @@ function ApplyPage() {
               onChange={(e) => set("instagram_handle", e.target.value)}
             />
           </Field>
-          <Field label="Why do you want to work with APEX? *">
+          <Field label="Why do you want to work with Vantage? *">
             <textarea
               className="apx-input"
               rows={4}
@@ -292,7 +292,7 @@ function ApplyPage() {
               onChange={(e) => set("consent_contact", e.target.checked)}
               className="mt-1 h-4 w-4 accent-apex-gold"
             />
-            I agree to be contacted by APEX Financial about agent opportunities and confirm my
+            I agree to be contacted by Vantage Financial about agent opportunities and confirm my
             information is accurate. *
           </label>
 

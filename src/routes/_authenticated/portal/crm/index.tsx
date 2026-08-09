@@ -7,7 +7,7 @@ import { listApplicants } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/apex/add-applicant-modal";
 
 export const Route = createFileRoute("/_authenticated/portal/crm/")({
-  head: () => ({ meta: [{ title: "CRM — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "CRM — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: CRMListPage,
 });
 

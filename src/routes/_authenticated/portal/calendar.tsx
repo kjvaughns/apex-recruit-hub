@@ -6,7 +6,7 @@ import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 import { getCalendar } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/calendar")({
-  head: () => ({ meta: [{ title: "Calendar — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Calendar — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: CalendarPage,
 });
 

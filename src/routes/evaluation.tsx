@@ -7,9 +7,9 @@ import { submitEvaluation } from "@/lib/applications.functions";
 export const Route = createFileRoute("/evaluation")({
   head: () => ({
     meta: [
-      { title: "Complete your evaluation — APEX Financial" },
-      { name: "description", content: "Finish your APEX application with a two-minute evaluation." },
-      { property: "og:title", content: "APEX evaluation" },
+      { title: "Complete your evaluation — Vantage Financial" },
+      { name: "description", content: "Finish your Vantage application with a two-minute evaluation." },
+      { property: "og:title", content: "Vantage evaluation" },
       { property: "og:description", content: "Four questions. About two minutes." },
       { name: "robots", content: "noindex" },
     ],

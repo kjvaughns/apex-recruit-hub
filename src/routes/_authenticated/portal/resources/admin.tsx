@@ -13,7 +13,7 @@ import {
 import { getMe } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/resources/admin")({
-  head: () => ({ meta: [{ title: "Manage Resources — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Manage Resources — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   beforeLoad: async () => {
     const me = await getMe();
     const roles = me?.roles ?? [];

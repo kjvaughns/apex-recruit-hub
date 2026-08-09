@@ -1,11 +1,10 @@
-import apexLogoAsset from "@/assets/apex-logo.asset.json";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-export const APEX_LOGO_URL = apexLogoAsset.url;
+export const APEX_LOGO_URL = "/vantage-logo.png";
 
 export function ApexLogo({ className = "h-10 w-auto" }: { className?: string }) {
-  return <img src={APEX_LOGO_URL} alt="APEX Financial Empire" className={className} />;
+  return <img src={APEX_LOGO_URL} alt="Vantage Financial" className={className} />;
 }
 
 export function AuroraBackdrop() {
@@ -86,7 +85,7 @@ export function PublicFooter() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] py-8">
         <ApexLogo className="h-[34px] w-auto opacity-85" />
         <div className="flex flex-wrap items-center gap-4 text-[13px] text-apex-faint">
-          <span>© 2026 APEX Financial Empire</span>
+          <span>© 2026 Vantage Financial</span>
           <span className="text-white/10">•</span>
           <Link to="/apply" className="text-apex-dim transition hover:text-apex-gold">
             Apply

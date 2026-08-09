@@ -9,9 +9,9 @@ export const Route = createFileRoute("/application-complete/licensed/$token")({
   head: () => ({
     meta: [
       { title: "Application received — Licensed agent interview" },
-      { name: "description", content: "Schedule your APEX Financial licensed agent interview." },
-      { property: "og:title", content: "Book your APEX licensed interview" },
-      { property: "og:description", content: "Pick a time that works with your assigned APEX recruiter." },
+      { name: "description", content: "Schedule your Vantage Financial licensed agent interview." },
+      { property: "og:title", content: "Book your Vantage licensed interview" },
+      { property: "og:description", content: "Pick a time that works with your assigned Vantage recruiter." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -76,7 +76,7 @@ function LicensedComplete() {
         </h1>
         <p className="mx-auto mt-4 max-w-[600px] text-[16px] leading-relaxed text-apex-muted">
           You've been identified as a licensed applicant. The next step is a short interview with{" "}
-          {contact ? <span className="text-apex-fog">{contact}</span> : "your assigned APEX recruiter"}
+          {contact ? <span className="text-apex-fog">{contact}</span> : "your assigned Vantage recruiter"}
           . Pick a time below to lock it in.
         </p>
 
@@ -105,7 +105,7 @@ function LicensedComplete() {
               You don't need to do anything else right now — watch your inbox and phone for outreach within one business day.
             </p>
             <div className="mt-6">
-              <Link to="/" className="apx-btn-ghost px-6 py-3.5 text-[15px]">Back to APEX →</Link>
+              <Link to="/" className="apx-btn-ghost px-6 py-3.5 text-[15px]">Back to Vantage →</Link>
             </div>
           </div>
         )}

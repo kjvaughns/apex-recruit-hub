@@ -22,7 +22,7 @@ function CompletePage() {
               Have an evaluation link?
             </Link>
             <Link to="/" className="apx-btn-primary px-6 py-3.5 text-[15px]">
-              Back to APEX →
+              Back to Vantage →
             </Link>
           </div>
         </div>

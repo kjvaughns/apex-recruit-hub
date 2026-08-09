@@ -8,7 +8,7 @@ import { AddApplicantModal } from "@/components/apex/add-applicant-modal";
 
 export const Route = createFileRoute("/_authenticated/portal/pipeline")({
   head: () => ({
-    meta: [{ title: "Pipeline — APEX Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Pipeline — Vantage Portal" }, { name: "robots", content: "noindex" }],
   }),
   component: PipelinePage,
 });

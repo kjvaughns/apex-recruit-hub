@@ -21,7 +21,7 @@ function NotFoundComponent() {
         <p className="mt-2 text-sm text-apex-muted">This page doesn't exist or has moved.</p>
         <div className="mt-6">
           <Link to="/" className="apx-btn-primary px-5 py-3 text-sm">
-            Return to APEX
+            Return to Vantage
           </Link>
         </div>
       </div>
@@ -40,7 +40,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-black px-4 text-apex-ivory">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">This page didn't load</h1>
-        <p className="mt-2 text-sm text-apex-muted">Try again, or head back to APEX.</p>
+        <p className="mt-2 text-sm text-apex-muted">Try again, or head back to Vantage.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -65,14 +65,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "APEX Financial Empire — Build your empire in insurance sales" },
+      { title: "Vantage Financial — Build your empire in insurance sales" },
       {
         name: "description",
         content:
-          "Uncapped commissions paid weekly, warm inbound leads, and free licensing and training. Join the APEX Financial recruiting team.",
+          "Uncapped commissions paid weekly, warm inbound leads, and free licensing and training. Join the Vantage Financial recruiting team.",
       },
-      { name: "author", content: "APEX Financial" },
-      { property: "og:title", content: "APEX Financial Empire" },
+      { name: "author", content: "Vantage Financial" },
+      { property: "og:title", content: "Vantage Financial" },
       {
         property: "og:description",
         content: "Build your empire in insurance sales — uncapped weekly commissions, warm leads, and free training.",
@@ -82,6 +82,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/vantage-logo.png", type: "image/png" },
+      { rel: "apple-touch-icon", href: "/vantage-logo.png" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },

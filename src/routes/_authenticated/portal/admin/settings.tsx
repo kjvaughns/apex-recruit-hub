@@ -6,7 +6,7 @@ import { adminGetSettings, adminSetSetting } from "@/lib/portal.functions";
 import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/settings")({
-  head: () => ({ meta: [{ title: "System Settings — APEX Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "System Settings — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
   component: SettingsPage,
 });
 

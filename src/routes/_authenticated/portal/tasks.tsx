@@ -8,7 +8,7 @@ import { DateTimePicker } from "@/components/apex/date-time-picker";
 
 export const Route = createFileRoute("/_authenticated/portal/tasks")({
   head: () => ({
-    meta: [{ title: "Tasks — APEX Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Tasks — Vantage Portal" }, { name: "robots", content: "noindex" }],
   }),
   component: TasksPage,
 });

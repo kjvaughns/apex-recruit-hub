@@ -6,7 +6,7 @@ import { getResourceHub, listPresentersWithRecordings } from "@/lib/resources.fu
 import { getMe } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/resources/")({
-  head: () => ({ meta: [{ title: "Agent Hub — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Agent Hub — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: HubPage,
 });
 
@@ -48,7 +48,7 @@ function HubPage() {
             Everything you need, in one place.
           </h1>
           <p className="mt-5 max-w-[560px] text-[17px] leading-[1.55] text-apex-dim">
-            Recordings, trainings, scripts, and tools — curated for APEX agents and updated weekly.
+            Recordings, trainings, scripts, and tools — curated for Vantage agents and updated weekly.
           </p>
           {isAdmin && (
             <Link
@@ -118,7 +118,7 @@ function HubPage() {
         </section>
 
         <footer className="mt-16 flex flex-wrap items-center gap-2.5 border-t border-white/[0.09] pt-6 text-[13px] text-apex-faint">
-          <span>APEX Financial Empire</span>
+          <span>Vantage Financial</span>
           <span className="text-white/10">·</span>
           <span>Internal agent resources</span>
           <span className="text-white/10">·</span>
