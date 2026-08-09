@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/")({
-  head: () => ({ meta: [{ title: "Admin — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: AdminHome,
 });
 

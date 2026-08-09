@@ -13,7 +13,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/portal/invitations")({
   head: () => ({
-    meta: [{ title: "Invitations — APEX Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Invitations — Vantage Portal" }, { name: "robots", content: "noindex" }],
   }),
   component: InvitationsPage,
 });

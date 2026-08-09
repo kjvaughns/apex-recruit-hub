@@ -6,10 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Agent login — APEX Financial" },
-      { name: "description", content: "Sign in to the APEX Financial agent portal." },
-      { property: "og:title", content: "APEX agent login" },
-      { property: "og:description", content: "Sign in to the APEX Financial agent portal." },
+      { title: "Agent login — Vantage Financial" },
+      { name: "description", content: "Sign in to the Vantage Financial agent portal." },
+      { property: "og:title", content: "Vantage agent login" },
+      { property: "og:description", content: "Sign in to the Vantage Financial agent portal." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -57,7 +57,7 @@ function LoginPage() {
             </button>
           </form>
           <div className="mt-6 flex items-center justify-between text-[13px] text-apex-faint">
-            <Link to="/" className="hover:text-apex-gold">← Back to APEX</Link>
+            <Link to="/" className="hover:text-apex-gold">← Back to Vantage</Link>
             <span>Portal launches in the next release.</span>
           </div>
         </div>

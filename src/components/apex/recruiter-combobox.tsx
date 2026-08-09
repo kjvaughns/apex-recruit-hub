@@ -130,7 +130,7 @@ export function RecruiterCombobox({
             ) : (
               <>
                 {results.length > 0 && (
-                  <CommandGroup heading="Active APEX agents">
+                  <CommandGroup heading="Active Vantage agents">
                     {results.map((r) => (
                       <CommandItem
                         key={r.id}

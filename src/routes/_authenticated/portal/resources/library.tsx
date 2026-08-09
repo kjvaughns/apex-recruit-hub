@@ -6,7 +6,7 @@ import { listLibrary } from "@/lib/resources.functions";
 import { LibraryView, type LibraryItem } from "@/components/apex/resources/library";
 
 export const Route = createFileRoute("/_authenticated/portal/resources/library")({
-  head: () => ({ meta: [{ title: "Resource Library — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Resource Library — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: LibraryPage,
 });
 

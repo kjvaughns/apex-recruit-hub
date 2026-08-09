@@ -7,7 +7,7 @@ import { getAuditLogs } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/audit")({
   head: () => ({
-    meta: [{ title: "Audit Log — APEX Admin" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Audit Log — Vantage Admin" }, { name: "robots", content: "noindex" }],
   }),
   component: AuditPage,
 });

@@ -8,9 +8,9 @@ import { getSchedulingContext, markScheduled } from "@/lib/applications.function
 export const Route = createFileRoute("/application-complete/unlicensed/$token")({
   head: () => ({
     meta: [
-      { title: "Application received — Book your APEX overview" },
-      { name: "description", content: "Schedule your APEX Financial overview call." },
-      { property: "og:title", content: "Book your APEX overview" },
+      { title: "Application received — Book your Vantage overview" },
+      { name: "description", content: "Schedule your Vantage Financial overview call." },
+      { property: "og:title", content: "Book your Vantage overview" },
       {
         property: "og:description",
         content: "Pick a Monday and we'll walk you through the next steps.",
@@ -78,7 +78,7 @@ function UnlicensedComplete() {
           You're in, {firstName} — now book your overview
         </h1>
         <p className="mx-auto mt-4 max-w-[560px] text-[16px] leading-relaxed text-apex-muted">
-          The next step is the APEX Financial overview call. Pick a Monday below — your application
+          The next step is the Vantage Financial overview call. Pick a Monday below — your application
           isn't complete until an overview time is selected.
         </p>
 
@@ -143,7 +143,7 @@ const NEXT_STEPS = [
   {
     n: "1",
     t: "Reserve your seat",
-    d: "Book the next Monday APEX Company Overview above — 7:00 PM CT / 8:00 PM ET.",
+    d: "Book the next Monday Vantage Company Overview above — 7:00 PM CT / 8:00 PM ET.",
   },
   {
     n: "2",
@@ -153,17 +153,17 @@ const NEXT_STEPS = [
   {
     n: "3",
     t: "Attend the overview",
-    d: "Attend the overview and follow the instructions provided by the APEX team.",
+    d: "Attend the overview and follow the instructions provided by the Vantage team.",
   },
 ];
 
 const LICENSING_CHECKLIST = [
-  "Complete the APEX evaluation",
+  "Complete the Vantage evaluation",
   "Receive the approved licensing course instructions",
   "Purchase and begin the course",
   "Complete the required education",
   "Schedule the state exam",
   "Pass the state exam",
   "Apply for the state license",
-  "Complete APEX onboarding",
+  "Complete Vantage onboarding",
 ];

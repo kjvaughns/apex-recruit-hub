@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * APEX Financial design tokens
+ * Vantage Financial design tokens
  * Black canvas, restrained gold accents, premium dark cards.
  * Never hardcode gold or ivory values in components — use utilities driven
  * by these tokens (bg-apex-gold, text-apex-ivory, etc.).
@@ -38,7 +38,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* APEX brand tokens (usable as bg-apex-gold, text-apex-ivory, etc.) */
+  /* Vantage brand tokens (usable as bg-apex-gold, text-apex-ivory, etc.) */
   --color-apex-black: #000000;
   --color-apex-card: #0A0A0A;
   --color-apex-panel: #0d0d0d;

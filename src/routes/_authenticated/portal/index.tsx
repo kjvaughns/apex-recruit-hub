@@ -5,7 +5,7 @@ import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 import { getDashboard } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
-  head: () => ({ meta: [{ title: "Dashboard — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: DashboardPage,
 });
 

@@ -6,7 +6,7 @@ import { adminListStages, adminUpsertStage } from "@/lib/portal.functions";
 import { useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/stages")({
-  head: () => ({ meta: [{ title: "Pipeline Stages — APEX Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Pipeline Stages — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
   component: StagesPage,
 });
 

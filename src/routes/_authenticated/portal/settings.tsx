@@ -12,7 +12,7 @@ import {
 import { CalendlyInline } from "@/components/apex/calendly-inline";
 
 export const Route = createFileRoute("/_authenticated/portal/settings")({
-  head: () => ({ meta: [{ title: "My Settings — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My Settings — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: PortalSettingsPage,
 });
 
@@ -135,7 +135,7 @@ function RecruitingLinkCard() {
   async function share() {
     if (!link) return;
     try {
-      await navigator.share({ title: "Apply to APEX Financial", url: link });
+      await navigator.share({ title: "Apply to Vantage Financial", url: link });
     } catch {
       /* share cancelled/unsupported */
     }

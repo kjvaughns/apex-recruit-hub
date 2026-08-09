@@ -7,7 +7,7 @@ import { getCompanyLeaderboard, type CompanyLeaderboardRow } from "@/lib/portal.
 
 export const Route = createFileRoute("/_authenticated/portal/leaderboard")({
   head: () => ({
-    meta: [{ title: "Leaderboard — APEX Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Leaderboard — Vantage Portal" }, { name: "robots", content: "noindex" }],
   }),
   component: LeaderboardPage,
 });

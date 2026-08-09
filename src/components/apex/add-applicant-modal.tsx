@@ -204,7 +204,7 @@ export function AddApplicantModal({
               />
             </R>
           </div>
-          <R label="Why they want to work with APEX">
+          <R label="Why they want to work with Vantage">
             <textarea
               className="apx-input"
               rows={2}

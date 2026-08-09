@@ -12,17 +12,17 @@ export const Route = createFileRoute("/")({
   validateSearch: (search) => searchSchema.parse(search),
   head: () => ({
     meta: [
-      { title: "APEX Financial Empire — Build a real career in life insurance" },
+      { title: "Vantage Financial — Build a real career in life insurance" },
       {
         name: "description",
         content:
-          "A technology-driven life insurance agency for serious agents: uncapped commission, daily pay opportunities, unlimited lead access, 20+ carriers, and a real path into leadership. See the full opportunity at the weekly APEX Company Overview. Licensed and unlicensed candidates may apply.",
+          "A technology-driven life insurance agency for serious agents: uncapped commission, daily pay opportunities, unlimited lead access, 20+ carriers, and a real path into leadership. See the full opportunity at the weekly Vantage Company Overview. Licensed and unlicensed candidates may apply.",
       },
-      { property: "og:title", content: "APEX Financial Empire" },
+      { property: "og:title", content: "Vantage Financial" },
       {
         property: "og:description",
         content:
-          "Uncapped commission, daily pay opportunities, unlimited leads, and a real path into leadership. Apply and attend the weekly APEX Company Overview.",
+          "Uncapped commission, daily pay opportunities, unlimited leads, and a real path into leadership. Apply and attend the weekly Vantage Company Overview.",
       },
     ],
   }),
@@ -52,7 +52,7 @@ const highlights = [
   },
   {
     t: "Inbound & outbound sales",
-    d: "Work outbound campaigns through the APEX dialing system and qualify for inbound Policy Service Request opportunities.",
+    d: "Work outbound campaigns through the Vantage dialing system and qualify for inbound Policy Service Request opportunities.",
   },
   {
     t: "In-house promotions",
@@ -82,7 +82,7 @@ const whyCols = [
 const values = ["Skill", "Speed", "Production", "Leadership", "Accountability"];
 
 const overviewCovers = [
-  "How the APEX sales system works",
+  "How the Vantage sales system works",
   "Inbound and outbound lead opportunities",
   "Compensation and promotions",
   "Training and technology",
@@ -92,7 +92,7 @@ const overviewCovers = [
 ];
 
 const licensedFlow = [
-  "Your application enters the APEX recruiting portal",
+  "Your application enters the Vantage recruiting portal",
   "Your recruiter or manager is notified",
   "You're directed to the licensed scheduling page",
   "The team contacts qualified licensed applicants quickly",
@@ -122,36 +122,36 @@ const testimonials = [
     quote:
       "I've had multiple months taking home over $15K just off personal production — with no prior life insurance experience. The training is A1. As soon as I hit the field, I was selling consistently, every day.",
     name: "Chudi",
-    role: "APEX Agent",
+    role: "Vantage Agent",
     initials: "CH",
   },
   {
     quote:
-      "I used the resources APEX provided and hit $40K in production in one month. This opportunity gave me the freedom to travel — I took a fully paid trip to Hawaii with my family.",
+      "I used the resources Vantage provided and hit $40K in production in one month. This opportunity gave me the freedom to travel — I took a fully paid trip to Hawaii with my family.",
     name: "Obi",
-    role: "APEX Agent",
+    role: "Vantage Agent",
     initials: "OB",
   },
   {
     quote:
-      "Before APEX, I was about to quit insurance. Since joining, I've done over $15K in sales in six days. It completely changed my trajectory.",
+      "Before Vantage, I was about to quit insurance. Since joining, I've done over $15K in sales in six days. It completely changed my trajectory.",
     name: "Aisha",
-    role: "APEX Agent",
+    role: "Vantage Agent",
     initials: "AI",
   },
   {
     quote:
       "My first month ever in insurance, with zero experience, I did $31K in sales — while being able to work from anywhere. I locked in with an open mind and won.",
     name: "Zay",
-    role: "APEX Agent",
+    role: "Vantage Agent",
     initials: "ZA",
   },
 ];
 
 const faqs = [
   {
-    q: "Is APEX inbound or outbound?",
-    a: "APEX offers both inbound and outbound sales opportunities.",
+    q: "Is Vantage inbound or outbound?",
+    a: "Vantage offers both inbound and outbound sales opportunities.",
   },
   {
     q: "Do I need a license to apply?",
@@ -159,7 +159,7 @@ const faqs = [
   },
   {
     q: "What happens after I apply if I am unlicensed?",
-    a: "You'll receive the immediate licensing steps and be directed to schedule the Monday APEX Company Overview.",
+    a: "You'll receive the immediate licensing steps and be directed to schedule the Monday Vantage Company Overview.",
   },
   {
     q: "What happens after I apply if I am licensed?",
@@ -171,7 +171,7 @@ const faqs = [
   },
   {
     q: "Are leads provided?",
-    a: "Agents receive access to APEX lead systems and multiple lead opportunities. Specific access depends on the program and current company guidelines.",
+    a: "Agents receive access to Vantage lead systems and multiple lead opportunities. Specific access depends on the program and current company guidelines.",
   },
   {
     q: "How does commission work?",
@@ -231,7 +231,7 @@ function LandingPage() {
               >
                 <iframe
                   src="https://www.youtube.com/embed/E2VJ1v85IRE"
-                  title="APEX Financial — Watch This First"
+                  title="Vantage Financial — Watch This First"
                   className="absolute inset-0 h-full w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
@@ -296,28 +296,28 @@ function LandingPage() {
         </p>
       </div>
 
-      {/* WHAT IS APEX */}
+      {/* WHAT IS Vantage */}
       <div id="about" className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
         <SectionHead
           kicker="Who We Are"
-          title="What is APEX Financial?"
-          body="APEX Financial Empire is a life insurance agency and brokerage built for serious agents who want to produce at a high level and grow into leadership. We provide access to multiple insurance carriers, lead opportunities, modern sales technology, hands-on training, and a structured path for personal production and team building."
+          title="What is Vantage Financial?"
+          body="Vantage Financial is a life insurance agency and brokerage built for serious agents who want to produce at a high level and grow into leadership. We provide access to multiple insurance carriers, lead opportunities, modern sales technology, hands-on training, and a structured path for personal production and team building."
         />
         <div className="apx-card apx-card-gold p-7 md:p-8">
           <p className="text-[16px] leading-relaxed text-apex-fog">
             The full company structure, sales system, compensation path, training process, and
             career opportunity are explained during the weekly{" "}
             <a href="#overview" className="font-semibold text-apex-gold hover:underline">
-              APEX Company Overview
+              Vantage Company Overview
             </a>
             .
           </p>
         </div>
       </div>
 
-      {/* WHY SERIOUS AGENTS CHOOSE APEX */}
+      {/* WHY SERIOUS AGENTS CHOOSE Vantage */}
       <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
-        <SectionHead kicker="Built for Producers" title="Why serious agents choose APEX" />
+        <SectionHead kicker="Built for Producers" title="Why serious agents choose Vantage" />
         <div className="grid gap-4 md:grid-cols-3">
           {whyCols.map((c) => (
             <div key={c.t} className="apx-card flex flex-col gap-3 p-7">
@@ -369,7 +369,7 @@ function LandingPage() {
             </div>
             <p className="text-[15px] leading-relaxed text-apex-muted">
               You don't need an active life insurance license to apply. Unlicensed applicants attend
-              the weekly APEX Company Overview to understand the opportunity before beginning the
+              the weekly Vantage Company Overview to understand the opportunity before beginning the
               licensing process.
             </p>
             <div className="flex flex-col gap-2.5">
@@ -390,10 +390,10 @@ function LandingPage() {
           <div>
             <div className="mb-3 apx-kicker">The Full Opportunity</div>
             <h2 className="font-display text-[clamp(36px,5vw,62px)] leading-[0.96]">
-              See the full APEX opportunity
+              See the full Vantage opportunity
             </h2>
             <p className="mt-5 text-[16.5px] leading-relaxed text-apex-muted">
-              The website gives you the highlights. The APEX Company Overview explains the complete
+              The website gives you the highlights. The Vantage Company Overview explains the complete
               opportunity.
             </p>
             <div className="mt-6 flex flex-col gap-2.5">
@@ -442,7 +442,7 @@ function LandingPage() {
             ))}
           </div>
           <p className="mt-6 border-t border-white/[0.08] pt-6 text-[14px] leading-relaxed text-apex-muted">
-            APEX is not designed for people looking for guaranteed income, passive work, or a casual
+            Vantage is not designed for people looking for guaranteed income, passive work, or a casual
             way to test the industry.
           </p>
         </div>
@@ -510,7 +510,7 @@ function LandingPage() {
             </h2>
             <p className="mt-5 text-[16.5px] leading-relaxed text-apex-muted">
               Complete the short application and tell us why you believe you would be a strong fit
-              for APEX. Licensed applicants are contacted quickly. Unlicensed applicants receive the
+              for Vantage. Licensed applicants are contacted quickly. Unlicensed applicants receive the
               licensing steps and reserve a seat for the next Monday company overview.
             </p>
           </div>

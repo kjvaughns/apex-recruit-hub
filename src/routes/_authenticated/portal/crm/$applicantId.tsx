@@ -8,7 +8,7 @@ import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.
 
 export const Route = createFileRoute("/_authenticated/portal/crm/$applicantId")({
   head: () => ({
-    meta: [{ title: "Applicant — APEX Portal" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Applicant — Vantage Portal" }, { name: "robots", content: "noindex" }],
   }),
   component: ApplicantDetailPage,
 });
@@ -114,7 +114,7 @@ function ApplicantDetailPage() {
               {a.why_text && (
                 <div className="mt-6">
                   <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-apex-faint">
-                    Why APEX
+                    Why Vantage
                   </div>
                   <p className="text-[14px] leading-relaxed text-apex-fog whitespace-pre-wrap">
                     {a.why_text}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 
-// A dark, APEX-styled date + time picker with shortcuts. Emits an ISO string
+// A dark, Vantage-styled date + time picker with shortcuts. Emits an ISO string
 // (local time preserved) or null for "no due date". Renders as a centered
 // modal/sheet so it works cleanly on mobile.
 

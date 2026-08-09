@@ -8,7 +8,7 @@ import { PlayerModal, type Presenter, type Recording } from "@/components/apex/r
 import { formatDisplayDate } from "@/components/apex/resources/shared";
 
 export const Route = createFileRoute("/_authenticated/portal/resources/presentations")({
-  head: () => ({ meta: [{ title: "Recorded Trainings — APEX Portal" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Recorded Trainings — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
   component: PresentationsPage,
 });
 
