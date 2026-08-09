@@ -216,29 +216,6 @@ function LandingPage() {
               Build a real career in <span className="apx-gold-text">life insurance</span>
             </h1>
 
-            {/* VSL slot */}
-            <div className="mt-8 w-full max-w-[760px]">
-              <div className="mb-4 apx-kicker text-center">
-                <span className="apx-glow-dot mr-2 inline-block h-1.5 w-1.5 rounded-full bg-apex-gold align-middle" />
-                Watch This First
-              </div>
-              <div
-                className="relative aspect-video w-full overflow-hidden rounded-[22px] border border-apex-gold/30"
-                style={{
-                  boxShadow:
-                    "0 1px 0 rgba(255,255,255,0.08) inset, 0 30px 80px rgba(0,0,0,0.55), 0 0 60px rgba(201,168,76,0.1)",
-                }}
-              >
-                <iframe
-                  src="https://www.youtube.com/embed/E2VJ1v85IRE"
-                  title="Vantage Financial — Watch This First"
-                  className="absolute inset-0 h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              </div>
-            </div>
-
             <p className="mt-8 max-w-[560px] text-[17px] leading-relaxed text-apex-muted">
               Join a technology-driven life insurance agency built for serious agents who want
               uncapped commission, daily pay opportunities, unlimited lead access, hands-on
