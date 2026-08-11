@@ -117,10 +117,13 @@ export function GoldButton({ href, label }: { href: string; label: string }) {
 export function Shell({
   preview,
   title,
+  footerNote,
   children,
 }: {
   preview: string
   title: string
+  /** Overrides the default recruiting footer line (use for account/auth emails). */
+  footerNote?: string
   children: React.ReactNode
 }) {
   return (
@@ -136,8 +139,9 @@ export function Shell({
           </Section>
           <Hr style={hr} />
           <Text style={footerStyle}>
-            &copy; 2026 Vantage Financial. You&apos;re receiving this because you applied to
-            join the Vantage team.
+            &copy; 2026 Vantage Financial.{' '}
+            {footerNote ??
+              "You're receiving this because you applied to join the Vantage team."}
           </Text>
         </Container>
       </Body>
