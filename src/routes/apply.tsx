@@ -176,7 +176,8 @@ function ApplyPage() {
           referral_source,
           referral_landing_url: landingUrl,
           invalid_referral_slug: invalidSlug,
-        },
+          requested_overview_at: form.overview_slot,
+
       });
       sessionStorage.setItem("vantage_applicant_first", form.first_name.trim());
       // Route by the applicant's own answer (source of truth on the client),
