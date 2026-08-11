@@ -139,7 +139,9 @@ function ApplyPage() {
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 7) errs.push("phone");
     if (!form.state) errs.push("your state");
     if (form.licensed === null) errs.push("your licensing status");
+    if (slots.length > 0 && !form.overview_slot) errs.push("the overview date you can attend");
     if (!recruiter) errs.push("who referred you");
+
     if (!form.why_text.trim() || form.why_text.trim().length < 10)
       errs.push("a short reason (min 10 chars)");
     if (!form.consent_contact) errs.push("consent to be contacted");
