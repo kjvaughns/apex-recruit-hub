@@ -143,13 +143,16 @@ export type Database = {
           created_at: string
           current_stage_id: string | null
           date_of_birth: string | null
+          discord_confirmed: boolean
           email: string
           evaluation_completed_at: string | null
           first_name: string
+          hired_at: string | null
           id: string
           instagram_handle: string | null
           invalid_referral_slug: string | null
           last_contacted_at: string | null
+          last_follow_up_at: string | null
           last_name: string
           licensed: boolean
           licensing_status: string | null
@@ -157,6 +160,8 @@ export type Database = {
           original_recruiter_id: string | null
           original_referral_name_snapshot: string | null
           original_referral_profile_id: string | null
+          overview_completed_at: string | null
+          overview_scheduled_at: string | null
           phone: string | null
           portal_invitation_id: string | null
           portal_profile_id: string | null
@@ -199,13 +204,16 @@ export type Database = {
           created_at?: string
           current_stage_id?: string | null
           date_of_birth?: string | null
+          discord_confirmed?: boolean
           email: string
           evaluation_completed_at?: string | null
           first_name: string
+          hired_at?: string | null
           id?: string
           instagram_handle?: string | null
           invalid_referral_slug?: string | null
           last_contacted_at?: string | null
+          last_follow_up_at?: string | null
           last_name: string
           licensed?: boolean
           licensing_status?: string | null
@@ -213,6 +221,8 @@ export type Database = {
           original_recruiter_id?: string | null
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
+          overview_completed_at?: string | null
+          overview_scheduled_at?: string | null
           phone?: string | null
           portal_invitation_id?: string | null
           portal_profile_id?: string | null
@@ -255,13 +265,16 @@ export type Database = {
           created_at?: string
           current_stage_id?: string | null
           date_of_birth?: string | null
+          discord_confirmed?: boolean
           email?: string
           evaluation_completed_at?: string | null
           first_name?: string
+          hired_at?: string | null
           id?: string
           instagram_handle?: string | null
           invalid_referral_slug?: string | null
           last_contacted_at?: string | null
+          last_follow_up_at?: string | null
           last_name?: string
           licensed?: boolean
           licensing_status?: string | null
@@ -269,6 +282,8 @@ export type Database = {
           original_recruiter_id?: string | null
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
+          overview_completed_at?: string | null
+          overview_scheduled_at?: string | null
           phone?: string | null
           portal_invitation_id?: string | null
           portal_profile_id?: string | null
@@ -432,6 +447,56 @@ export type Database = {
             columns: ["target_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_outbox: {
+        Row: {
+          applicant_id: string | null
+          created_at: string
+          error: string | null
+          html: string
+          id: string
+          sent_at: string | null
+          status: string
+          subject: string
+          template_key: string
+          to_email: string
+          to_name: string | null
+        }
+        Insert: {
+          applicant_id?: string | null
+          created_at?: string
+          error?: string | null
+          html: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_key: string
+          to_email: string
+          to_name?: string | null
+        }
+        Update: {
+          applicant_id?: string | null
+          created_at?: string
+          error?: string | null
+          html?: string
+          id?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_key?: string
+          to_email?: string
+          to_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_outbox_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
             referencedColumns: ["id"]
           },
         ]
@@ -685,6 +750,7 @@ export type Database = {
           email: string | null
           first_name: string | null
           full_name: string | null
+          hires: number
           id: string
           instagram_handle: string | null
           is_active: boolean
@@ -715,6 +781,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          hires?: number
           id: string
           instagram_handle?: string | null
           is_active?: boolean
@@ -745,6 +812,7 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           full_name?: string | null
+          hires?: number
           id?: string
           instagram_handle?: string | null
           is_active?: boolean
@@ -1129,7 +1197,9 @@ export type Database = {
           id: string
         }[]
       }
+      enqueue_email: { Args: { payload: Json }; Returns: string }
       finalize_invitation_acceptance: { Args: { payload: Json }; Returns: Json }
+      get_evaluation_prefill: { Args: { _applicant_id: string }; Returns: Json }
       get_invitation_public: { Args: { _token: string }; Returns: Json }
       get_primary_role: { Args: { _user_id: string }; Returns: string }
       get_recruiter_by_slug: {
