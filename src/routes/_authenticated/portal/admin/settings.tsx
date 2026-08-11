@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
 import { adminGetSettings, adminSetSetting } from "@/lib/portal.functions";
 import { useState, useEffect } from "react";
+import { PageHeader, PageBody, Panel, Field, Input, Button, Stack } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/settings")({
   head: () => ({ meta: [{ title: "System Settings — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
@@ -42,37 +43,35 @@ function SettingsPage() {
 
   return (
     <PortalShell>
-      <PortalHeader kicker="Admin" title="System settings" />
-      <div className="px-6 py-8 md:px-10">
-        <div className="apx-card max-w-2xl p-6 md:p-8">
+      <PageBody>
+        <PageHeader title="System settings" description="Global platform configuration and defaults." />
+        <Panel padded>
           {isLoading ? (
-            <div className="text-apex-dim">Loading…</div>
+            <div className="p-secondary">Loading…</div>
           ) : (
-            <div className="flex flex-col gap-5">
+            <Stack className="space-y-4">
               {KEYS.map((k) => (
-                <div key={k.key}>
-                  <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-faint">{k.label}</label>
+                <Field key={k.key} label={k.label}>
                   <div className="flex gap-2">
-                    <input
-                      className="apx-input flex-1"
+                    <Input
                       placeholder={k.placeholder}
                       value={vals[k.key] ?? ""}
                       onChange={(e) => setVals({ ...vals, [k.key]: e.target.value })}
                     />
-                    <button
+                    <Button
+                      variant="primary"
                       onClick={() => save.mutate({ key: k.key, value: vals[k.key] ?? "" })}
                       disabled={save.isPending}
-                      className="apx-btn-primary px-5 disabled:opacity-60"
                     >
                       Save
-                    </button>
+                    </Button>
                   </div>
-                </div>
+                </Field>
               ))}
-            </div>
+            </Stack>
           )}
-        </div>
-      </div>
+        </Panel>
+      </PageBody>
     </PortalShell>
   );
 }

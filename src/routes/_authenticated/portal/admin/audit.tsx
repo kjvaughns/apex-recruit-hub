@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
 import { getAuditLogs } from "@/lib/portal.functions";
+import { PageHeader, PageBody, Select, TableWrap, Table, THead, TH, TR, TD, Badge, EmptyState } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/audit")({
   head: () => ({
@@ -35,67 +36,55 @@ function AuditPage() {
 
   return (
     <PortalShell>
-      <PortalHeader
-        kicker="Admin"
-        title="Audit log"
-        actions={
-          <select
-            className="apx-input h-9 text-[12.5px]"
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-          >
-            {ACTIONS.map((a) => (
-              <option key={a} value={a}>
-                {a === "" ? "All actions" : labelize(a)}
-              </option>
-            ))}
-          </select>
-        }
-      />
-      <div className="px-6 py-8 md:px-10">
-        <div className="apx-card overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-[13.5px]">
-            <thead className="bg-white/[0.02] text-[11px] uppercase tracking-[0.12em] text-apex-faint">
-              <tr>
-                <th className="px-5 py-3">Action</th>
-                <th className="px-5 py-3">Detail</th>
-                <th className="px-5 py-3">When</th>
-              </tr>
-            </thead>
+      <PageBody>
+        <PageHeader
+          title="Audit log"
+          description="System activity across the portal."
+          actions={
+            <Select value={action} onChange={(e) => setAction(e.target.value)} className="h-9 w-auto text-[12.5px]">
+              {ACTIONS.map((a) => (
+                <option key={a} value={a}>
+                  {a === "" ? "All actions" : labelize(a)}
+                </option>
+              ))}
+            </Select>
+          }
+        />
+        <TableWrap>
+          <Table>
+            <THead>
+              <TH>Action</TH>
+              <TH>Detail</TH>
+              <TH>When</TH>
+            </THead>
             <tbody>
               {q.isLoading ? (
-                <tr>
-                  <td colSpan={3} className="px-5 py-10 text-center text-apex-dim">
-                    Loading…
-                  </td>
-                </tr>
+                <TR>
+                  <TD colSpan={3} className="p-secondary text-center">Loading…</TD>
+                </TR>
               ) : logs.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-5 py-10 text-center text-apex-dim">
-                    No audit entries.
-                  </td>
-                </tr>
+                <TR>
+                  <TD colSpan={3}>
+                    <EmptyState title="No audit entries" />
+                  </TD>
+                </TR>
               ) : (
                 logs.map((l: any) => (
-                  <tr key={l.id} className="border-t border-white/[0.05]">
-                    <td className="px-5 py-3">
-                      <span className="rounded-full border border-apex-gold/30 bg-apex-gold/5 px-2.5 py-1 text-[11.5px] capitalize text-apex-gold">
-                        {labelize(l.action)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-apex-dim">
+                  <TR key={l.id}>
+                    <TD>
+                      <Badge tone="gold">{labelize(l.action)}</Badge>
+                    </TD>
+                    <TD className="p-secondary">
                       {l.new_value ? JSON.stringify(l.new_value) : "—"}
-                    </td>
-                    <td className="px-5 py-3 text-apex-faint">
-                      {new Date(l.created_at).toLocaleString()}
-                    </td>
-                  </tr>
+                    </TD>
+                    <TD className="p-muted">{new Date(l.created_at).toLocaleString()}</TD>
+                  </TR>
                 ))
               )}
             </tbody>
-          </table>
-        </div>
-      </div>
+          </Table>
+        </TableWrap>
+      </PageBody>
     </PortalShell>
   );
 }
