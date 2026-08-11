@@ -1164,6 +1164,49 @@ export const adminSetAgentScheduling = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---- Self-service profile + notification settings ------------------------
+
+/** Update the signed-in user's own profile (name, phone, avatar). */
+export const updateMyProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        first_name: z.string().trim().max(80).optional(),
+        last_name: z.string().trim().max(80).optional(),
+        phone: z.string().trim().max(40).optional().or(z.literal("")),
+        avatar_url: z.string().trim().url().max(600).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (data.first_name !== undefined) patch.first_name = data.first_name;
+    if (data.last_name !== undefined) patch.last_name = data.last_name;
+    if (data.phone !== undefined) patch.phone = data.phone || null;
+    if (data.avatar_url !== undefined) patch.avatar_url = data.avatar_url || null;
+    const { error } = await supabase.from("profiles").update(patch as never).eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Save the signed-in user's notification toggles (jsonb map). */
+export const updateMyNotificationPrefs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ prefs: z.record(z.string(), z.boolean()) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ notification_prefs: data.prefs, updated_at: new Date().toISOString() } as never)
+      .eq("id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ---- Manual applicant entry (Phase 4) ------------------------------------
 
 /** Users the caller may assign applicants to: self + downline (admins: all). */
