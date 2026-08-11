@@ -1,6 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { getMyOnboarding, completeOnboardingStep } from "@/lib/portal.functions";
+import {
+  ONBOARDING_STEP_ORDER,
+  type OnboardingStepKey,
+  type OnboardingStepState,
+} from "@/lib/onboarding";
 
 export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   head: () => ({
@@ -9,54 +17,78 @@ export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   component: OnboardingPage,
 });
 
-type StepKey =
-  | "agentspace_contracting"
-  | "discord_role_update"
-  | "portal_account_setup"
-  | "expectations_reviewed";
-
-type StepState = { completed: boolean; completed_at: string | null };
-type Steps = Record<StepKey, StepState>;
-
 const AGENCY_CODE = "AEFS-AVLX-A7FY-9Z9L";
 const AGENTSPACE_URL = "https://app.useagentspace.com/register";
 
-const ORDER: StepKey[] = [
-  "agentspace_contracting",
-  "discord_role_update",
-  "portal_account_setup",
-  "expectations_reviewed",
-];
+function stepState(
+  steps: Record<string, OnboardingStepState> | undefined,
+  key: OnboardingStepKey,
+): OnboardingStepState {
+  return steps?.[key] ?? { completed: false, completed_at: null };
+}
 
 function OnboardingPage() {
-  // Phase 0: local mock state. Phase 4 replaces this with getMyOnboarding /
-  // completeOnboardingStep server state. portal_account_setup is auto-complete
-  // (logging in proves it).
-  const [steps, setSteps] = useState<Steps>({
-    agentspace_contracting: { completed: false, completed_at: null },
-    discord_role_update: { completed: false, completed_at: null },
-    portal_account_setup: { completed: true, completed_at: new Date().toISOString() },
-    expectations_reviewed: { completed: false, completed_at: null },
+  const qc = useQueryClient();
+  const fetchOnboarding = useServerFn(getMyOnboarding);
+  const completeStep = useServerFn(completeOnboardingStep);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["my-onboarding"],
+    queryFn: () => fetchOnboarding(),
   });
 
-  function complete(key: StepKey) {
-    setSteps((p) => ({ ...p, [key]: { completed: true, completed_at: new Date().toISOString() } }));
+  const mut = useMutation({
+    mutationFn: (step: "agentspace_contracting" | "discord_role_update" | "expectations_reviewed") =>
+      completeStep({ data: { step } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-onboarding"] });
+      qc.invalidateQueries({ queryKey: ["applicants"] });
+      qc.invalidateQueries({ queryKey: ["applicant"] });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <PortalShell>
+        <PortalHeader kicker="Welcome to Vantage" title="Your onboarding checklist" />
+        <div className="p-10 text-[13px] text-apex-faint">Loading…</div>
+      </PortalShell>
+    );
   }
 
-  const done = ORDER.filter((k) => steps[k].completed).length;
-  const allDone = done === ORDER.length;
-  const pct = Math.round((done / ORDER.length) * 100);
+  if (!data?.hasOnboarding) {
+    return (
+      <PortalShell>
+        <PortalHeader kicker="Welcome to Vantage" title="Onboarding" />
+        <div className="mx-auto max-w-[560px] px-6 py-16 text-center md:px-10">
+          <div className="apx-card p-8">
+            <p className="text-[15px] text-apex-muted">
+              You don't have any onboarding steps assigned. You're all set — head to your dashboard.
+            </p>
+            <Link to="/portal" className="apx-btn-primary mt-5 inline-flex px-6 py-3 text-[14px]">
+              Go to dashboard →
+            </Link>
+          </div>
+        </div>
+      </PortalShell>
+    );
+  }
+
+  const steps = data.steps as Record<string, OnboardingStepState>;
+  const done = data.done ?? 0;
+  const total = data.total ?? ONBOARDING_STEP_ORDER.length;
+  const allDone = !!data.complete;
+  const pct = Math.round((done / total) * 100);
 
   return (
     <PortalShell>
       <PortalHeader kicker="Welcome to Vantage" title="Your onboarding checklist" />
 
       <div className="mx-auto max-w-[820px] px-6 py-8 md:px-10">
-        {/* Progress */}
         <div className="apx-card p-5 md:p-6">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-apex-muted">
-              {allDone ? "All steps complete" : `${done} of ${ORDER.length} complete`}
+              {allDone ? "All steps complete" : `${done} of ${total} complete`}
             </span>
             <span className="font-display text-[20px] text-apex-gold">{pct}%</span>
           </div>
@@ -80,6 +112,9 @@ function OnboardingPage() {
               Every step is done — welcome to the team. Your training path will be available in the
               portal shortly.
             </p>
+            <Link to="/portal" className="apx-btn-ghost mt-5 inline-flex px-6 py-3 text-[14px]">
+              Go to your dashboard →
+            </Link>
           </div>
         )}
 
@@ -87,8 +122,9 @@ function OnboardingPage() {
           <StepCard
             n={1}
             title="AgentSpace contracting"
-            state={steps.agentspace_contracting}
-            onComplete={() => complete("agentspace_contracting")}
+            state={stepState(steps, "agentspace_contracting")}
+            onComplete={() => mut.mutate("agentspace_contracting")}
+            pending={mut.isPending}
             actionLabel="I've completed this"
           >
             <p className="text-[14px] leading-relaxed text-apex-dim">
@@ -111,8 +147,9 @@ function OnboardingPage() {
           <StepCard
             n={2}
             title="Discord role update"
-            state={steps.discord_role_update}
-            onComplete={() => complete("discord_role_update")}
+            state={stepState(steps, "discord_role_update")}
+            onComplete={() => mut.mutate("discord_role_update")}
+            pending={mut.isPending}
             actionLabel="I've completed this"
           >
             <p className="text-[14px] leading-relaxed text-apex-dim">
@@ -121,12 +158,7 @@ function OnboardingPage() {
             </p>
           </StepCard>
 
-          <StepCard
-            n={3}
-            title="Portal account setup"
-            state={steps.portal_account_setup}
-            auto
-          >
+          <StepCard n={3} title="Portal account setup" state={stepState(steps, "portal_account_setup")} auto>
             <p className="text-[14px] leading-relaxed text-apex-dim">
               Done automatically — you're logged into the portal right now, which is all this step
               needs.
@@ -136,8 +168,9 @@ function OnboardingPage() {
           <StepCard
             n={4}
             title="Expectations reviewed"
-            state={steps.expectations_reviewed}
-            onComplete={() => complete("expectations_reviewed")}
+            state={stepState(steps, "expectations_reviewed")}
+            onComplete={() => mut.mutate("expectations_reviewed")}
+            pending={mut.isPending}
             actionLabel="I've reviewed this"
           >
             <p className="text-[14px] leading-relaxed text-apex-dim">
@@ -158,21 +191,21 @@ function StepCard({
   onComplete,
   actionLabel,
   auto,
+  pending,
   children,
 }: {
   n: number;
   title: string;
-  state: StepState;
+  state: OnboardingStepState;
   onComplete?: () => void;
   actionLabel?: string;
   auto?: boolean;
+  pending?: boolean;
   children: React.ReactNode;
 }) {
   const done = state.completed;
   return (
-    <div
-      className={`apx-card p-5 md:p-6 ${done ? "border-emerald-500/25" : ""}`}
-    >
+    <div className={`apx-card p-5 md:p-6 ${done ? "border-emerald-500/25" : ""}`}>
       <div className="flex items-start gap-4">
         <div
           className={`flex h-10 w-10 flex-none items-center justify-center rounded-full border font-display text-[18px] ${
@@ -193,10 +226,17 @@ function StepCard({
           <div className="mt-4">
             {done ? (
               <div className="text-[12px] text-emerald-300/80">
-                Completed{state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
+                Completed
+                {state.completed_at
+                  ? ` · ${new Date(state.completed_at).toLocaleDateString()}`
+                  : ""}
               </div>
             ) : auto ? null : (
-              <button onClick={onComplete} className="apx-btn-primary px-4 py-2.5 text-[13px]">
+              <button
+                onClick={onComplete}
+                disabled={pending}
+                className="apx-btn-primary px-4 py-2.5 text-[13px] disabled:opacity-60"
+              >
                 {actionLabel ?? "Mark complete"}
               </button>
             )}
