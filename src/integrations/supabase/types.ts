@@ -157,6 +157,8 @@ export type Database = {
           licensed: boolean
           licensing_status: string | null
           next_follow_up_at: string | null
+          onboarding_completed_at: string | null
+          onboarding_steps: Json | null
           original_recruiter_id: string | null
           original_referral_name_snapshot: string | null
           original_referral_profile_id: string | null
@@ -218,6 +220,8 @@ export type Database = {
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_steps?: Json | null
           original_recruiter_id?: string | null
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
@@ -279,6 +283,8 @@ export type Database = {
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_steps?: Json | null
           original_recruiter_id?: string | null
           original_referral_name_snapshot?: string | null
           original_referral_profile_id?: string | null
@@ -1191,6 +1197,7 @@ export type Database = {
         }[]
       }
       create_invitation: { Args: { payload: Json }; Returns: Json }
+      default_onboarding_steps: { Args: never; Returns: Json }
       descendant_ids: {
         Args: { _root: string }
         Returns: {
