@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,9 @@ import {
   submitApplication,
   getRecruiterBySlug,
 } from "@/lib/applications.functions";
+import { getOverviewSlots } from "@/lib/calendly.functions";
 import { getReferral } from "@/lib/referral";
+
 
 const searchSchema = z.object({
   ref: z.string().optional(),
@@ -43,6 +46,7 @@ type Form = {
   phone: string;
   state: string;
   licensed: boolean | null;
+  overview_slot: string;
   instagram_handle: string;
   why_text: string;
   consent_contact: boolean;
@@ -55,6 +59,7 @@ const initial: Form = {
   phone: "",
   state: "",
   licensed: null,
+  overview_slot: "",
   instagram_handle: "",
   why_text: "",
   consent_contact: false,
@@ -65,6 +70,18 @@ function ApplyPage() {
   const navigate = useNavigate();
   const submit = useServerFn(submitApplication);
   const resolveRecruiter = useServerFn(getRecruiterBySlug);
+  const fetchSlots = useServerFn(getOverviewSlots);
+
+  // Live Monday overview availability from Calendly. If this fails or comes back
+  // empty the field is simply skipped — applications are never blocked on it.
+  const slotsQuery = useQuery({
+    queryKey: ["overview-slots"],
+    queryFn: () => fetchSlots(),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const slots = slotsQuery.data?.slots ?? [];
+
 
   const [form, setForm] = useState<Form>(initial);
   // Final selected recruiter (what gets submitted) + the original referral-link
@@ -122,7 +139,9 @@ function ApplyPage() {
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 7) errs.push("phone");
     if (!form.state) errs.push("your state");
     if (form.licensed === null) errs.push("your licensing status");
+    if (slots.length > 0 && !form.overview_slot) errs.push("the overview date you can attend");
     if (!recruiter) errs.push("who referred you");
+
     if (!form.why_text.trim() || form.why_text.trim().length < 10)
       errs.push("a short reason (min 10 chars)");
     if (!form.consent_contact) errs.push("consent to be contacted");
@@ -157,8 +176,10 @@ function ApplyPage() {
           referral_source,
           referral_landing_url: landingUrl,
           invalid_referral_slug: invalidSlug,
+          requested_overview_at: form.overview_slot,
         },
       });
+
       sessionStorage.setItem("vantage_applicant_first", form.first_name.trim());
       // Route by the applicant's own answer (source of truth on the client),
       // falling back to the server's echo. Prevents any drift between the two.
@@ -281,6 +302,30 @@ function ApplyPage() {
               })}
             </div>
           </Field>
+
+          {slots.length > 0 && (
+            <Field label="Which overview can you attend? *">
+              <select
+                className="vantage-input w-full appearance-none"
+                value={form.overview_slot}
+                onChange={(e) => set("overview_slot", e.target.value)}
+              >
+                <option value="">Select a Monday overview…</option>
+                {slots.map((s) => (
+                  <option key={s.startIso} value={s.startIso}>
+                    {s.label}
+                    {s.seatsLeft !== null && s.seatsLeft <= 5 ? ` — ${s.seatsLeft} seats left` : ""}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-[12.5px] leading-relaxed text-vantage-muted">
+                Live availability from our calendar. After you submit, your seat is pre-filled — one
+                tap confirms it.
+              </p>
+            </Field>
+          )}
+
+
 
           <Field label="Who referred you? *">
             <RecruiterCombobox

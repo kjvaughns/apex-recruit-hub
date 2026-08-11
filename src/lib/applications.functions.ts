@@ -41,6 +41,9 @@ const applicationSchema = z
     referral_source: z.enum(["referral_link", "manual", "direct"]).optional(),
     referral_landing_url: z.string().trim().max(600).optional().or(z.literal("")),
     invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
+    // Monday overview slot the applicant picked on the form (ISO-8601 UTC).
+    requested_overview_at: z.string().trim().max(40).optional().or(z.literal("")),
+
   })
   .refine(
     (d) =>
@@ -63,6 +66,16 @@ export const submitApplication = createServerFn({ method: "POST" })
       success_page_type: "licensed" | "unlicensed";
       recruiter_id: string | null;
     };
+
+    // Persist the overview slot they picked on the form so the pipeline shows an
+    // intended date even before Calendly confirms it. Never blocks submission.
+    if (data.requested_overview_at) {
+      const { error: slotError } = await (supabase as any).rpc("set_requested_overview", {
+        _token: res.token,
+        _at: data.requested_overview_at,
+      });
+      if (slotError) console.error("set_requested_overview failed", slotError.message);
+    }
 
     // Trigger: application-submitted email (branches on licensing). Stub send —
     // enqueues into the outbox, never blocks the submission.
@@ -208,3 +221,46 @@ export const markScheduled = createServerFn({ method: "POST" })
     return result as { matched: boolean; id?: string };
   });
 
+
+export type OverviewBooking = {
+  found: boolean;
+  /** Calendly URL, deep-linked to the chosen slot and pre-filled when possible. */
+  url: string | null;
+  requested_overview_at: string | null;
+};
+
+/**
+ * Resolve the one-tap Calendly confirm URL for an applicant's chosen overview
+ * slot. Calendly does not allow third parties to create a booking on an
+ * invitee's behalf, so the applicant confirms on Calendly — pre-filled.
+ */
+export const getOverviewBooking = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({ token: z.string().min(10).max(128), base_url: z.string().min(1).max(600) }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { buildPrefilledUrl } = await import("@/lib/calendly.server");
+    const supabase = serverClient();
+    const { data: result, error } = await (supabase as any).rpc("get_overview_prefill", {
+      _token: data.token,
+    });
+    if (error) throw new Error(error.message);
+    const row = (result ?? { found: false }) as {
+      found: boolean;
+      requested_overview_at?: string | null;
+      first_name?: string | null;
+      last_name?: string | null;
+      email?: string | null;
+    };
+    if (!row.found) return { found: false, url: null, requested_overview_at: null } as OverviewBooking;
+    const name = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
+    return {
+      found: true,
+      requested_overview_at: row.requested_overview_at ?? null,
+      url: buildPrefilledUrl(data.base_url, row.requested_overview_at ?? null, {
+        name,
+        email: row.email ?? null,
+        token: data.token,
+      }),
+    } as OverviewBooking;
+  });
