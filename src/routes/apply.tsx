@@ -254,28 +254,34 @@ function ApplyPage() {
           </Field>
           <Field label="Are you currently licensed? *">
             <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => set("licensed", true)}
-                className={cn(
-                  "apx-input flex items-center justify-center font-medium transition-colors",
-                  form.licensed === true ? "border-apex-gold text-apex-ivory" : "text-apex-muted",
-                )}
-              >
-                Yes, I'm licensed
-              </button>
-              <button
-                type="button"
-                onClick={() => set("licensed", false)}
-                className={cn(
-                  "apx-input flex items-center justify-center font-medium transition-colors",
-                  form.licensed === false ? "border-apex-gold text-apex-ivory" : "text-apex-muted",
-                )}
-              >
-                No, not yet
-              </button>
+              {(
+                [
+                  { value: true, label: "Yes, I'm licensed" },
+                  { value: false, label: "No, not yet" },
+                ] as const
+              ).map((opt) => {
+                const active = form.licensed === opt.value;
+                return (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => set("licensed", opt.value)}
+                    className={cn(
+                      "apx-input flex min-h-[54px] cursor-pointer touch-manipulation items-center justify-center gap-2 text-center font-semibold transition-colors select-none",
+                      active
+                        ? "border-apex-gold bg-apex-gold text-apex-card shadow-[0_0_24px_rgba(201,168,76,0.25)]"
+                        : "text-apex-muted hover:border-apex-gold/50 hover:text-apex-ivory active:border-apex-gold",
+                    )}
+                  >
+                    {active && <span aria-hidden>✓</span>}
+                    {opt.label}
+                  </button>
+                );
+              })}
             </div>
           </Field>
+
           <Field label="Who referred you? *">
             <RecruiterCombobox
               value={recruiter}
