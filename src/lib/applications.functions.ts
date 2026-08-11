@@ -41,6 +41,9 @@ const applicationSchema = z
     referral_source: z.enum(["referral_link", "manual", "direct"]).optional(),
     referral_landing_url: z.string().trim().max(600).optional().or(z.literal("")),
     invalid_referral_slug: z.string().trim().max(120).optional().or(z.literal("")),
+    // Monday overview slot the applicant picked on the form (ISO-8601 UTC).
+    requested_overview_at: z.string().trim().max(40).optional().or(z.literal("")),
+
   })
   .refine(
     (d) =>
