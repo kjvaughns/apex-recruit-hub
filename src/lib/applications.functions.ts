@@ -151,6 +151,8 @@ export const submitApplication = createServerFn({ method: "POST" })
     }
 
     // Trigger: Discord recruiting bot. No-ops when no webhook is configured.
+    // Server-only module — loaded inside the handler so it never ships to the client.
+    const { notifyNewRecruit } = await import("@/lib/discord.server");
     await notifyNewRecruit(supabase as never, {
       firstName: data.first_name,
       lastName: data.last_name,
