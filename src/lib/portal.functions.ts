@@ -595,13 +595,17 @@ export const sendFollowUpEmail = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!a?.email) throw new Error("Applicant has no email on file.");
 
+    const applicantName = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined;
     await queueEmail(supabase as never, {
       to: a.email,
-      toName: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
+      toName: applicantName,
       applicantId: a.id,
       template: "followup_checkin",
       params: { firstName: firstNameFrom(null, a.first_name) },
+      copyTo: await recruiterCopy(supabase, a.id),
+      copyForName: applicantName ?? a.email,
     });
+
 
     const now = new Date().toISOString();
     // last_follow_up_at resets the weekly-follow-up counter (Phase 5).
