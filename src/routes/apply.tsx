@@ -182,17 +182,36 @@ function ApplyPage() {
         <div className="apx-reveal text-center">
           <div className="apx-eyebrow-pill mb-5 inline-flex">Join the team</div>
           <h1 className="font-display text-[clamp(40px,6vw,68px)] leading-none">
-            Your Vantage application
+            Build your empire in insurance sales
           </h1>
-          <p className="mx-auto mt-4 max-w-[520px] text-[16px] leading-relaxed text-apex-muted">
-            Three minutes. After you apply, you'll book a short overview call and we'll email you
-            the details.
+          <p className="mx-auto mt-4 max-w-[540px] text-[16px] leading-relaxed text-apex-muted">
+            Uncapped commissions paid weekly, warm inbound leads, and free licensing and training.
+            Three minutes to apply — no résumé required.
           </p>
+
+          {/* Value prop strip — make the "why" obvious above the fold */}
+          <div className="mx-auto mt-7 flex max-w-[560px] flex-wrap items-center justify-center gap-2.5">
+            {VALUE_PROPS.map((v) => (
+              <span
+                key={v}
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-[12.5px] font-medium text-apex-fog"
+              >
+                <span className="text-apex-gold">✓</span>
+                {v}
+              </span>
+            ))}
+          </div>
+
           {recruiter && (
-            <p className="mt-5 text-[14px] text-apex-gold">
-              Referred by{" "}
-              <span className="font-semibold text-apex-ivory">{recruiter.full_name}</span>
-            </p>
+            <div className="mx-auto mt-7 inline-flex items-center gap-3 rounded-full border border-apex-gold/30 bg-apex-gold/[0.08] py-2 pl-2 pr-5">
+              <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-apex-gold text-[13px] font-bold text-apex-card">
+                {(recruiter.full_name ?? "?").slice(0, 1).toUpperCase()}
+              </span>
+              <span className="text-[13.5px] text-apex-dim">
+                Referred by{" "}
+                <span className="font-semibold text-apex-ivory">{recruiter.full_name}</span>
+              </span>
+            </div>
           )}
         </div>
 
@@ -330,6 +349,8 @@ function ApplyPage() {
     </PublicShell>
   );
 }
+
+const VALUE_PROPS = ["Paid weekly", "Warm inbound leads", "Free licensing & training"];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
