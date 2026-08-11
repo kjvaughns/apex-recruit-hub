@@ -36,6 +36,14 @@ function DashboardPage() {
 
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
 
+  // Onboarding progress card (reuses the my-onboarding query). Ternaries keep the
+  // discriminated-union narrowing that a closure would lose.
+  const onb = onbQ.data;
+  const onbDone = onb?.hasOnboarding ? onb.done ?? 0 : 0;
+  const onbTotal = onb?.hasOnboarding ? onb.total ?? 4 : 4;
+  const onbComplete = onb?.hasOnboarding ? !!onb.complete : false;
+  const onbPct = Math.round((onbDone / onbTotal) * 100);
+
   if (needsOnboarding) {
     return (
       <PortalShell>
@@ -65,6 +73,36 @@ function DashboardPage() {
         ) : (
           <div className="space-y-4">
             <RecruitingLinkCard />
+
+            {onb?.hasOnboarding && (
+              <Panel
+                title="Your onboarding"
+                actions={
+                  <Link to="/portal/onboarding">
+                    <Button variant="secondary" size="sm">View checklist →</Button>
+                  </Link>
+                }
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="p-label">
+                    {onbComplete ? "All steps complete" : `${onbDone} of ${onbTotal} complete`}
+                  </span>
+                  {onbComplete ? (
+                    <Badge tone="green">Complete</Badge>
+                  ) : (
+                    <span className="p-metric" style={{ color: "var(--p-gold)" }}>
+                      {onbPct}%
+                    </span>
+                  )}
+                </div>
+                <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${Math.max(4, onbPct)}%`, background: "var(--p-gold)" }}
+                  />
+                </div>
+              </Panel>
+            )}
 
             <MetricRow>
               <MetricCard label="My Applicants" value={data?.counts.totalMine ?? 0} hint="Active in your book" />

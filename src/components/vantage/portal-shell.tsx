@@ -57,6 +57,7 @@ function NavRow({
   collapsed,
   onClick,
   accent,
+  badge,
 }: {
   to: string;
   icon: LucideIcon;
@@ -65,6 +66,7 @@ function NavRow({
   collapsed: boolean;
   onClick?: () => void;
   accent?: boolean;
+  badge?: ReactNode;
 }) {
   return (
     <Link
@@ -81,7 +83,8 @@ function NavRow({
       }
     >
       <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
-      {!collapsed && <span className="truncate">{label}</span>}
+      {!collapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
+      {!collapsed && badge && <span className="shrink-0">{badge}</span>}
     </Link>
   );
 }
@@ -123,7 +126,17 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const fetchOnboarding = useServerFn(getMyOnboarding);
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => fetchMe() });
   const onboardingQ = useQuery({ queryKey: ["my-onboarding"], queryFn: () => fetchOnboarding() });
-  const showOnboardingNav = !!onboardingQ.data?.hasOnboarding && !onboardingQ.data.complete;
+  const onb = onboardingQ.data;
+  const onbInProgress = !!onb?.hasOnboarding && !onb.complete;
+  const onboardingBadge = onb?.hasOnboarding ? (
+    onb.complete ? (
+      <Badge tone="green">Done</Badge>
+    ) : (
+      <Badge tone="gold">
+        {onb.done}/{onb.total}
+      </Badge>
+    )
+  ) : null;
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
@@ -204,17 +217,16 @@ export function PortalShell({ children }: { children: ReactNode }) {
           </div>
 
           <nav className="flex-1 overflow-y-auto px-2 py-3">
-            {showOnboardingNav && (
-              <NavRow
-                to="/portal/onboarding"
-                icon={Rocket}
-                label="Onboarding"
-                accent
-                active={path.startsWith("/portal/onboarding")}
-                collapsed={collapsed}
-                onClick={() => setMobileOpen(false)}
-              />
-            )}
+            <NavRow
+              to="/portal/onboarding"
+              icon={Rocket}
+              label="Onboarding"
+              accent={onbInProgress}
+              badge={onboardingBadge}
+              active={path.startsWith("/portal/onboarding")}
+              collapsed={collapsed}
+              onClick={() => setMobileOpen(false)}
+            />
             {NAV.map((n) => (
               <NavRow
                 key={n.to}
