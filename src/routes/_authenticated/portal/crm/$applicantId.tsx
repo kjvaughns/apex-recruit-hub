@@ -9,6 +9,7 @@ import {
   addApplicantNote,
   setOverviewStatus,
   sendFollowUpEmail,
+  setDiscordConfirmed,
 } from "@/lib/portal.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
 
@@ -118,11 +119,17 @@ function ApplicantDetailPage() {
                   label="Location"
                   value={[a.city, a.state, a.zip].filter(Boolean).join(", ") || "—"}
                 />
-                <Field label="Date of birth" value={a.date_of_birth ?? "—"} />
-                <Field label="Licensed" value={a.licensed ? "Yes" : "No"} />
+                <Field
+                  label="Licensing status"
+                  value={
+                    (a.licensing_status as string | null) || (a.licensed ? "Licensed" : "Unlicensed")
+                  }
+                />
+                <Field label="Referring recruiter" value={data?.referringRecruiterName || "—"} />
+                <Field label="Date applied" value={new Date(a.created_at).toLocaleDateString()} />
+                <Field label="Last activity" value={lastActivity(data?.activities, a.updated_at)} />
                 <Field label="Priority" value={a.priority} />
                 <Field label="Status" value={a.status} />
-                <Field label="Created" value={new Date(a.created_at).toLocaleString()} />
               </dl>
               {a.why_text && (
                 <div className="mt-6">
@@ -186,6 +193,17 @@ function ApplicantDetailPage() {
             </div>
 
             <SendEvaluationCard applicant={a} />
+
+            {!a.licensed && a.hired_at && (
+              <DiscordCard
+                applicantId={applicantId}
+                confirmed={!!(a as any).discord_confirmed}
+                onChange={() => {
+                  qc.invalidateQueries({ queryKey: ["applicant", applicantId] });
+                  qc.invalidateQueries({ queryKey: ["applicants"] });
+                }}
+              />
+            )}
 
             <FollowUpCard applicantId={applicantId} onSent={() => {
               qc.invalidateQueries({ queryKey: ["applicant", applicantId] });
@@ -471,6 +489,59 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
+function DiscordCard({
+  applicantId,
+  confirmed,
+  onChange,
+}: {
+  applicantId: string;
+  confirmed: boolean;
+  onChange: () => void;
+}) {
+  const setFlag = useServerFn(setDiscordConfirmed);
+  const [busy, setBusy] = useState(false);
+
+  async function toggle() {
+    setBusy(true);
+    try {
+      await setFlag({ data: { id: applicantId, value: !confirmed } });
+      onChange();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="apx-card p-6">
+      <h2 className="mb-1 font-display text-[20px] leading-none">Discord confirmation</h2>
+      <p className="mb-4 text-[12.5px] text-apex-faint">
+        Manually confirm once you've seen their "I got the course" screenshot in the #unlicensed
+        channel.
+      </p>
+      <label className="inline-flex cursor-pointer items-center gap-3">
+        <button
+          onClick={toggle}
+          disabled={busy}
+          className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[12.5px] font-semibold transition disabled:opacity-60 ${
+            confirmed
+              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+              : "border-white/10 text-apex-dim hover:border-apex-gold/40 hover:text-apex-ivory"
+          }`}
+        >
+          <span
+            className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] ${
+              confirmed ? "border-emerald-400 bg-emerald-400 text-black" : "border-white/25"
+            }`}
+          >
+            {confirmed ? "✓" : ""}
+          </span>
+          {confirmed ? "Course post confirmed" : "Mark course post confirmed"}
+        </button>
+      </label>
+    </div>
+  );
+}
+
 function FollowUpCard({
   applicantId,
   onSent,
@@ -619,6 +690,14 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
+function lastActivity(
+  activities: { created_at: string }[] | undefined,
+  fallbackIso: string,
+): string {
+  const iso = activities && activities.length ? activities[0].created_at : fallbackIso;
+  return new Date(iso).toLocaleDateString();
+}
+
 function eventLabel(t: string) {
   const map: Record<string, string> = {
     application_submitted: "Application submitted",
@@ -626,6 +705,7 @@ function eventLabel(t: string) {
     appointment_scheduled: "Appointment scheduled",
     overview_updated: "Overview updated",
     follow_up_sent: "Follow-up sent",
+    discord_updated: "Discord confirmation",
     stage_changed: "Stage changed",
     note: "Note",
   };
