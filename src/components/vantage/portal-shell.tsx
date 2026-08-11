@@ -9,16 +9,32 @@ import { getMe, addAgent, getMyOnboarding } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/vantage/add-agent-modal";
 import { useTheme } from "@/components/vantage/theme";
 import { Avatar, Badge, btnClass } from "@/components/portal/ui";
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  Trophy,
+  BookOpen,
+  Network,
+  Settings,
+  Rocket,
+  UserPlus,
+  Mail,
+  ShieldCheck,
+  ScrollText,
+  type LucideIcon,
+} from "lucide-react";
 
-const NAV = [
-  { to: "/portal", label: "Dashboard", icon: "◈" },
-  { to: "/portal/applicants", label: "Applicants", icon: "◐" },
-  { to: "/portal/calendar", label: "Calendar", icon: "◗" },
-  { to: "/portal/leaderboard", label: "Leaderboard", icon: "★" },
-  { to: "/portal/resources", label: "Resources", icon: "▤" },
-  { to: "/portal/organization", label: "Organization", icon: "⚇" },
-  { to: "/portal/settings", label: "My Settings", icon: "⚙" },
+const NAV: { to: string; label: string; icon: LucideIcon }[] = [
+  { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/portal/applicants", label: "Applicants", icon: Users },
+  { to: "/portal/calendar", label: "Calendar", icon: CalendarDays },
+  { to: "/portal/leaderboard", label: "Leaderboard", icon: Trophy },
+  { to: "/portal/resources", label: "Resources", icon: BookOpen },
+  { to: "/portal/organization", label: "Organization", icon: Network },
+  { to: "/portal/settings", label: "My Settings", icon: Settings },
 ];
+
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
