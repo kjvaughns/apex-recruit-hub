@@ -22,6 +22,10 @@ import {
   Mail,
   ShieldCheck,
   ScrollText,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 
