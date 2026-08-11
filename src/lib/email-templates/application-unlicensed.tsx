@@ -12,7 +12,7 @@ const TITLE = "You're in — here's your next step"
 const Email = ({ firstName, ...rest }: Props) => {
   const L = links(rest)
   return (
-    <Shell preview={TITLE} title={TITLE}>
+    <Shell preview={TITLE} title={TITLE} copyFor={rest.copyFor}>
       <Text style={paragraph}>
         Hey {greet(firstName)}, we&apos;ve got your application — welcome.
       </Text>
