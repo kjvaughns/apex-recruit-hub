@@ -269,20 +269,6 @@ export function PortalShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="shrink-0 border-t p-2" style={{ borderColor: "var(--p-border)" }}>
-            <button
-              onClick={toggleTheme}
-              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className={`p-focus mb-1 flex h-[34px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[13px] font-medium transition hover:bg-[var(--p-hover)] ${
-                collapsed ? "justify-center" : ""
-              }`}
-              style={{ color: "var(--p-text-2)" }}
-            >
-              <span className="w-4 shrink-0 text-center text-[14px]">
-                {theme === "dark" ? "☀" : "☾"}
-              </span>
-              {!collapsed && <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>}
-            </button>
-
             <div
               className={`flex items-center gap-2.5 rounded-[8px] px-1.5 py-2 ${collapsed ? "justify-center" : ""}`}
             >
