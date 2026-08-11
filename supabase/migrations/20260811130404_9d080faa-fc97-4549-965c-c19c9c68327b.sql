@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.resolve_one_on_one_url(uuid) FROM anon;
