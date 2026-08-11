@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { queueEmail } from "@/lib/emails/send";
+import { queueEmail, sendAgentNewApplicant } from "@/lib/emails/send";
+import { scheduleLabel } from "@/lib/recruit-alert";
 
 function serverClient() {
   const url = process.env.SUPABASE_URL!;
