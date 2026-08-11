@@ -30,7 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 const heroStats = [
-  "50% to 145% commission",
+  "Uncapped commission",
   "Daily pay opportunities",
   "Unlimited lead access",
   "20+ carriers",
@@ -40,7 +40,7 @@ const heroStats = [
 const highlights = [
   {
     t: "Uncapped commission",
-    d: "Commission levels from 50% to 145% based on position, experience, production, and promotions.",
+    d: "Uncapped commission based on position, experience, production, and promotions.",
   },
   {
     t: "Daily pay opportunities",
@@ -175,7 +175,7 @@ const faqs = [
   },
   {
     q: "How does commission work?",
-    a: "Commission levels range from 50% to 145% based on position, experience, performance, and promotions.",
+    a: "Commission is uncapped and increases based on position, experience, performance, and promotions.",
   },
   { q: "Is income guaranteed?", a: "No. This is a performance-based sales opportunity." },
 ];
