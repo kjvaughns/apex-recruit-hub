@@ -322,7 +322,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle navigation"
-              className={`${btnClass("ghost", "sm")} md:hidden`}
+              className={`${btnClass("ghost", "sm")} min-h-[40px] min-w-[40px] text-[18px] md:hidden`}
             >
               ☰
             </button>
@@ -346,7 +346,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className={`${btnClass("ghost", "sm")}`}
+              className={`${btnClass("ghost", "sm")} min-h-[40px] min-w-[40px] md:min-h-0 md:min-w-0`}
             >
               {theme === "dark" ? (
                 <Sun className="h-4 w-4" aria-hidden="true" />

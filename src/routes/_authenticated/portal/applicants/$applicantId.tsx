@@ -549,8 +549,8 @@ function SendEvaluationCard({ applicant }: { applicant: any }) {
               overview.
             </p>
           )}
-          <div className="flex gap-2">
-            <Input readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
+          <div className="flex flex-wrap gap-2">
+            <Input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="min-w-[180px] flex-1" />
             <Button variant="primary" onClick={copy} className="shrink-0">
               {copied ? "Copied!" : "Copy link"}
             </Button>

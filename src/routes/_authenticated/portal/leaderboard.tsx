@@ -80,28 +80,41 @@ function LeaderboardPage() {
 
         <div className="space-y-3">
           <Toolbar>
+            {/* Metric: a Select on mobile (the 5-option segmented control overflows phones). */}
+            <Select
+              value={metric}
+              onChange={(e) => setMetric(e.target.value as Metric)}
+              className="h-9 w-full text-[13px] sm:hidden"
+            >
+              {METRICS.map((m) => (
+                <option key={m.key} value={m.key}>
+                  {m.label}
+                </option>
+              ))}
+            </Select>
             <SegmentedControl
+              className="hidden sm:inline-flex"
               size="sm"
               options={METRICS.map((m) => ({ value: m.key, label: m.label }))}
               value={metric}
               onChange={setMetric}
             />
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              <Select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="h-9 w-auto text-[12.5px]">
+            <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+              <Select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="h-9 w-full text-[12.5px] sm:w-auto">
                 {PERIODS.map((p) => (
                   <option key={p.key} value={p.key}>
                     {p.label}
                   </option>
                 ))}
               </Select>
-              <Select value={role} onChange={(e) => setRole(e.target.value as any)} className="h-9 w-auto text-[12.5px]">
+              <Select value={role} onChange={(e) => setRole(e.target.value as any)} className="h-9 w-full text-[12.5px] sm:w-auto">
                 <option value="">All roles</option>
                 <option value="agent">Agent</option>
                 <option value="leader">Leader</option>
                 <option value="manager">Manager</option>
                 <option value="admin">Admin</option>
               </Select>
-              <Select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="h-9 w-auto text-[12.5px]">
+              <Select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="h-9 w-full text-[12.5px] sm:w-auto">
                 <option value="">All teams</option>
                 {teams.map((t: any) => (
                   <option key={t.id} value={t.id}>

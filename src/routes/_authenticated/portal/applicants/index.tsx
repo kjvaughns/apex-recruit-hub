@@ -280,7 +280,120 @@ function ListView({
         </p>
       )}
 
-      <TableWrap>
+      {/* Mobile: stacked cards (the 6-column table is too wide for phones). */}
+      <div className="flex flex-col gap-2.5 sm:hidden">
+        {isLoading ? (
+          <div className="p-panel p-4 text-center">
+            <span className="p-muted">Loading…</span>
+          </div>
+        ) : (data?.applicants ?? []).length === 0 ? (
+          <div className="p-panel p-2">
+            <EmptyState
+              title="No applicants found"
+              description={
+                view === "pre_licensing" ? (
+                  "No hired-but-unlicensed applicants right now."
+                ) : (
+                  <>
+                    No applicants match the filters. Try switching scope to{" "}
+                    <button className="underline" style={{ color: "var(--p-gold)" }} onClick={() => setScope("all")}>
+                      All
+                    </button>
+                    .
+                  </>
+                )
+              }
+            />
+          </div>
+        ) : (
+          (data?.applicants ?? []).map((a: any) => {
+            const s = a.current_stage_id ? stageMap[a.current_stage_id] : null;
+            const next = nextStageOf(a.current_stage_id);
+            const licensed = !!a.licensed;
+            return (
+              <div key={a.id} className="p-panel p-3.5">
+                <div className="flex items-start justify-between gap-2">
+                  <Link to="/portal/applicants/$applicantId" params={{ applicantId: a.id }} className="min-w-0">
+                    <div className="p-body font-semibold truncate">
+                      {a.first_name} {a.last_name}
+                    </div>
+                    <div className="p-muted truncate">
+                      {a.city || "—"}
+                      {a.state ? `, ${a.state}` : ""}
+                    </div>
+                  </Link>
+                  {s ? (
+                    <span
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-0.5 text-[12px] font-medium whitespace-nowrap"
+                      style={{ color: s.color, background: `${s.color}18` }}
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
+                      {s.name}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="p-muted mt-2 truncate text-[12.5px]">
+                  {a.email}
+                  {a.phone ? ` · ${a.phone}` : ""}
+                </div>
+
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {a.current_stage_id && onboardingStageIds.has(a.current_stage_id)
+                    ? (() => {
+                        const p = onboardingProgress(a.onboarding_steps);
+                        return (
+                          <Badge tone={p.done === p.total ? "green" : "amber"}>
+                            Onboarding {p.done}/{p.total}
+                          </Badge>
+                        );
+                      })()
+                    : null}
+                  <Badge tone={licensed ? "green" : "amber"}>{licensed ? "Licensed" : "Unlicensed"}</Badge>
+                  {a.hired_at && <Badge tone="green">Hired</Badge>}
+                  {!a.hired_at && a.evaluation_completed_at && <Badge>Evaluated</Badge>}
+                  {a.calendly_scheduled_at && <Badge>Scheduled</Badge>}
+                  {a.discord_confirmed && <Badge tone="green">Discord ✓</Badge>}
+                </div>
+
+                {view === "pre_licensing" &&
+                  (() => {
+                    const days = a.last_follow_up_at ? daysSince(a.last_follow_up_at) : null;
+                    const overdue = days === null || days > 7;
+                    return (
+                      <div className="mt-2">
+                        <Badge tone={overdue ? "red" : "green"}>
+                          {days === null ? "No follow-up yet" : `${days}d since follow-up`}
+                        </Badge>
+                      </div>
+                    );
+                  })()}
+
+                <div
+                  className="mt-3 flex items-center gap-2 border-t pt-3"
+                  style={{ borderColor: "var(--p-border)" }}
+                >
+                  <span className="p-muted flex-1 truncate text-[12px]">
+                    Applied {shortDate(a.created_at)} · Active {relative(a.updated_at)}
+                  </span>
+                  {next && (
+                    <Button size="sm" variant="ghost" onClick={() => moveNext(a.id, a.current_stage_id)}>
+                      Next →
+                    </Button>
+                  )}
+                  <Link to="/portal/applicants/$applicantId" params={{ applicantId: a.id }}>
+                    <Button size="sm" variant="secondary">
+                      Open
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <TableWrap className="hidden sm:block">
         <Table>
           <THead>
             <TH>Applicant</TH>
