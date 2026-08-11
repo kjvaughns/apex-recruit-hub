@@ -23,6 +23,7 @@ const TEMPLATE_NAMES: Record<TemplateKey, string> = {
   application_unlicensed: "application-unlicensed",
   welcome_hired: "welcome-hired",
   followup_checkin: "followup-checkin",
+  welcome_onboarding: "welcome-onboarding",
 };
 
 /**
@@ -48,6 +49,7 @@ export async function queueEmail(
       templateData: {
         firstName: params?.firstName,
         licensed: params?.licensed,
+        portalLink: params?.portalLink,
         ...links,
       },
       idempotencyKey: `${template}-${applicantId ?? email}`,

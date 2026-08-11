@@ -4,6 +4,67 @@ import { z } from "zod";
 import { writeAudit } from "@/lib/audit";
 import { queueEmail, firstNameFrom } from "@/lib/emails/send";
 
+const APP_URL = () =>
+  (process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "");
+
+type OnboardingApplicant = {
+  id: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  portal_profile_id?: string | null;
+};
+
+/** Resolve the best portal link for an onboarding welcome email:
+ *  existing account → /login; otherwise reuse a pending invite token, or mint a
+ *  new agent invitation tied to the applicant. Never throws. */
+async function resolveOnboardingPortalLink(
+  supabase: any,
+  a: OnboardingApplicant,
+): Promise<string> {
+  if (a.portal_profile_id) return `${APP_URL()}/login`;
+  try {
+    const { data: inv } = await supabase
+      .from("invitations")
+      .select("token")
+      .eq("applicant_id", a.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    let token: string | undefined = inv?.token;
+    if (!token && a.email) {
+      const { data: res } = await supabase.rpc("create_invitation", {
+        payload: {
+          email: a.email,
+          first_name: a.first_name ?? "",
+          last_name: a.last_name ?? "",
+          role: "agent",
+          applicant_id: a.id,
+        },
+      });
+      token = res?.token;
+    }
+    if (token) return `${APP_URL()}/portal-invite/${token}`;
+  } catch {
+    /* fall through to a safe default */
+  }
+  return `${APP_URL()}/login`;
+}
+
+/** Enqueue the "Welcome to Onboarding" email (best-effort, never throws). */
+async function enqueueWelcomeOnboarding(supabase: any, a: OnboardingApplicant): Promise<void> {
+  if (!a.email) return;
+  const portalLink = await resolveOnboardingPortalLink(supabase, a);
+  await queueEmail(supabase, {
+    to: a.email,
+    toName: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
+    applicantId: a.id,
+    template: "welcome_onboarding",
+    params: { firstName: firstNameFrom(null, a.first_name), portalLink },
+  });
+}
+
 /** Current user profile + roles + team. */
 export const getMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -330,6 +391,22 @@ export const updateApplicantStage = createServerFn({ method: "POST" })
       actor_id: userId,
       data: { stage_id: data.stage_id },
     });
+
+    // If they just landed on Onboarding, send the welcome email (the DB trigger
+    // has already initialized their onboarding_steps). Best-effort.
+    const { data: stage } = await supabase
+      .from("pipeline_stages")
+      .select("slug")
+      .eq("id", data.stage_id)
+      .maybeSingle();
+    if (stage?.slug === "onboarding") {
+      const { data: a } = await supabase
+        .from("applicants")
+        .select("id, email, first_name, last_name, portal_profile_id")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (a) await enqueueWelcomeOnboarding(supabase, a as OnboardingApplicant);
+    }
     return { ok: true };
   });
 
