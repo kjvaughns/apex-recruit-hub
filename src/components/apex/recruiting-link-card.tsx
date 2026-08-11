@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRecruitingLink } from "@/lib/portal.functions";
+import { Panel, Button, Badge } from "@/components/portal/ui";
 
 function useOrigin() {
   const [origin, setOrigin] = useState("");
@@ -39,9 +40,8 @@ async function shareLink(link: string) {
 }
 
 /**
- * The agent's personal recruiting link. `full` = the standalone card
- * (Dashboard, Settings); `compact` = a slim inline bar for dense toolbars.
- * Reuses getMyRecruitingLink — no new data logic.
+ * The agent's personal recruiting link, rendered as a compact single-row
+ * utility panel. Reuses getMyRecruitingLink — no new data logic.
  */
 export function RecruitingLinkCard({ variant = "full" }: { variant?: "full" | "compact" }) {
   const { q, slug, link, canShare } = useRecruitingLink();
@@ -51,91 +51,63 @@ export function RecruitingLinkCard({ variant = "full" }: { variant?: "full" | "c
     setTimeout(() => setCopied(false), 1600);
   });
 
-  if (variant === "compact") {
-    return (
-      <div className="apx-card flex flex-wrap items-center gap-2 p-2.5 pl-4">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-apex-faint">
-          Your link
-        </span>
+  return (
+    <Panel padded={false} bodyClassName="px-3 py-2.5">
+      <div className="flex flex-wrap items-center gap-2.5 px-3 py-2.5">
+        <span className="p-label shrink-0 uppercase tracking-[0.06em]">Your link</span>
+
         {q.isLoading ? (
-          <span className="text-[12.5px] text-apex-dim">Loading…</span>
+          <span className="p-secondary">Loading…</span>
         ) : !slug ? (
-          <span className="text-[12.5px] text-apex-muted">Not set up yet — ask an administrator.</span>
+          <span className="p-secondary">Not set up yet — ask an administrator.</span>
         ) : (
           <>
-            <input
-              className="apx-input h-9 min-w-[180px] flex-1 text-[12.5px]"
-              readOnly
-              value={link || "…"}
-              onFocus={(e) => e.currentTarget.select()}
-            />
-            <button onClick={copy} disabled={!link} className="apx-btn-primary px-3.5 py-2 text-[12px] disabled:opacity-60">
-              {copied ? "Copied!" : "Copy"}
-            </button>
-            {canShare && (
-              <button onClick={() => shareLink(link)} className="apx-btn-ghost px-3.5 py-2 text-[12px]">
-                Share
-              </button>
-            )}
-          </>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="apx-card p-6 md:p-8">
-      <div className="mb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-faint">
-        Recruiting
-      </div>
-      <h2 className="font-display text-[26px] leading-none">Your recruiting link</h2>
-      <p className="mt-2 text-[14px] leading-relaxed text-apex-muted">
-        Share this link with prospects. Anyone who applies through it is automatically attributed to
-        you.
-      </p>
-
-      {q.isLoading ? (
-        <div className="mt-5 text-apex-dim">Loading…</div>
-      ) : !slug ? (
-        <p className="mt-5 text-[14px] text-apex-muted">
-          Your recruiting link isn't set up yet. Ask an administrator to enable it.
-        </p>
-      ) : (
-        <>
-          <div className="mt-5 flex flex-col gap-3 md:flex-row">
-            <input
-              className="apx-input flex-1"
-              readOnly
-              value={link || "…"}
-              onFocus={(e) => e.currentTarget.select()}
-            />
-            <div className="flex gap-3">
-              <button onClick={copy} disabled={!link} className="apx-btn-primary px-5 disabled:opacity-60">
-                {copied ? "Copied!" : "Copy link"}
-              </button>
-              <a href={link || "#"} target="_blank" rel="noreferrer noopener" className="apx-btn-ghost flex items-center px-5">
+            <div
+              className="min-w-[160px] flex-1 truncate rounded-[8px] border px-2.5 py-1.5 font-mono text-[12.5px]"
+              style={{
+                borderColor: "var(--p-border)",
+                background: "var(--p-raised)",
+                color: "var(--p-text-2)",
+              }}
+              onClick={(e) => {
+                const range = document.createRange();
+                range.selectNodeContents(e.currentTarget);
+                window.getSelection()?.removeAllRanges();
+                window.getSelection()?.addRange(range);
+              }}
+            >
+              {link || "…"}
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Button size="sm" variant="primary" onClick={copy} disabled={!link}>
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+              <a
+                href={link || "#"}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="p-focus inline-flex h-8 items-center justify-center rounded-[10px] border px-2.5 text-[13px] font-semibold transition hover:brightness-[1.08]"
+                style={{
+                  background: "var(--p-raised)",
+                  borderColor: "var(--p-border)",
+                  color: "var(--p-text)",
+                }}
+              >
                 Open
               </a>
               {canShare && (
-                <button onClick={() => shareLink(link)} className="apx-btn-ghost px-5">
+                <Button size="sm" variant="ghost" onClick={() => shareLink(link)}>
                   Share
-                </button>
+                </Button>
+              )}
+              <Badge tone="gold">{q.data?.applicant_count ?? 0} applicants</Badge>
+              {!q.data?.can_receive_applicants && (
+                <Badge tone="amber">Paused</Badge>
               )}
             </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-[13px]">
-            <span className="rounded-full border border-[var(--apx-hairline)] px-2.5 py-1 text-apex-fog">
-              Applicants generated:{" "}
-              <span className="font-semibold text-apex-ivory">{q.data?.applicant_count ?? 0}</span>
-            </span>
-            {!q.data?.can_receive_applicants && (
-              <span className="text-apex-faint">
-                Note: new applicants are currently paused for your profile.
-              </span>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </Panel>
   );
 }
