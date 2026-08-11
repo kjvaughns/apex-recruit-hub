@@ -88,8 +88,8 @@ function TreeNode({
   return (
     <div>
       <div
-        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-[8px] px-2 py-2 hover:bg-[var(--p-hover)] sm:flex"
-        style={{ paddingLeft: `${depth * 18 + 8}px` }}
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-[8px] py-2 pr-2 pl-[calc(var(--depth)*10px_+_8px)] hover:bg-[var(--p-hover)] sm:flex sm:pl-[calc(var(--depth)*18px_+_8px)]"
+        style={{ "--depth": depth } as React.CSSProperties}
       >
         <div className="flex min-w-0 items-center gap-2">
           {kids.length > 0 ? (

@@ -153,7 +153,68 @@ function TasksPage() {
             </div>
           </Toolbar>
 
-          <TableWrap>
+          {/* Mobile: stacked task cards (the 6-column table is too wide for phones). */}
+          <div className="flex flex-col gap-2.5 sm:hidden">
+            {q.isLoading ? (
+              <div className="p-panel p-4 text-center">
+                <span className="p-muted">Loading tasks…</span>
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="p-panel p-2">
+                <EmptyState title="No tasks" description="Create your first above." />
+              </div>
+            ) : (
+              tasks.map((t: any) => {
+                const done = !!t.completed_at;
+                const overdue = t.due_at && !done && new Date(t.due_at) < new Date();
+                return (
+                  <div key={t.id} className="p-panel p-3.5">
+                    <div className="flex items-start gap-3">
+                      <button
+                        onClick={() => toggleM.mutate({ id: t.id, done: !done })}
+                        className="p-focus mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border text-[12px]"
+                        style={
+                          done
+                            ? { borderColor: "var(--p-gold)", background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+                            : { borderColor: "var(--p-border-strong)", color: "transparent" }
+                        }
+                        aria-label={done ? "Mark open" : "Mark done"}
+                      >
+                        ✓
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className="p-body font-medium"
+                          style={done ? { color: "var(--p-text-3)", textDecoration: "line-through" } : undefined}
+                        >
+                          {t.title}
+                        </div>
+                        {t.notes && <div className="p-muted mt-0.5">{t.notes}</div>}
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+                          {t.due_at && (
+                            <span className="p-muted" style={overdue ? { color: "var(--p-red)" } : undefined}>
+                              {new Date(t.due_at).toLocaleString()}
+                            </span>
+                          )}
+                          <span className="p-muted uppercase tracking-wide">{t.priority}</span>
+                          {t.applicants && (
+                            <span className="p-muted">
+                              {t.applicants.first_name} {t.applicants.last_name}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => deleteM.mutate(t.id)}>
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <TableWrap className="hidden sm:block">
             <Table>
               <THead>
                 <TH></TH>

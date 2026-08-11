@@ -23,6 +23,7 @@ function CoursePlayer() {
 
   const [selected, setSelected] = useState<string | null>(null);
   const [openModules, setOpenModules] = useState<string[] | null>(null);
+  const [outlineOpen, setOutlineOpen] = useState(false);
 
   const data = q.data && q.data.found ? q.data : null;
 
@@ -78,11 +79,24 @@ function CoursePlayer() {
         <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
           {/* Outline */}
           <Panel padded={false} className="overflow-hidden">
-            <div className="border-b px-4 py-3" style={{ borderColor: "var(--p-border)" }}>
-              <div className="p-section-title truncate">{(data.course as any).title}</div>
-              {(data.course as any).is_required && <Badge tone="gold" className="mt-1">Required</Badge>}
-            </div>
-            <div className="max-h-[70vh] overflow-y-auto p-2">
+            {/* On mobile this header toggles the outline so the lesson shows first; static rail on lg+. */}
+            <button
+              onClick={() => setOutlineOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-2 border-b px-4 py-3 text-left lg:cursor-default"
+              style={{ borderColor: "var(--p-border)" }}
+            >
+              <div className="min-w-0">
+                <div className="p-section-title truncate">{(data.course as any).title}</div>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <span className="p-muted text-[12px] lg:hidden">Contents · {done} of {total}</span>
+                  {(data.course as any).is_required && <Badge tone="gold">Required</Badge>}
+                </div>
+              </div>
+              <span className="shrink-0 text-[13px] lg:hidden" style={{ color: "var(--p-text-3)" }}>
+                {outlineOpen ? "▾" : "▸"}
+              </span>
+            </button>
+            <div className={`max-h-[70vh] overflow-y-auto p-2 lg:block ${outlineOpen ? "block" : "hidden"}`}>
               {(data.modules as any[]).map((m) => {
                 const open = modulesOpen.includes(m.id);
                 const rows = ordered.filter((r) => r.moduleId === m.id);
@@ -99,7 +113,7 @@ function CoursePlayer() {
                       <button
                         key={l.id}
                         disabled={locked}
-                        onClick={() => setSelected(l.id)}
+                        onClick={() => { setSelected(l.id); setOutlineOpen(false); }}
                         className="p-focus flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13.5px] transition disabled:cursor-not-allowed"
                         style={{
                           background: currentId === l.id ? "var(--p-gold-soft)" : "transparent",

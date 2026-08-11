@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { PageHeader, PageBody, Toolbar, ToolbarSpacer, SegmentedControl, Button } from "@/components/portal/ui";
+import { PageHeader, PageBody, Toolbar, ToolbarSpacer, SegmentedControl, Button, Badge } from "@/components/portal/ui";
 import { getCalendar } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/calendar")({
@@ -117,8 +117,54 @@ function CalendarPage() {
           </div>
         </Toolbar>
 
+        {/* Mobile: agenda list of days that have events (the 7-col grid is unreadable at phone width). */}
+        <div className="space-y-2 sm:hidden">
+          {days.filter((d): d is Date => !!d && (byDay[d.toDateString()]?.length ?? 0) > 0).length === 0 ? (
+            <div className="p-panel p-6 text-center">
+              <span className="p-muted">No appointments or tasks this month.</span>
+            </div>
+          ) : (
+            days
+              .filter((d): d is Date => !!d && (byDay[d.toDateString()]?.length ?? 0) > 0)
+              .map((d) => {
+                const events = byDay[d.toDateString()] ?? [];
+                const isToday = d.toDateString() === today;
+                return (
+                  <div key={d.toISOString()} className="p-panel p-3">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span
+                        className="text-[14px] font-semibold"
+                        style={{ color: isToday ? "var(--p-gold)" : "var(--p-text)" }}
+                      >
+                        {d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+                      </span>
+                      {isToday && <Badge tone="gold">Today</Badge>}
+                    </div>
+                    <div className="space-y-1.5">
+                      {events.map((e) => (
+                        <div
+                          key={e.kind + e.id}
+                          className="flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-[13px] font-medium"
+                          style={
+                            e.kind === "appt"
+                              ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+                              : { background: "rgba(63,179,127,0.12)", color: "var(--p-green)" }
+                          }
+                        >
+                          <span className="shrink-0 tabular-nums">{e.time}</span>
+                          <span className="min-w-0 truncate">{e.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+          )}
+        </div>
+
+        {/* Desktop: full month grid. */}
         <div
-          className="grid grid-cols-7 gap-px overflow-hidden rounded-[10px] border"
+          className="hidden grid-cols-7 gap-px overflow-hidden rounded-[10px] border sm:grid"
           style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}
         >
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
