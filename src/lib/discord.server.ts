@@ -9,7 +9,9 @@ export const DISCORD_WEBHOOK_SETTING_KEY = "discord_recruiting_webhook_url";
 
 const GOLD = 0xc9a84c;
 
-export type RecruitAlert = {
+export type { RecruitAlert };
+
+type _Unused = {
   firstName: string;
   lastName: string;
   recruiterName?: string | null;
@@ -19,31 +21,6 @@ export type RecruitAlert = {
   wantsOneOnOne?: boolean;
   state?: string | null;
 };
-
-/** Monday-overview slot rendered in Central time, the way the team reads it. */
-export function formatSlot(iso?: string | null): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return (
-    new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Chicago",
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(d) + " CT"
-  );
-}
-
-/** Human label for what the applicant scheduled. */
-export function scheduleLabel(a: Pick<RecruitAlert, "requestedOverviewAt" | "wantsOneOnOne">): string {
-  const slot = formatSlot(a.requestedOverviewAt);
-  if (slot) return slot;
-  if (a.wantsOneOnOne) return "Requested a 1:1 call";
-  return "Not scheduled yet";
-}
 
 type MinimalClient = {
   from: (t: string) => {
