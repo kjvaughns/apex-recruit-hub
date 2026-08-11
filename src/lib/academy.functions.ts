@@ -416,6 +416,91 @@ export const adminDeleteTag = createServerFn({ method: "POST" })
   });
 
 /* ============================================================ */
+/* Learner: Academy home + library                               */
+/* ============================================================ */
+
+/** Published courses (with the caller's progress) + all library resources
+ *  (with tags) + the tag set, for the Academy home. */
+export const getAcademyHome = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const s = supabase as any;
+    const [{ data: courses }, { data: resources }, { data: joins }, { data: tags }, { data: enrollments }] =
+      await Promise.all([
+        s.from("courses").select("*").eq("status", "published").order("created_at", { ascending: false }),
+        s.from("library_resources").select("*").order("created_at", { ascending: false }),
+        s.from("library_resource_tags").select("resource_id, tag_id"),
+        s.from("library_tags").select("id, name").order("name"),
+        s.from("enrollments").select("id, course_id, completed_at").eq("user_id", userId),
+      ]);
+
+    const courseIds = (courses ?? []).map((c: any) => c.id);
+    const { data: modules } = courseIds.length
+      ? await s.from("course_modules").select("id, course_id").in("course_id", courseIds)
+      : { data: [] };
+    const modToCourse: Record<string, string> = {};
+    const modIds: string[] = [];
+    for (const m of modules ?? []) { modToCourse[m.id] = m.course_id; modIds.push(m.id); }
+    const { data: lessons } = modIds.length
+      ? await s.from("course_lessons").select("id, module_id").in("module_id", modIds)
+      : { data: [] };
+    const totalByCourse: Record<string, number> = {};
+    for (const l of lessons ?? []) {
+      const cid = modToCourse[l.module_id];
+      if (cid) totalByCourse[cid] = (totalByCourse[cid] ?? 0) + 1;
+    }
+    const enrByCourse: Record<string, any> = {};
+    const enrCourse: Record<string, string> = {};
+    for (const e of enrollments ?? []) { enrByCourse[e.course_id] = e; enrCourse[e.id] = e.course_id; }
+    const enrIds = (enrollments ?? []).map((e: any) => e.id);
+    const { data: progress } = enrIds.length
+      ? await s.from("lesson_progress").select("enrollment_id, completed_at").in("enrollment_id", enrIds)
+      : { data: [] };
+    const completedByCourse: Record<string, number> = {};
+    for (const p of progress ?? []) {
+      if (p.completed_at) {
+        const cid = enrCourse[p.enrollment_id];
+        if (cid) completedByCourse[cid] = (completedByCourse[cid] ?? 0) + 1;
+      }
+    }
+
+    const courseCards = (courses ?? []).map((c: any) => {
+      const total = totalByCourse[c.id] ?? 0;
+      const done = completedByCourse[c.id] ?? 0;
+      const enrolled = !!enrByCourse[c.id];
+      return {
+        ...c,
+        progress: enrolled ? (total ? Math.round((done / total) * 100) : 0) : null,
+        completed: !!enrByCourse[c.id]?.completed_at,
+      };
+    });
+
+    const tagName: Record<string, string> = {};
+    for (const t of tags ?? []) tagName[t.id] = t.name;
+    const byResource: Record<string, string[]> = {};
+    for (const j of joins ?? []) (byResource[j.resource_id] ??= []).push(tagName[j.tag_id]);
+    const resourceCards = (resources ?? []).map((r: any) => ({ ...r, tags: byResource[r.id] ?? [] }));
+
+    return { courses: courseCards, resources: resourceCards, tags: (tags ?? []).map((t: any) => t.name) };
+  });
+
+export const getLibraryResource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ slug: z.string().min(1).max(200) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const s = context.supabase as any;
+    const { data: r } = await s.from("library_resources").select("*").eq("slug", data.slug).maybeSingle();
+    if (!r) return { found: false as const };
+    const { data: joins } = await s.from("library_resource_tags").select("tag_id").eq("resource_id", r.id);
+    const tagIds = (joins ?? []).map((j: any) => j.tag_id);
+    const { data: tags } = tagIds.length
+      ? await s.from("library_tags").select("name").in("id", tagIds)
+      : { data: [] };
+    return { found: true as const, resource: { ...r, tags: (tags ?? []).map((t: any) => t.name) } };
+  });
+
+/* ============================================================ */
 /* Learner: course player                                        */
 /* ============================================================ */
 
