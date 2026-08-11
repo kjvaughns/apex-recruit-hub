@@ -191,7 +191,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
             {showOnboardingNav && (
               <NavRow
                 to="/portal/onboarding"
-                icon="◆"
+                icon={Rocket}
                 label="Onboarding"
                 accent
                 active={path.startsWith("/portal/onboarding")}
@@ -225,12 +225,12 @@ export function PortalShell({ children }: { children: ReactNode }) {
                   }`}
                   style={{ color: "var(--p-gold)" }}
                 >
-                  <span className="w-4 shrink-0 text-center">＋</span>
+                  <UserPlus className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
                   {!collapsed && <span>Add Agent</span>}
                 </button>
                 <NavRow
                   to="/portal/invitations"
-                  icon="✉"
+                  icon={Mail}
                   label="Invitations"
                   active={path.startsWith("/portal/invitations")}
                   collapsed={collapsed}
@@ -244,7 +244,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 <GroupLabel hidden={collapsed}>Admin</GroupLabel>
                 <NavRow
                   to="/portal/admin"
-                  icon="⚙"
+                  icon={ShieldCheck}
                   label="Admin"
                   active={
                     path.startsWith("/portal/admin") && !path.startsWith("/portal/admin/audit")
@@ -254,7 +254,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 />
                 <NavRow
                   to="/portal/admin/audit"
-                  icon="◫"
+                  icon={ScrollText}
                   label="Audit Log"
                   active={path.startsWith("/portal/admin/audit")}
                   collapsed={collapsed}
