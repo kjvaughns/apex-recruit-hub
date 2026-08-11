@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
+import { queueEmail } from "@/lib/emails/send";
 
 function serverClient() {
   const url = process.env.SUPABASE_URL!;
@@ -56,7 +57,24 @@ export const submitApplication = createServerFn({ method: "POST" })
       payload: data as never,
     });
     if (error) throw new Error(error.message);
-    return result as { id: string; token: string; success_page_type: "licensed" | "unlicensed"; recruiter_id: string | null };
+    const res = result as {
+      id: string;
+      token: string;
+      success_page_type: "licensed" | "unlicensed";
+      recruiter_id: string | null;
+    };
+
+    // Trigger: application-submitted email (branches on licensing). Stub send —
+    // enqueues into the outbox, never blocks the submission.
+    await queueEmail(supabase as never, {
+      to: data.email,
+      toName: `${data.first_name} ${data.last_name}`.trim(),
+      applicantId: res.id,
+      template: res.success_page_type === "licensed" ? "application_licensed" : "application_unlicensed",
+      params: { firstName: data.first_name, licensed: res.success_page_type === "licensed" },
+    });
+
+    return res;
   });
 
 
@@ -74,7 +92,22 @@ export const submitEvaluation = createServerFn({ method: "POST" })
       payload: data as never,
     });
     if (error) throw new Error(error.message);
-    return result as { id: string; matched: boolean; hired: boolean; licensed: boolean };
+    const res = result as { id: string; matched: boolean; hired: boolean; licensed: boolean };
+
+    // Trigger: welcome / auto-hire email (branches on licensing). Only fires on
+    // the first hire. Stub send — enqueues into the outbox.
+    if (res.hired) {
+      const fullName = (data.answers?.full_name as string | undefined) ?? "";
+      await queueEmail(supabase as never, {
+        to: data.email,
+        toName: fullName || undefined,
+        applicantId: data.applicant_id || null,
+        template: "welcome_hired",
+        params: { firstName: fullName.split(/\s+/)[0] || "", licensed: res.licensed },
+      });
+    }
+
+    return res;
   });
 
 export type EvaluationPrefill = {

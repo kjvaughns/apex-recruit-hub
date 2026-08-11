@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { writeAudit } from "@/lib/audit";
+import { queueEmail, firstNameFrom } from "@/lib/emails/send";
 
 /** Current user profile + roles + team. */
 export const getMe = createServerFn({ method: "GET" })
@@ -313,6 +314,43 @@ export const setOverviewStatus = createServerFn({ method: "POST" })
       applicant_id: data.id,
       event_type: "overview_updated",
       summary: label,
+      actor_id: userId,
+    } as never);
+    return { ok: true };
+  });
+
+/** Manual pre-licensing follow-up nudge (Email 4). Enqueues the follow-up
+ *  template, logs the activity, and stamps last-contact. Phase 5 also resets
+ *  the follow-up counter here. */
+export const sendFollowUpEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: a } = await supabase
+      .from("applicants")
+      .select("id, first_name, last_name, email")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!a?.email) throw new Error("Applicant has no email on file.");
+
+    await queueEmail(supabase as never, {
+      to: a.email,
+      toName: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
+      applicantId: a.id,
+      template: "followup_checkin",
+      params: { firstName: firstNameFrom(null, a.first_name) },
+    });
+
+    const now = new Date().toISOString();
+    await supabase
+      .from("applicants")
+      .update({ last_contacted_at: now, updated_at: now } as never)
+      .eq("id", data.id);
+    await supabase.from("applicant_activities").insert({
+      applicant_id: data.id,
+      event_type: "follow_up_sent",
+      summary: "Follow-up email sent",
       actor_id: userId,
     } as never);
     return { ok: true };
