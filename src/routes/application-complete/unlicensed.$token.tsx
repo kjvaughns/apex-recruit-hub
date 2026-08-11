@@ -2,18 +2,17 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { PublicShell } from "@/components/apex/brand";
-import { CalendlyInline } from "@/components/apex/calendly-inline";
 import { getSchedulingContext, markScheduled } from "@/lib/applications.functions";
 
 export const Route = createFileRoute("/application-complete/unlicensed/$token")({
   head: () => ({
     meta: [
-      { title: "Application received — Book your Vantage overview" },
-      { name: "description", content: "Schedule your Vantage Financial overview call." },
-      { property: "og:title", content: "Book your Vantage overview" },
+      { title: "You're in — here's your next step" },
+      { name: "description", content: "Your Vantage application is in. Here's what happens next." },
+      { property: "og:title", content: "You're in — here's your next step" },
       {
         property: "og:description",
-        content: "Pick a Monday and we'll walk you through the next steps.",
+        content: "Book your overview and get a head start on licensing.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -56,7 +55,12 @@ function UnlicensedComplete() {
     );
   }
 
-  async function onConfirm() {
+  // Unlicensed branch: no embedded Calendly. We route everyone to the Overview
+  // meeting via a link (delivered again by email in Phase 3), and lead with the
+  // "what happens next" checklist so they know exactly where they stand.
+  const overviewUrl = ctx.calendly_url || null;
+
+  async function onBooked() {
     try {
       await mark({ data: { token } });
     } catch {
@@ -65,45 +69,68 @@ function UnlicensedComplete() {
     navigate({ to: "/application-complete" });
   }
 
-  const url = ctx.calendly_url!;
-
   return (
     <PublicShell>
-      <div className="mx-auto max-w-[900px] px-6 pt-14 pb-24 text-center md:px-8">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-apex-gold text-[26px] text-apex-card shadow-[0_0_40px_rgba(201,168,76,0.5)]">
-          ✓
+      <div className="mx-auto max-w-[820px] px-6 pt-14 pb-24 md:px-8">
+        <div className="text-center">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-apex-gold text-[26px] text-apex-card shadow-[0_0_40px_rgba(201,168,76,0.5)]">
+            ✓
+          </div>
+          <div className="apx-eyebrow-pill mb-4 inline-flex">Application received</div>
+          <h1 className="font-display text-[clamp(36px,6vw,58px)] leading-[0.96]">
+            You're in, {firstName} — here's your next step
+          </h1>
+          <p className="mx-auto mt-4 max-w-[560px] text-[16px] leading-relaxed text-apex-muted">
+            We've got your application. The next step is the Vantage overview call — and you can get
+            a head start on licensing today so you're never waiting on us to move.
+          </p>
         </div>
-        <div className="apx-eyebrow-pill mb-4 inline-flex">Application received</div>
-        <h1 className="font-display text-[clamp(36px,6vw,58px)] leading-[0.96]">
-          You're in, {firstName} — now book your overview
-        </h1>
-        <p className="mx-auto mt-4 max-w-[560px] text-[16px] leading-relaxed text-apex-muted">
-          The next step is the Vantage Financial overview call. Pick a Monday below — your application
-          isn't complete until an overview time is selected.
-        </p>
 
-        <CalendlyInline url={url} />
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="apx-btn-ghost px-6 py-3.5 text-[15px]"
-          >
-            Open Calendly in a new tab →
-          </a>
-          <button onClick={onConfirm} className="apx-btn-primary px-6 py-3.5 text-[15px]">
-            I've booked — continue →
-          </button>
+        {/* Primary next step — book the overview (link, not an embed) */}
+        <div className="apx-card apx-card-gold mt-10 flex flex-col items-start gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-8">
+          <div>
+            <div className="font-display text-[24px] leading-tight text-apex-ivory">
+              Book your Vantage overview
+            </div>
+            <p className="mt-1.5 text-[14px] leading-relaxed text-apex-muted">
+              Monday nights, 7:00 PM CT / 8:00 PM ET. This is where we walk you through how it all
+              works and what's next.
+            </p>
+          </div>
+          {overviewUrl ? (
+            <a
+              href={overviewUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={() => {
+                // best-effort: record that they were routed to book
+                mark({ data: { token } }).catch(() => {});
+              }}
+              className="apx-btn-primary flex-none px-6 py-3.5 text-[15px]"
+            >
+              Book the overview →
+            </a>
+          ) : (
+            <span className="flex-none text-[13px] text-apex-faint">
+              We'll email you the booking link shortly.
+            </span>
+          )}
         </div>
-        <p className="mt-4 text-[13px] text-apex-faint">
-          Your application isn't complete until you select an overview time.
-        </p>
 
-        {/* Immediate licensing next steps — don't make them wait for Monday to know what's next */}
-        <div className="mx-auto mt-16 max-w-[820px] text-left">
-          <div className="apx-kicker mb-4">Your licensing next steps</div>
+        {overviewUrl && (
+          <div className="mt-3 text-center">
+            <button
+              onClick={onBooked}
+              className="text-[13px] text-apex-dim underline-offset-4 transition hover:text-apex-gold hover:underline"
+            >
+              I've already booked — continue →
+            </button>
+          </div>
+        )}
+
+        {/* What happens next — mirrors the Phase 3 unlicensed email copy */}
+        <div className="mt-14">
+          <div className="apx-kicker mb-4">What happens next</div>
           <div className="grid gap-4 md:grid-cols-3">
             {NEXT_STEPS.map((s) => (
               <div key={s.n} className="apx-card flex flex-col gap-2.5 p-6">
@@ -129,8 +156,8 @@ function UnlicensedComplete() {
               ))}
             </div>
             <p className="mt-4 text-[12.5px] leading-relaxed text-apex-faint">
-              You don't need to complete every licensing step before attending the overview — the
-              Monday overview is your main next appointment.
+              You don't need to finish licensing before the overview — the Monday overview is your
+              main next appointment. Getting a head start just means you move faster once you're in.
             </p>
           </div>
         </div>
@@ -142,23 +169,23 @@ function UnlicensedComplete() {
 const NEXT_STEPS = [
   {
     n: "1",
-    t: "Reserve your seat",
-    d: "Book the next Monday Vantage Company Overview above — 7:00 PM CT / 8:00 PM ET.",
+    t: "Book the overview",
+    d: "Reserve your seat at the next Monday Vantage overview using the button above.",
   },
   {
     n: "2",
-    t: "Prepare to get licensed",
-    d: "Review the licensing process and get ready to begin the approved licensing course.",
+    t: "Get a head start",
+    d: "Start the approved licensing course today so you're not waiting on us to move forward.",
   },
   {
     n: "3",
-    t: "Attend the overview",
-    d: "Attend the overview and follow the instructions provided by the Vantage team.",
+    t: "Attend & join",
+    d: "Attend the overview. If it's a fit, you'll get a short form to officially join the team.",
   },
 ];
 
 const LICENSING_CHECKLIST = [
-  "Complete the Vantage evaluation",
+  "Attend the Monday overview",
   "Receive the approved licensing course instructions",
   "Purchase and begin the course",
   "Complete the required education",
