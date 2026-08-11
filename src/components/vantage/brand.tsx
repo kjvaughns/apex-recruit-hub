@@ -43,7 +43,7 @@ export function PublicNav() {
     >
       <div className="mx-auto flex h-[76px] max-w-[1240px] items-center justify-between gap-6 px-6 md:px-8">
         <Link to="/" className="flex items-center">
-          <ApexLogo className="h-[42px] w-auto" />
+          <VantageLogo className="h-[42px] w-auto" />
         </Link>
         <nav className="flex items-center gap-4 md:gap-6">
           <a
@@ -83,7 +83,7 @@ export function PublicFooter() {
   return (
     <div className="mx-auto mt-[72px] max-w-[1240px] px-6 md:px-8">
       <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white/[0.08] py-8">
-        <ApexLogo className="h-[34px] w-auto opacity-85" />
+        <VantageLogo className="h-[34px] w-auto opacity-85" />
         <div className="flex flex-wrap items-center gap-4 text-[13px] text-vantage-faint">
           <span>© 2026 Vantage Financial</span>
           <span className="text-white/10">•</span>
