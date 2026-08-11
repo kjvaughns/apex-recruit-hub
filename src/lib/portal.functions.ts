@@ -248,7 +248,7 @@ export const listApplicants = createServerFn({ method: "POST" })
     let query = supabase
       .from("applicants")
       .select(
-        "id, first_name, last_name, email, phone, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, created_at, updated_at, stage_entered_at",
+        "id, first_name, last_name, email, phone, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, onboarding_steps, created_at, updated_at, stage_entered_at",
       )
       .is("archived_at", null)
       .limit(data.limit);
@@ -370,6 +370,77 @@ export const getApplicant = createServerFn({ method: "POST" })
       evaluations: evalRes.data ?? [],
       stages: stagesRes.data ?? [],
     };
+  });
+
+type OnboardingResult = {
+  found: boolean;
+  applicant_id?: string;
+  email?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  steps?: Record<string, { completed: boolean; completed_at: string | null }>;
+  done?: number;
+  total?: number;
+  complete?: boolean;
+  just_completed?: boolean;
+};
+
+/** After the RPC updates steps, send the completion email once (best-effort). */
+async function afterOnboardingUpdate(supabase: any, res: OnboardingResult) {
+  if (res.just_completed && res.email) {
+    await queueEmail(supabase, {
+      to: res.email,
+      toName: `${res.first_name ?? ""} ${res.last_name ?? ""}`.trim() || undefined,
+      applicantId: res.applicant_id ?? null,
+      template: "onboarding_complete",
+      params: { firstName: firstNameFrom(null, res.first_name) },
+    });
+  }
+}
+
+/** The signed-in agent's onboarding state. Marks portal_account_setup complete
+ *  on first view (logging in proves it) and fires the completion email if that
+ *  transition finishes onboarding. Non-agents resolve to { hasOnboarding:false }. */
+export const getMyOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data, error } = await (supabase as any).rpc("update_onboarding", {
+      _step: "portal_account_setup",
+    });
+    if (error) throw new Error(error.message);
+    const res = (data ?? { found: false }) as OnboardingResult;
+    if (!res.found) return { hasOnboarding: false as const };
+    await afterOnboardingUpdate(supabase, res);
+    return {
+      hasOnboarding: true as const,
+      steps: res.steps ?? {},
+      done: res.done ?? 0,
+      total: res.total ?? 4,
+      complete: !!res.complete,
+    };
+  });
+
+/** Agent self-checks one of the 3 manual onboarding steps. */
+export const completeOnboardingStep = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        step: z.enum(["agentspace_contracting", "discord_role_update", "expectations_reviewed"]),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase } = context;
+    const { data: res, error } = await (supabase as any).rpc("update_onboarding", {
+      _step: data.step,
+    });
+    if (error) throw new Error(error.message);
+    const r = (res ?? { found: false }) as OnboardingResult;
+    if (!r.found) throw new Error("No onboarding record found for your account.");
+    await afterOnboardingUpdate(supabase, r);
+    return { steps: r.steps ?? {}, done: r.done ?? 0, total: r.total ?? 4, complete: !!r.complete };
   });
 
 export const updateApplicantStage = createServerFn({ method: "POST" })

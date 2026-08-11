@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
-import { getDashboard } from "@/lib/portal.functions";
+import { getDashboard, getMyOnboarding } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   head: () => ({ meta: [{ title: "Dashboard — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
@@ -11,7 +12,27 @@ export const Route = createFileRoute("/_authenticated/portal/")({
 
 function DashboardPage() {
   const fn = useServerFn(getDashboard);
+  const navigate = useNavigate();
+  const onbFn = useServerFn(getMyOnboarding);
+  const onbQ = useQuery({ queryKey: ["my-onboarding"], queryFn: () => onbFn() });
+
+  // Soft landing: a new agent with incomplete onboarding defaults to the
+  // onboarding page. They can still navigate elsewhere from the sidebar.
+  const needsOnboarding = !!onbQ.data?.hasOnboarding && !onbQ.data.complete;
+  useEffect(() => {
+    if (needsOnboarding) navigate({ to: "/portal/onboarding", replace: true });
+  }, [needsOnboarding, navigate]);
+
   const { data, isLoading } = useQuery({ queryKey: ["dashboard"], queryFn: () => fn() });
+
+  if (needsOnboarding) {
+    return (
+      <PortalShell>
+        <PortalHeader kicker="Welcome to Vantage" title="Getting you set up…" />
+        <div className="p-10 text-[13px] text-apex-faint">Taking you to your onboarding checklist…</div>
+      </PortalShell>
+    );
+  }
 
   return (
     <PortalShell>

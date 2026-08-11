@@ -5,7 +5,7 @@ import { ApexLogo } from "@/components/apex/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMe, addAgent } from "@/lib/portal.functions";
+import { getMe, addAgent, getMyOnboarding } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/apex/add-agent-modal";
 
 const NAV = [
@@ -30,7 +30,11 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
   const fetchMe = useServerFn(getMe);
   const addAgentFn = useServerFn(addAgent);
+  const fetchOnboarding = useServerFn(getMyOnboarding);
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => fetchMe() });
+  const onboardingQ = useQuery({ queryKey: ["my-onboarding"], queryFn: () => fetchOnboarding() });
+  const showOnboardingNav =
+    !!onboardingQ.data?.hasOnboarding && !onboardingQ.data.complete;
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
@@ -94,6 +98,20 @@ export function PortalShell({ children }: { children: ReactNode }) {
             )}
           </div>
           <nav className="flex-1 overflow-y-auto p-3">
+            {showOnboardingNav && (
+              <Link
+                to="/portal/onboarding"
+                onClick={() => setMobileOpen(false)}
+                className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-semibold transition ${
+                  path.startsWith("/portal/onboarding")
+                    ? "border border-apex-gold/40 bg-apex-gold/15 text-apex-gold"
+                    : "border border-apex-gold/25 bg-apex-gold/[0.06] text-apex-gold hover:bg-apex-gold/[0.12]"
+                }`}
+              >
+                <span className="w-5 text-center text-[15px]">◆</span>
+                {!collapsed && <span>Onboarding</span>}
+              </Link>
+            )}
             {NAV.map((n) => {
               const active = n.to === "/portal" ? path === "/portal" : path.startsWith(n.to);
               return (
