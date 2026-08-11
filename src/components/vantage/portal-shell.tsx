@@ -9,16 +9,32 @@ import { getMe, addAgent, getMyOnboarding } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/vantage/add-agent-modal";
 import { useTheme } from "@/components/vantage/theme";
 import { Avatar, Badge, btnClass } from "@/components/portal/ui";
+import {
+  LayoutDashboard,
+  Users,
+  CalendarDays,
+  Trophy,
+  BookOpen,
+  Network,
+  Settings,
+  Rocket,
+  UserPlus,
+  Mail,
+  ShieldCheck,
+  ScrollText,
+  type LucideIcon,
+} from "lucide-react";
 
-const NAV = [
-  { to: "/portal", label: "Dashboard", icon: "◈" },
-  { to: "/portal/applicants", label: "Applicants", icon: "◐" },
-  { to: "/portal/calendar", label: "Calendar", icon: "◗" },
-  { to: "/portal/leaderboard", label: "Leaderboard", icon: "★" },
-  { to: "/portal/resources", label: "Resources", icon: "▤" },
-  { to: "/portal/organization", label: "Organization", icon: "⚇" },
-  { to: "/portal/settings", label: "My Settings", icon: "⚙" },
+const NAV: { to: string; label: string; icon: LucideIcon }[] = [
+  { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/portal/applicants", label: "Applicants", icon: Users },
+  { to: "/portal/calendar", label: "Calendar", icon: CalendarDays },
+  { to: "/portal/leaderboard", label: "Leaderboard", icon: Trophy },
+  { to: "/portal/resources", label: "Resources", icon: BookOpen },
+  { to: "/portal/organization", label: "Organization", icon: Network },
+  { to: "/portal/settings", label: "My Settings", icon: Settings },
 ];
+
 
 const ROLE_LABEL: Record<string, string> = {
   super_admin: "Super Admin",
@@ -31,7 +47,7 @@ const ROLE_LABEL: Record<string, string> = {
 /** Compact sidebar row. Active state is a subtle gold tint — no heavy outline. */
 function NavRow({
   to,
-  icon,
+  icon: Icon,
   label,
   active,
   collapsed,
@@ -39,7 +55,7 @@ function NavRow({
   accent,
 }: {
   to: string;
-  icon: ReactNode;
+  icon: LucideIcon;
   label: string;
   active: boolean;
   collapsed: boolean;
@@ -60,11 +76,12 @@ function NavRow({
           : { color: accent ? "var(--p-gold)" : "var(--p-text-2)" }
       }
     >
-      <span className="w-4 shrink-0 text-center text-[14px]">{icon}</span>
+      <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
       {!collapsed && <span className="truncate">{label}</span>}
     </Link>
   );
 }
+
 
 function GroupLabel({ children, hidden }: { children: ReactNode; hidden?: boolean }) {
   if (hidden) return null;
@@ -174,7 +191,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
             {showOnboardingNav && (
               <NavRow
                 to="/portal/onboarding"
-                icon="◆"
+                icon={Rocket}
                 label="Onboarding"
                 accent
                 active={path.startsWith("/portal/onboarding")}
@@ -208,12 +225,12 @@ export function PortalShell({ children }: { children: ReactNode }) {
                   }`}
                   style={{ color: "var(--p-gold)" }}
                 >
-                  <span className="w-4 shrink-0 text-center">＋</span>
+                  <UserPlus className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
                   {!collapsed && <span>Add Agent</span>}
                 </button>
                 <NavRow
                   to="/portal/invitations"
-                  icon="✉"
+                  icon={Mail}
                   label="Invitations"
                   active={path.startsWith("/portal/invitations")}
                   collapsed={collapsed}
@@ -227,7 +244,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 <GroupLabel hidden={collapsed}>Admin</GroupLabel>
                 <NavRow
                   to="/portal/admin"
-                  icon="⚙"
+                  icon={ShieldCheck}
                   label="Admin"
                   active={
                     path.startsWith("/portal/admin") && !path.startsWith("/portal/admin/audit")
@@ -237,7 +254,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 />
                 <NavRow
                   to="/portal/admin/audit"
-                  icon="◫"
+                  icon={ScrollText}
                   label="Audit Log"
                   active={path.startsWith("/portal/admin/audit")}
                   collapsed={collapsed}
