@@ -303,6 +303,30 @@ function ApplyPage() {
             </div>
           </Field>
 
+          {slots.length > 0 && (
+            <Field label="Which overview can you attend? *">
+              <select
+                className="vantage-input w-full appearance-none"
+                value={form.overview_slot}
+                onChange={(e) => set("overview_slot", e.target.value)}
+              >
+                <option value="">Select a Monday overview…</option>
+                {slots.map((s) => (
+                  <option key={s.startIso} value={s.startIso}>
+                    {s.label}
+                    {s.seatsLeft !== null && s.seatsLeft <= 5 ? ` — ${s.seatsLeft} seats left` : ""}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-[12.5px] leading-relaxed text-vantage-muted">
+                Live availability from our calendar. After you submit, your seat is pre-filled — one
+                tap confirms it.
+              </p>
+            </Field>
+          )}
+
+
+
           <Field label="Who referred you? *">
             <RecruiterCombobox
               value={recruiter}
