@@ -22,6 +22,10 @@ import {
   Mail,
   ShieldCheck,
   ScrollText,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Sun,
+  Moon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -265,20 +269,6 @@ export function PortalShell({ children }: { children: ReactNode }) {
           </nav>
 
           <div className="shrink-0 border-t p-2" style={{ borderColor: "var(--p-border)" }}>
-            <button
-              onClick={toggleTheme}
-              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className={`p-focus mb-1 flex h-[34px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[13px] font-medium transition hover:bg-[var(--p-hover)] ${
-                collapsed ? "justify-center" : ""
-              }`}
-              style={{ color: "var(--p-text-2)" }}
-            >
-              <span className="w-4 shrink-0 text-center text-[14px]">
-                {theme === "dark" ? "☀" : "☾"}
-              </span>
-              {!collapsed && <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>}
-            </button>
-
             <div
               className={`flex items-center gap-2.5 rounded-[8px] px-1.5 py-2 ${collapsed ? "justify-center" : ""}`}
             >
@@ -298,13 +288,6 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 Sign out
               </button>
             )}
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className="p-focus mt-1 hidden h-7 w-full rounded-[8px] text-[11.5px] transition hover:bg-[var(--p-hover)] md:block"
-              style={{ color: "var(--p-text-3)" }}
-            >
-              {collapsed ? "→" : "← Collapse"}
-            </button>
           </div>
         </aside>
 
@@ -347,6 +330,30 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 ＋ Add Agent
               </button>
             )}
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`${btnClass("ghost", "sm")} hidden md:inline-flex`}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className={`${btnClass("ghost", "sm")}`}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Moon className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
             <Avatar name={displayName} email={profile?.email} size={28} />
           </header>
 
