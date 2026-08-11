@@ -184,6 +184,9 @@ function ApplicantDetailPage() {
               )}
             </div>
 
+            <SendEvaluationCard applicant={a} />
+
+
             {(data?.evaluations ?? []).length > 0 && (
               <div className="apx-card p-6">
                 <h2 className="mb-4 font-display text-[20px] leading-none">Evaluation</h2>
@@ -459,6 +462,68 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
       </span>
       {children}
     </label>
+  );
+}
+
+function SendEvaluationCard({ applicant }: { applicant: any }) {
+  const [copied, setCopied] = useState(false);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const link = `${origin}/evaluation?a=${applicant.id}`;
+  const ready = !!applicant.overview_completed_at;
+  const alreadyHired = !!applicant.hired_at;
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* noop */
+    }
+  }
+
+  return (
+    <div className="apx-card p-6">
+      <h2 className="mb-1 font-display text-[20px] leading-none">Evaluation form</h2>
+      <p className="mb-4 text-[12.5px] text-apex-faint">
+        Send this pre-filled link after the overview. When they submit, they're auto-hired and moved
+        into {applicant.licensed ? "Contracting" : "Licensing"}.
+      </p>
+
+      {alreadyHired ? (
+        <div className="rounded-[10px] border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2.5 text-[13px] text-emerald-300">
+          ✓ Evaluation submitted — auto-hired.
+        </div>
+      ) : (
+        <>
+          {!ready && (
+            <p className="mb-3 text-[12px] text-apex-gold/80">
+              Tip: mark the overview completed above first — the form is meant to go out after the
+              overview.
+            </p>
+          )}
+          <div className="flex gap-2">
+            <input
+              readOnly
+              className="apx-input flex-1 text-[12px]"
+              value={link}
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <button onClick={copy} className="apx-btn-primary flex-none px-4 text-[12.5px]">
+              {copied ? "Copied!" : "Copy link"}
+            </button>
+            <a
+              href={link}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="apx-btn-ghost flex-none px-4 py-2 text-[12.5px]"
+            >
+              Open →
+            </a>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

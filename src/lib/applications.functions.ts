@@ -61,6 +61,7 @@ export const submitApplication = createServerFn({ method: "POST" })
 
 
 const evaluationSchema = z.object({
+  applicant_id: z.string().uuid().optional().or(z.literal("")),
   email: z.string().trim().email().max(200),
   answers: z.record(z.string(), z.string()).default({}),
 });
@@ -73,7 +74,30 @@ export const submitEvaluation = createServerFn({ method: "POST" })
       payload: data as never,
     });
     if (error) throw new Error(error.message);
-    return result as { id: string; matched: boolean };
+    return result as { id: string; matched: boolean; hired: boolean; licensed: boolean };
+  });
+
+export type EvaluationPrefill = {
+  found: boolean;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  licensed?: boolean;
+  licensing_status?: string | null;
+  already_hired?: boolean;
+};
+
+/** Resolve prefill fields for the evaluation form from an applicant UUID link. */
+export const getEvaluationPrefill = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ applicant_id: z.string().uuid() }).parse(data))
+  .handler(async ({ data }) => {
+    const supabase = serverClient();
+    // Generated types lag the new RPC — cast until types are regenerated.
+    const { data: result, error } = await (supabase as any).rpc("get_evaluation_prefill", {
+      _applicant_id: data.applicant_id,
+    });
+    if (error) throw new Error(error.message);
+    return (result ?? { found: false }) as EvaluationPrefill;
   });
 
 export type RecruiterOption = {
