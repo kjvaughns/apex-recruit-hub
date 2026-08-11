@@ -41,7 +41,7 @@ function DashboardPage() {
         title="Your empire, at a glance"
         actions={
           <Link to="/portal/crm" className="apx-btn-primary px-4 py-2.5 text-[13.5px]">
-            Open CRM →
+            Open Applicants →
           </Link>
         }
       />
@@ -51,11 +51,14 @@ function DashboardPage() {
           <SkeletonGrid />
         ) : (
           <>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <Stat label="My Applicants" value={data?.counts.totalMine ?? 0} />
-              <Stat label="New This Week" value={data?.counts.newThisWeek ?? 0} accent />
-              <Stat label="Scheduled (30d)" value={data?.counts.scheduled30d ?? 0} />
-              <Stat label="Evaluated (30d)" value={data?.counts.evaluated30d ?? 0} />
+            <div className="mb-6">
+              <div className="apx-kicker mb-3">This month</div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <Stat label="My Applicants" value={data?.counts.totalMine ?? 0} caption="Active in your book" />
+                <Stat label="New This Week" value={data?.counts.newThisWeek ?? 0} caption="Fresh applicants" accent />
+                <Stat label="Scheduled" value={data?.counts.scheduled30d ?? 0} caption="Overviews booked · 30d" />
+                <Stat label="Evaluated" value={data?.counts.evaluated30d ?? 0} caption="Completed · 30d" />
+              </div>
             </div>
 
             {(data?.needsFollowUp ?? []).length > 0 && (
@@ -75,7 +78,7 @@ function DashboardPage() {
                   Hired but not yet licensed, and it's been more than a week (or never) since their
                   last check-in.
                 </p>
-                <div className="flex flex-col divide-y divide-white/[0.06]">
+                <div className="flex flex-col divide-y divide-[var(--apx-hairline)]">
                   {(data?.needsFollowUp ?? []).map((p) => {
                     const days = p.last_follow_up_at ? daysSince(p.last_follow_up_at) : null;
                     return (
@@ -112,7 +115,7 @@ function DashboardPage() {
                     return (
                       <div key={s.id} className="flex items-center gap-3">
                         <div className="w-40 flex-none text-[13px] text-apex-dim">{s.name}</div>
-                        <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
+                        <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-[var(--apx-hover)]">
                           <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, background: s.color || "#C9A84C" }} />
                         </div>
                         <div className="w-10 flex-none text-right font-display text-[18px] text-apex-ivory">{count}</div>
@@ -132,7 +135,7 @@ function DashboardPage() {
                     const app = f.applicants as { first_name: string; last_name: string } | null;
                     const who = app ? `${app.first_name} ${app.last_name}` : "Applicant";
                     return (
-                      <div key={f.id} className="flex items-start gap-3 border-b border-white/[0.05] pb-3 last:border-0">
+                      <div key={f.id} className="flex items-start gap-3 border-b border-[var(--apx-hairline)] pb-3 last:border-0">
                         <div className="mt-1 h-2 w-2 flex-none rounded-full bg-apex-gold shadow-[0_0_8px_rgba(201,168,76,0.6)]" />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-[13.5px] text-apex-ivory">
@@ -157,11 +160,31 @@ function DashboardPage() {
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+function Stat({
+  label,
+  value,
+  caption,
+  accent,
+}: {
+  label: string;
+  value: number;
+  caption?: string;
+  accent?: boolean;
+}) {
   return (
-    <div className={`${accent ? "apx-card apx-card-gold" : "apx-card"} p-6`}>
-      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-apex-muted">{label}</div>
-      <div className={`mt-3 font-display text-[52px] leading-none ${accent ? "text-apex-gold" : "text-apex-ivory"}`}>{value}</div>
+    <div
+      className={`${accent ? "apx-card apx-card-gold" : "apx-card"} group relative overflow-hidden p-6 transition-transform duration-200 hover:-translate-y-0.5`}
+    >
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-apex-gold/0 via-apex-gold/70 to-apex-gold/0 opacity-70" />
+      <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-apex-muted">
+        {label}
+      </div>
+      <div
+        className={`mt-3 font-display text-[52px] leading-none ${accent ? "text-apex-gold" : "text-apex-ivory"}`}
+      >
+        {value}
+      </div>
+      {caption && <div className="mt-1.5 text-[12px] text-apex-faint">{caption}</div>}
     </div>
   );
 }
