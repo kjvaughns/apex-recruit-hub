@@ -1251,6 +1251,7 @@ export type Database = {
       slugify_name: { Args: { _text: string }; Returns: string }
       submit_application: { Args: { payload: Json }; Returns: Json }
       submit_evaluation: { Args: { payload: Json }; Returns: Json }
+      update_onboarding: { Args: { _step: string }; Returns: Json }
     }
     Enums: {
       app_role: "agent" | "manager" | "admin" | "super_admin" | "leader"
