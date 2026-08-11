@@ -75,7 +75,19 @@ function UnlicensedComplete() {
   // Unlicensed branch: no embedded Calendly. We route everyone to the Overview
   // meeting via a link (delivered again by email in Phase 3), and lead with the
   // "what happens next" checklist so they know exactly where they stand.
-  const overviewUrl = ctx.calendly_url || null;
+  const chosenIso = bookingQuery.data?.requested_overview_at ?? null;
+  const overviewUrl = bookingQuery.data?.url || ctx.calendly_url || null;
+  const chosenLabel = chosenIso
+    ? new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/Chicago",
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(new Date(chosenIso)) + " CT"
+    : null;
+
 
   async function onBooked() {
     try {
