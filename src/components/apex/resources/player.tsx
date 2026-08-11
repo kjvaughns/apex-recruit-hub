@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Overlay, durationToSeconds, fmtTime } from "./shared";
+import { Avatar, Badge as UiBadge } from "@/components/portal/ui";
 
 export type Recording = {
   id: string;
@@ -78,12 +79,15 @@ function MediaPlayer({ rec }: { rec: Recording }) {
   const hasVideo = !!rec.video_url;
 
   return (
-    <div className="mt-6 flex flex-col gap-4">
+    <div className="mt-4 flex flex-col gap-3">
       <div
-        className={`relative w-full overflow-hidden rounded-xl border border-white/[0.09] ${
-          hasVideo ? "" : "bg-[radial-gradient(circle_at_50%_42%,#1c1c1c,#101010)]"
-        }`}
-        style={hasVideo ? undefined : { aspectRatio: rec.audio ? undefined : "16/9", height: rec.audio ? 172 : undefined }}
+        className="relative w-full overflow-hidden rounded-[10px] border"
+        style={{
+          borderColor: "var(--p-border)",
+          background: hasVideo ? undefined : "var(--p-raised)",
+          aspectRatio: hasVideo ? undefined : rec.audio ? undefined : "16/9",
+          height: hasVideo ? undefined : rec.audio ? 140 : undefined,
+        }}
       >
         {hasVideo ? (
           <iframe
@@ -94,42 +98,51 @@ function MediaPlayer({ rec }: { rec: Recording }) {
             title={rec.title}
           />
         ) : (
-          <div className="flex h-full min-h-[172px] items-center justify-center">
+          <div className="flex h-full min-h-[140px] items-center justify-center">
             <button
               onClick={() => setPlaying((p) => !p)}
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-apex-gold text-black shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition hover:brightness-110"
+              className="p-focus grid h-12 w-12 place-items-center rounded-full text-[#0B0B0C]"
+              style={{ background: "var(--p-gold)" }}
             >
               {playing ? "❚❚" : "▶"}
             </button>
           </div>
         )}
-        <span className="absolute bottom-3 left-3 rounded-full bg-black/50 px-2 py-1 font-mono text-[11px] uppercase tracking-wider text-apex-faint">
+        <span
+          className="absolute bottom-2 left-2 rounded-full px-2 py-0.5 text-[11px] uppercase tracking-wider"
+          style={{ background: "rgba(0,0,0,0.5)", color: "var(--p-text-2)" }}
+        >
           {rec.audio ? "♪ Audio" : hasVideo ? "▶ Video" : "Preview"}
         </span>
       </div>
 
       {!hasVideo && (
-        <div className="flex items-center gap-4 rounded-xl border border-white/[0.09] bg-[#1a1a1a] p-4">
+        <div className="p-panel flex items-center gap-3 p-3">
           <button
             onClick={() => { if (cur >= total) setCur(0); setPlaying((p) => !p); }}
-            className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-apex-gold text-black transition hover:brightness-110"
+            className="p-focus grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#0B0B0C]"
+            style={{ background: "var(--p-gold)" }}
           >
             {playing ? "❚❚" : "▶"}
           </button>
           <div className="min-w-0 flex-1">
             <div
-              className="relative h-1.5 cursor-pointer rounded-full bg-white/10"
+              className="relative h-1.5 cursor-pointer rounded-full"
+              style={{ background: "var(--p-hover)" }}
               onClick={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
                 setCur(Math.round(x * total));
               }}
             >
-              <div className="h-full rounded-full bg-apex-gold" style={{ width: `${pct}%` }}>
-                <div className="absolute right-[-6px] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-apex-gold shadow-[0_0_0_3px_rgba(201,168,76,0.22)]" style={{ left: `calc(${pct}% - 6px)` }} />
+              <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--p-gold)" }}>
+                <div
+                  className="absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full"
+                  style={{ left: `calc(${pct}% - 6px)`, background: "var(--p-gold)" }}
+                />
               </div>
             </div>
-            <div className="mt-2 flex justify-between font-mono text-[12px] tabular-nums text-apex-dim">
+            <div className="p-muted mt-1.5 flex justify-between font-mono tabular-nums">
               <span>{fmtTime(cur)}</span>
               <span>{fmtTime(total)}</span>
             </div>
@@ -138,13 +151,14 @@ function MediaPlayer({ rec }: { rec: Recording }) {
       )}
 
       <div className="flex flex-col">
-        <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-[12px] font-bold uppercase tracking-[0.14em]">Transcript</span>
-          <span className="text-[11px] text-apex-faint">Auto-generated · click a line to jump</span>
+        <div className="mb-1.5 flex items-baseline justify-between">
+          <span className="p-label">Transcript</span>
+          <span className="p-muted">Auto-generated · click a line to jump</span>
         </div>
         <div
           ref={scrollRef}
-          className="flex max-h-[230px] flex-col gap-0.5 overflow-y-auto rounded-xl border border-white/[0.09] p-1.5"
+          className="flex max-h-[200px] flex-col gap-0.5 overflow-y-auto rounded-[10px] border p-1.5"
+          style={{ borderColor: "var(--p-border)" }}
         >
           {transcript.map((seg, i) => {
             const on = i === activeIdx;
@@ -152,14 +166,16 @@ function MediaPlayer({ rec }: { rec: Recording }) {
               <button
                 key={i}
                 onClick={() => setCur(seg.t)}
-                className={`ts-line flex w-full gap-3 rounded-lg px-3 py-2 text-left transition ${
-                  on ? "ts-line-on bg-apex-gold/[0.12] text-apex-ivory" : "text-apex-dim hover:bg-white/[0.04] hover:text-apex-ivory"
-                }`}
+                className={`ts-line flex w-full gap-2.5 rounded-md px-2.5 py-1.5 text-left transition ${on ? "ts-line-on" : "hover:bg-[var(--p-hover)]"}`}
+                style={on ? { background: "var(--p-gold-soft)", color: "var(--p-text)" } : { color: "var(--p-text-2)" }}
               >
-                <span className={`min-w-[38px] font-mono text-[12px] tabular-nums ${on ? "font-semibold text-apex-gold" : "text-apex-faint"}`}>
+                <span
+                  className="min-w-[36px] shrink-0 font-mono text-[12px] tabular-nums"
+                  style={{ color: on ? "var(--p-gold)" : "var(--p-text-3)", fontWeight: on ? 600 : 400 }}
+                >
                   {fmtTime(seg.t)}
                 </span>
-                <span className="text-[14px] leading-[1.5]">{seg.text}</span>
+                <span className="text-[13.5px] leading-snug">{seg.text}</span>
               </button>
             );
           })}
@@ -178,29 +194,24 @@ export function PlayerModal({ rec, presenter, onClose }: { rec: Recording; prese
   }, [onClose]);
   return (
     <Overlay onClose={onClose}>
-      <div className="relative rounded-[18px] border border-white/[0.09] bg-[#131313] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.5)]">
+      <div className="p-panel relative p-4">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-apex-dim hover:border-white/30 hover:text-apex-ivory"
           aria-label="Close"
+          className="p-focus absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-md text-[14px] hover:bg-[var(--p-hover)]"
+          style={{ color: "var(--p-text-2)" }}
         >
           ✕
         </button>
-        <div className="flex items-center gap-3 pr-10">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-apex-gold/15 font-display text-lg text-apex-gold">
-            {presenter?.initials ?? "?"}
-          </span>
+        <div className="flex items-center gap-3 pr-8">
+          <Avatar name={presenter?.name} size={36} />
           <div className="min-w-0 flex-1">
-            <div className="text-[14px] font-semibold">{presenter?.name}</div>
-            <div className="text-[12px] text-apex-faint">{presenter?.role}</div>
+            <div className="p-card-title truncate">{presenter?.name}</div>
+            <div className="p-muted truncate">{presenter?.role}</div>
           </div>
-          {rec.topic && (
-            <span className="rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-widest text-apex-dim">
-              {rec.topic}
-            </span>
-          )}
+          {rec.topic && <UiBadge tone="neutral">{rec.topic}</UiBadge>}
         </div>
-        <h2 className="mt-5 font-display text-[clamp(28px,4vw,40px)] leading-[1.02]">{rec.title}</h2>
+        <h2 className="p-title mt-3">{rec.title}</h2>
         <MediaPlayer rec={rec} />
       </div>
     </Overlay>
