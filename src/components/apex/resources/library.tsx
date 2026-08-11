@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Badge, TYPE_META, formatDisplayDate, Overlay } from "./shared";
+import { Toolbar, SearchField, SegmentedControl, EmptyState, Button } from "@/components/portal/ui";
 
 export type LibraryItem = {
   id: string;
@@ -43,61 +44,24 @@ export function LibraryView({ items }: { items: LibraryItem[] }) {
     });
   }, [items, filter, query]);
 
+  const visibleFilters = FILTERS.filter((f) => f.key === "all" || (counts[f.key] ?? 0) > 0);
+
   return (
     <>
-      <section className="flex flex-wrap items-end justify-between gap-6 pt-8 pb-8 md:pt-14">
-        <div>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.22em] text-apex-gold">Resource Library</p>
-          <h1 className="mt-3 font-display text-[clamp(32px,5vw,52px)] leading-[0.98] tracking-[0.01em]">
-            Scripts, guides &amp; trainings.
-          </h1>
-        </div>
-        <div className="flex h-10 w-full max-w-[320px] items-center gap-2 rounded-lg border border-white/[0.09] bg-[#131313] px-3 focus-within:border-apex-gold/60 focus-within:shadow-[0_0_0_3px_rgba(201,168,76,0.13)]">
-          <span className="text-apex-dim">⌕</span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search resources…"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-apex-faint"
-          />
-          {query && (
-            <button onClick={() => setQuery("")} className="text-apex-dim hover:text-apex-ivory">✕</button>
-          )}
-        </div>
-      </section>
-
-      <div className="mb-9 flex flex-nowrap gap-1 overflow-x-auto border-b border-white/[0.09]">
-        {FILTERS.filter((f) => f.key === "all" || (counts[f.key] ?? 0) > 0).map((f) => {
-          const on = filter === f.key;
-          return (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={`relative inline-flex items-center gap-2 whitespace-nowrap px-4 py-3 text-[14px] font-semibold transition ${
-                on ? "text-apex-ivory" : "text-apex-dim hover:text-apex-ivory"
-              }`}
-            >
-              {f.label}
-              <span
-                className={`inline-flex min-w-[22px] items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  on ? "bg-apex-gold/15 text-apex-gold" : "bg-white/[0.06] text-apex-faint"
-                }`}
-              >
-                {counts[f.key] ?? 0}
-              </span>
-              {on && <span className="absolute inset-x-4 -bottom-px h-0.5 bg-apex-gold" />}
-            </button>
-          );
-        })}
-      </div>
+      <Toolbar className="mb-4">
+        <SearchField value={query} onChange={setQuery} placeholder="Search resources…" />
+        <SegmentedControl
+          size="sm"
+          options={visibleFilters.map((f) => ({ value: f.key, label: `${f.label} (${counts[f.key] ?? 0})` }))}
+          value={filter}
+          onChange={setFilter}
+        />
+      </Toolbar>
 
       {visible.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.09] bg-[#131313] p-14 text-center">
-          <p className="font-display text-2xl">No resources found</p>
-          <p className="mt-1 text-[13px] text-apex-dim">Try a different search or filter.</p>
-        </div>
+        <EmptyState title="No resources found" description="Try a different search or filter." />
       ) : (
-        <div className="grid gap-[18px] [grid-template-columns:repeat(auto-fill,minmax(312px,1fr))]">
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
           {visible.map((it) => <Card key={it.id} item={it} onOpen={() => setActive(it)} />)}
         </div>
       )}
@@ -112,23 +76,23 @@ function Card({ item, onOpen }: { item: LibraryItem; onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
-      className="group relative flex flex-col gap-3 overflow-hidden rounded-[14px] border border-white/[0.09] bg-[#131313] p-[22px] text-left transition hover:-translate-y-[3px] hover:border-white/25"
+      className="p-panel group relative flex flex-col gap-2 p-4 text-left transition hover:[border-color:var(--p-border-strong)]"
     >
       <span
         className="absolute inset-y-0 left-0 w-[3px] opacity-0 transition-opacity group-hover:opacity-100"
         style={{ background: color }}
       />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Badge type={item.type} />
-        <span className="text-[12px] text-apex-faint">{formatDisplayDate(item.display_date)}</span>
+        <span className="p-muted shrink-0">{formatDisplayDate(item.display_date)}</span>
       </div>
-      <h3 className="font-display text-[26px] leading-[1.02] tracking-[0.012em]">{item.title}</h3>
-      <p className="line-clamp-3 text-[14.5px] leading-[1.55] text-apex-dim">{item.description}</p>
-      <div className="mt-auto flex items-center justify-between border-t border-white/[0.06] pt-[14px]">
-        <span className="text-[12.5px] text-apex-faint">{item.meta}</span>
-        <span className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-apex-gold">
+      <h3 className="p-card-title truncate">{item.title}</h3>
+      <p className="p-secondary line-clamp-2">{item.description}</p>
+      <div className="mt-auto flex items-center justify-between border-t pt-2.5" style={{ borderColor: "var(--p-border)" }}>
+        <span className="p-muted truncate">{item.meta}</span>
+        <span className="inline-flex items-center gap-1 text-[13px] font-semibold" style={{ color: "var(--p-gold)" }}>
           {item.cta ?? "Open"}
-          <span className="transition-transform group-hover:translate-x-1">→</span>
+          <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </span>
       </div>
     </button>
@@ -136,57 +100,45 @@ function Card({ item, onOpen }: { item: LibraryItem; onOpen: () => void }) {
 }
 
 function ItemModal({ item, onClose }: { item: LibraryItem; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [onClose]);
   const color = (TYPE_META[item.type] ?? TYPE_META.guide).color;
   return (
     <Overlay onClose={onClose}>
-      <div
-        className="relative rounded-[18px] border border-white/[0.09] bg-[#131313] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
-        style={{ borderTopColor: color, borderTopWidth: 2 }}
-      >
+      <div className="p-panel relative p-4" style={{ borderTop: `2px solid ${color}` }}>
+        <div className="flex items-center justify-between gap-3 pr-8">
+          <Badge type={item.type} size="md" />
+          <span className="p-muted">{formatDisplayDate(item.display_date)}</span>
+        </div>
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-apex-dim hover:border-white/30 hover:text-apex-ivory"
           aria-label="Close"
+          className="p-focus absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-md text-[14px] hover:bg-[var(--p-hover)]"
+          style={{ color: "var(--p-text-2)" }}
         >
           ✕
         </button>
-        <div className="flex items-center justify-between pr-10">
-          <Badge type={item.type} size="md" />
-          <span className="text-[12.5px] text-apex-faint">{formatDisplayDate(item.display_date)}</span>
-        </div>
-        <h2 className="mt-5 font-display text-[clamp(30px,4.4vw,44px)] leading-[1.02]">{item.title}</h2>
-        <p className="mt-4 text-[15px] leading-[1.6] text-apex-dim">{item.long || item.description}</p>
+        <h2 className="p-title mt-3">{item.title}</h2>
+        <p className="p-secondary mt-3 leading-snug">{item.long || item.description}</p>
         {item.tags && item.tags.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-1.5">
             {item.tags.map((t) => (
-              <span key={t} className="rounded-full border border-white/10 bg-black/40 px-2.5 py-1 text-[11.5px] text-apex-dim">
+              <span
+                key={t}
+                className="rounded-full border px-2 py-0.5 text-[11.5px]"
+                style={{ borderColor: "var(--p-border)", color: "var(--p-text-2)" }}
+              >
                 #{t}
               </span>
             ))}
           </div>
         )}
-        <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-5">
-          <span className="text-[12.5px] text-apex-faint">{item.meta}</span>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--p-border)" }}>
+          <span className="p-muted">{item.meta}</span>
           {item.url ? (
-            <a
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-apex-gold px-4 py-2.5 text-[14px] font-bold text-black transition hover:brightness-110"
-            >
-              {item.cta ?? "Open"} <span>→</span>
+            <a href={item.url} target="_blank" rel="noreferrer">
+              <Button variant="primary" size="sm">{item.cta ?? "Open"} →</Button>
             </a>
           ) : (
-            <span className="text-[13px] text-apex-faint">Link coming soon</span>
+            <span className="p-muted">Link coming soon</span>
           )}
         </div>
       </div>

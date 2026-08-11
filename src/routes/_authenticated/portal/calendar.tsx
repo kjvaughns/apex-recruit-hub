@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
+import { PageHeader, PageBody, Toolbar, ToolbarSpacer, SegmentedControl, Button } from "@/components/portal/ui";
 import { getCalendar } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/calendar")({
@@ -70,73 +71,107 @@ function CalendarPage() {
 
   return (
     <PortalShell>
-      <PortalHeader
-        kicker="Schedule"
-        title="Calendar"
-        actions={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setScope(scope === "mine" ? "all" : "mine")}
-              className="apx-btn-ghost px-3 py-2 text-[12px]"
-            >
-              {scope === "mine" ? "Mine" : "All"}
-            </button>
-            <button
+      <PageBody>
+        <PageHeader title="Calendar" description="Appointments and tasks across your pipeline." />
+
+        <Toolbar className="mb-4">
+          <SegmentedControl
+            size="sm"
+            options={[
+              { value: "mine", label: "Mine" },
+              { value: "all", label: "All" },
+            ]}
+            value={scope}
+            onChange={(v) => setScope(v as Scope)}
+          />
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-              className="apx-btn-ghost px-3 py-2 text-[12px]"
             >
               ←
-            </button>
-            <button
-              onClick={() => setCursor(startOfMonth(new Date()))}
-              className="apx-btn-ghost px-3 py-2 text-[12px]"
-            >
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setCursor(startOfMonth(new Date()))}>
               Today
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-              className="apx-btn-ghost px-3 py-2 text-[12px]"
             >
               →
-            </button>
+            </Button>
           </div>
-        }
-      />
-      <div className="px-6 py-8 md:px-10">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="font-display text-2xl">{monthLabel}</div>
-          <div className="text-[11.5px] text-apex-faint">
-            <span className="mr-3"><span className="mr-1 inline-block h-2 w-2 rounded-full bg-apex-gold" />Appointments</span>
-            <span><span className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />Tasks</span>
+          <span className="p-card-title ml-2">{monthLabel}</span>
+          <ToolbarSpacer />
+          <div className="p-muted flex items-center gap-3 text-[11.5px]">
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--p-gold)" }} />
+              Appointments
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--p-green)" }} />
+              Tasks
+            </span>
           </div>
-        </div>
+        </Toolbar>
 
-        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.04]">
-          {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map((d) => (
-            <div key={d} className="bg-black/50 px-3 py-2 text-[10.5px] uppercase tracking-[0.2em] text-apex-faint">{d}</div>
+        <div
+          className="grid grid-cols-7 gap-px overflow-hidden rounded-[10px] border"
+          style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}
+        >
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            <div
+              key={d}
+              className="p-label px-2 py-2 uppercase tracking-[0.08em]"
+              style={{ background: "var(--p-hover)" }}
+            >
+              {d}
+            </div>
           ))}
           {days.map((d, i) => {
-            if (!d) return <div key={i} className="min-h-[110px] bg-black/40" />;
+            if (!d) return <div key={i} className="min-h-[110px]" style={{ background: "var(--p-panel)" }} />;
             const events = byDay[d.toDateString()] ?? [];
             const isToday = d.toDateString() === today;
             return (
-              <div key={i} className={`min-h-[110px] bg-black/50 p-2 ${isToday ? "ring-1 ring-inset ring-apex-gold/40" : ""}`}>
-                <div className={`text-[11.5px] ${isToday ? "text-apex-gold font-semibold" : "text-apex-dim"}`}>{d.getDate()}</div>
+              <div
+                key={i}
+                className="min-h-[110px] p-2"
+                style={{
+                  background: "var(--p-panel)",
+                  boxShadow: isToday ? "inset 0 0 0 1px var(--p-gold)" : undefined,
+                }}
+              >
+                <div
+                  className="text-[12px] font-semibold"
+                  style={{ color: isToday ? "var(--p-gold)" : "var(--p-text)" }}
+                >
+                  {d.getDate()}
+                </div>
                 <div className="mt-1 space-y-1">
                   {events.slice(0, 3).map((e) => (
-                    <div key={e.kind + e.id} className={`truncate rounded px-1.5 py-0.5 text-[10.5px] ${e.kind === "appt" ? "bg-apex-gold/15 text-apex-gold" : "bg-emerald-500/10 text-emerald-300"}`}>
+                    <div
+                      key={e.kind + e.id}
+                      className="truncate rounded px-1.5 py-0.5 text-[10.5px] font-medium"
+                      style={
+                        e.kind === "appt"
+                          ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+                          : { background: "rgba(63,179,127,0.12)", color: "var(--p-green)" }
+                      }
+                    >
                       {e.time} · {e.label}
                     </div>
                   ))}
-                  {events.length > 3 && <div className="text-[10px] text-apex-faint">+{events.length - 3} more</div>}
+                  {events.length > 3 && <div className="p-muted text-[10px]">+{events.length - 3} more</div>}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {q.isLoading && <div className="mt-4 text-center text-apex-dim">Loading…</div>}
-      </div>
+        {q.isLoading && <div className="p-muted mt-4 text-center">Loading…</div>}
+      </PageBody>
     </PortalShell>
   );
 }

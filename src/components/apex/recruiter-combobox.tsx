@@ -114,7 +114,11 @@ export function RecruiterCombobox({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="w-[--radix-popover-trigger-width] border-white/10 bg-apex-panel p-0"
+        className="w-[--radix-popover-trigger-width] p-0"
+        style={{
+          background: "var(--p-panel, #141416)",
+          borderColor: "var(--p-border, rgba(255,255,255,0.08))",
+        }}
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -122,7 +126,7 @@ export function RecruiterCombobox({
             value={query}
             onValueChange={setQuery}
           />
-          <CommandList>
+          <CommandList className="max-h-72 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center gap-2 py-6 text-sm text-apex-muted">
                 <Loader2 className="h-4 w-4 animate-spin" /> Searching…
