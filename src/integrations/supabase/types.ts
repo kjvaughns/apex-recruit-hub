@@ -1539,6 +1539,7 @@ export type Database = {
       }
       enqueue_email: { Args: { payload: Json }; Returns: string }
       finalize_invitation_acceptance: { Args: { payload: Json }; Returns: Json }
+      get_applicant_notify_context: { Args: { _token: string }; Returns: Json }
       get_evaluation_prefill: { Args: { _applicant_id: string }; Returns: Json }
       get_invitation_public: { Args: { _token: string }; Returns: Json }
       get_overview_prefill: { Args: { _token: string }; Returns: Json }
@@ -1552,6 +1553,10 @@ export type Database = {
           recruiting_slug: string
           team_name: string
         }[]
+      }
+      get_recruiter_for_applicant: {
+        Args: { _applicant_id: string }
+        Returns: Json
       }
       has_role: {
         Args: {
