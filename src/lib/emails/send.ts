@@ -24,6 +24,7 @@ const TEMPLATE_NAMES: Record<TemplateKey, string> = {
   welcome_hired: "welcome-hired",
   followup_checkin: "followup-checkin",
   welcome_onboarding: "welcome-onboarding",
+  onboarding_complete: "onboarding-complete",
 };
 
 /**

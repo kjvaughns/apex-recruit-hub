@@ -72,7 +72,8 @@ export type TemplateKey =
   | "application_unlicensed"
   | "welcome_hired"
   | "followup_checkin"
-  | "welcome_onboarding";
+  | "welcome_onboarding"
+  | "onboarding_complete";
 
 export type RenderedEmail = { subject: string; html: string };
 
@@ -193,6 +194,20 @@ export function welcomeOnboarding(params: TemplateParams): RenderedEmail {
   return { subject: "Welcome to the team — let's get you set up", html: layout(inner) };
 }
 
+// ONBOARDING EMAIL 2 — all 4 onboarding steps complete.
+export function onboardingComplete(params: TemplateParams): RenderedEmail {
+  const inner =
+    h1("You're fully onboarded — welcome to training") +
+    p(
+      `Nice work, ${greet(params.firstName)} — every onboarding step is done. You're officially set up and a real part of the Vantage team.`,
+    ) +
+    p(
+      `Next up is training. Your training path will be available in the portal shortly — we'll let you know the moment it's live.`,
+    ) +
+    p(`Welcome aboard. This is where it gets good.`);
+  return { subject: "You're fully onboarded — welcome to training", html: layout(inner) };
+}
+
 export function render(key: TemplateKey, params: TemplateParams): RenderedEmail {
   switch (key) {
     case "application_licensed":
@@ -205,5 +220,7 @@ export function render(key: TemplateKey, params: TemplateParams): RenderedEmail 
       return followupCheckin(params);
     case "welcome_onboarding":
       return welcomeOnboarding(params);
+    case "onboarding_complete":
+      return onboardingComplete(params);
   }
 }
