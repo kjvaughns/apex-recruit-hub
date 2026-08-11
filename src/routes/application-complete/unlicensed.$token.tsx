@@ -119,11 +119,12 @@ function UnlicensedComplete() {
         <div className="vantage-card vantage-card-gold mt-10 flex flex-col items-start gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-8">
           <div>
             <div className="font-display text-[24px] leading-tight text-vantage-ivory">
-              Book your Vantage overview
+              {chosenLabel ? "Confirm your overview seat" : "Book your Vantage overview"}
             </div>
             <p className="mt-1.5 text-[14px] leading-relaxed text-vantage-muted">
-              Monday nights, 7:00 PM CT / 8:00 PM ET. This is where we walk you through how it all
-              works and what's next.
+              {chosenLabel
+                ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks in your seat.`
+                : "Monday nights, 7:00 PM CT / 8:00 PM ET. This is where we walk you through how it all works and what's next."}
             </p>
           </div>
           {overviewUrl ? (
@@ -137,8 +138,9 @@ function UnlicensedComplete() {
               }}
               className="vantage-btn-primary flex-none px-6 py-3.5 text-[15px]"
             >
-              Book the overview →
+              {chosenLabel ? "Confirm my seat →" : "Book the overview →"}
             </a>
+
           ) : (
             <span className="flex-none text-[13px] text-vantage-faint">
               We'll email you the booking link shortly.
