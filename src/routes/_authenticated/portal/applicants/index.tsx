@@ -8,6 +8,7 @@ import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/apex/add-applicant-modal";
 import { AddAgentModal } from "@/components/apex/add-agent-modal";
+import { RecruitingLinkCard } from "@/components/apex/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
 
 const searchSchema = z.object({
@@ -122,6 +123,10 @@ function ApplicantsPage() {
       />
 
       <div className="px-6 py-6 md:px-10">
+        <div className="mb-5">
+          <RecruitingLinkCard variant="compact" />
+        </div>
+
         {/* Tab switcher */}
         <div className="mb-5 inline-flex overflow-hidden rounded-[10px] border border-[var(--apx-hairline)]">
           {(["list", "pipeline"] as const).map((t) => (
