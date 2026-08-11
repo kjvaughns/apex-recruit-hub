@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { z } from "zod";
 import { PublicShell } from "@/components/apex/brand";
-import { submitEvaluation } from "@/lib/applications.functions";
+import { submitEvaluation, getEvaluationPrefill } from "@/lib/applications.functions";
+
+const searchSchema = z.object({ a: z.string().optional() });
 
 export const Route = createFileRoute("/evaluation")({
   head: () => ({
@@ -14,6 +17,17 @@ export const Route = createFileRoute("/evaluation")({
       { name: "robots", content: "noindex" },
     ],
   }),
+  validateSearch: (search) => searchSchema.parse(search),
+  loaderDeps: ({ search }) => ({ a: search.a }),
+  loader: async ({ deps }) => {
+    if (!deps.a) return { prefill: null as null | Awaited<ReturnType<typeof getEvaluationPrefill>> };
+    try {
+      const prefill = await getEvaluationPrefill({ data: { applicant_id: deps.a } });
+      return { prefill };
+    } catch {
+      return { prefill: null };
+    }
+  },
   component: EvaluationPage,
 });
 
@@ -24,16 +38,34 @@ const LICENSING_OPTIONS = [
   "Licensed — Life & Health",
 ] as const;
 
+function deriveLicensing(p: { licensed?: boolean; licensing_status?: string | null } | null) {
+  if (!p) return "";
+  if (p.licensing_status) {
+    const match = LICENSING_OPTIONS.find(
+      (o) => o.toLowerCase() === p.licensing_status!.toLowerCase(),
+    );
+    if (match) return match;
+  }
+  if (p.licensed === true) return "Licensed — Life & Health";
+  if (p.licensed === false) return "Not licensed yet";
+  return "";
+}
+
 function EvaluationPage() {
+  const { a } = Route.useSearch();
+  const { prefill } = Route.useLoaderData();
   const submit = useServerFn(submitEvaluation);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+
+  const pf = prefill && prefill.found ? prefill : null;
+  const [firstName, setFirstName] = useState(pf?.first_name ?? "");
+  const [lastName, setLastName] = useState(pf?.last_name ?? "");
+  const [email, setEmail] = useState(pf?.email ?? "");
   const [phone, setPhone] = useState("");
-  const [licensing, setLicensing] = useState("");
+  const [licensing, setLicensing] = useState(deriveLicensing(pf));
   const [why, setWhy] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [hiredLicensed, setHiredLicensed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit() {
@@ -56,11 +88,9 @@ function EvaluationPage() {
     }
     setSubmitting(true);
     try {
-      // Open-ended single form. Logic unchanged: we still submit through the
-      // existing submit_evaluation RPC (email + a flat answers map). Phase 2
-      // rebuilds this to prefill + auto-hire.
-      await submit({
+      const res = await submit({
         data: {
+          applicant_id: a || "",
           email: email.trim(),
           answers: {
             full_name: `${firstName.trim()} ${lastName.trim()}`,
@@ -70,6 +100,7 @@ function EvaluationPage() {
           },
         },
       });
+      setHiredLicensed(!!res.licensed);
       setDone(true);
     } catch (e) {
       setError((e as Error).message || "Something went wrong.");
@@ -87,12 +118,19 @@ function EvaluationPage() {
               ✓
             </div>
             <h1 className="font-display text-[clamp(38px,6vw,58px)] leading-[0.96]">
-              You're on the team.
+              Welcome to Vantage — you're officially on the team.
             </h1>
-            <p className="mx-auto mt-4 max-w-[440px] text-apex-muted">
-              We've got your details — your recruiter will follow up shortly with your exact next
-              steps.
-            </p>
+            {hiredLicensed ? (
+              <p className="mx-auto mt-4 max-w-[460px] text-apex-muted">
+                You're in. Since you're already licensed, the next step is contracting paperwork —
+                someone from the team will follow up shortly with the details.
+              </p>
+            ) : (
+              <p className="mx-auto mt-4 max-w-[460px] text-apex-muted">
+                You're in. Get started on your licensing course today — we'll be in touch with your
+                onboarding steps and check in with you each week until you're licensed.
+              </p>
+            )}
             <Link to="/" className="apx-btn-ghost mt-6 inline-flex px-6 py-3 text-[14px]">
               Back to home
             </Link>
