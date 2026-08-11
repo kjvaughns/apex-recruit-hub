@@ -185,17 +185,33 @@ export const submitEvaluation = createServerFn({ method: "POST" })
     const res = result as { id: string; matched: boolean; hired: boolean; licensed: boolean };
 
     // Trigger: welcome / auto-hire email (branches on licensing). Only fires on
-    // the first hire. Stub send — enqueues into the outbox.
+    // the first hire. The recruiting agent is copied.
     if (res.hired) {
       const fullName = (data.answers?.full_name as string | undefined) ?? "";
+      let copyTo: { email: string; name: string | null } | null = null;
+      if (data.applicant_id) {
+        try {
+          const { data: r } = await (supabase as any).rpc("get_recruiter_for_applicant", {
+            _applicant_id: data.applicant_id,
+          });
+          if (r?.found && r.recruiter_email) {
+            copyTo = { email: r.recruiter_email, name: r.recruiter_name ?? null };
+          }
+        } catch {
+          /* best-effort */
+        }
+      }
       await queueEmail(supabase as never, {
         to: data.email,
         toName: fullName || undefined,
         applicantId: data.applicant_id || null,
         template: "welcome_hired",
         params: { firstName: fullName.split(/\s+/)[0] || "", licensed: res.licensed },
+        copyTo,
+        copyForName: fullName || data.email,
       });
     }
+
 
     return res;
   });
