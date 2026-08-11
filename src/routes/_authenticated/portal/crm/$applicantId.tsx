@@ -8,6 +8,7 @@ import {
   updateApplicantStage,
   addApplicantNote,
   setOverviewStatus,
+  sendFollowUpEmail,
 } from "@/lib/portal.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
 
@@ -185,6 +186,11 @@ function ApplicantDetailPage() {
             </div>
 
             <SendEvaluationCard applicant={a} />
+
+            <FollowUpCard applicantId={applicantId} onSent={() => {
+              qc.invalidateQueries({ queryKey: ["applicant", applicantId] });
+              qc.invalidateQueries({ queryKey: ["applicants"] });
+            }} />
 
 
             {(data?.evaluations ?? []).length > 0 && (
@@ -465,6 +471,51 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
+function FollowUpCard({
+  applicantId,
+  onSent,
+}: {
+  applicantId: string;
+  onSent: () => void;
+}) {
+  const send = useServerFn(sendFollowUpEmail);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  async function onSend() {
+    setSending(true);
+    setError("");
+    try {
+      await send({ data: { id: applicantId } });
+      setSent(true);
+      setTimeout(() => setSent(false), 2500);
+      onSent();
+    } catch (e) {
+      setError((e as Error).message || "Could not send follow-up.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="apx-card p-6">
+      <h2 className="mb-1 font-display text-[20px] leading-none">Pre-licensing follow-up</h2>
+      <p className="mb-4 text-[12.5px] text-apex-faint">
+        Sends the weekly check-in template (Email 4) and logs it on the timeline.
+      </p>
+      <button
+        onClick={onSend}
+        disabled={sending}
+        className="apx-btn-ghost px-4 py-2.5 text-[13px] disabled:opacity-60"
+      >
+        {sending ? "Sending…" : sent ? "✓ Follow-up sent" : "Send follow-up email"}
+      </button>
+      {error && <p className="mt-2 text-[12px] text-red-300">{error}</p>}
+    </div>
+  );
+}
+
 function SendEvaluationCard({ applicant }: { applicant: any }) {
   const [copied, setCopied] = useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -574,6 +625,7 @@ function eventLabel(t: string) {
     evaluation_submitted: "Evaluation submitted",
     appointment_scheduled: "Appointment scheduled",
     overview_updated: "Overview updated",
+    follow_up_sent: "Follow-up sent",
     stage_changed: "Stage changed",
     note: "Note",
   };
