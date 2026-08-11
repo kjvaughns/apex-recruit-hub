@@ -1098,25 +1098,45 @@ export const getMySchedulingSettings = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data } = await supabase
       .from("profiles")
-      .select("licensed_calendly_url, can_schedule_licensed, licensed_calendly_updated_at")
+      .select(
+        "licensed_calendly_url, can_schedule_licensed, licensed_calendly_updated_at, one_on_one_calendly_url, one_on_one_calendly_updated_at",
+      )
       .eq("id", userId)
       .maybeSingle();
+    const row = (data ?? null) as
+      | (typeof data & {
+          one_on_one_calendly_url?: string | null;
+          one_on_one_calendly_updated_at?: string | null;
+        })
+      | null;
     const roles = await supabase.from("user_roles").select("role").eq("user_id", userId);
     const roleList = (roles.data ?? []).map((r) => r.role as string);
     const isPrivileged = roleList.some(
       (r) => r === "manager" || r === "admin" || r === "super_admin",
     );
+    // Leaders own the 1:1 call link — applicants under their downline book with them.
+    const isLeader = isPrivileged || roleList.includes("leader");
     return {
-      licensed_calendly_url: data?.licensed_calendly_url ?? "",
-      can_schedule_licensed: data?.can_schedule_licensed ?? false,
-      licensed_calendly_updated_at: data?.licensed_calendly_updated_at ?? null,
-      can_edit: isPrivileged || (data?.can_schedule_licensed ?? false),
+      licensed_calendly_url: row?.licensed_calendly_url ?? "",
+      can_schedule_licensed: row?.can_schedule_licensed ?? false,
+      licensed_calendly_updated_at: row?.licensed_calendly_updated_at ?? null,
+      one_on_one_calendly_url: row?.one_on_one_calendly_url ?? "",
+      one_on_one_calendly_updated_at: row?.one_on_one_calendly_updated_at ?? null,
+      can_edit_one_on_one: isLeader,
+      can_edit: isPrivileged || (row?.can_schedule_licensed ?? false),
     };
   });
 
 export const updateMySchedulingSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ licensed_calendly_url: calendlyUrlSchema }).parse(d))
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        licensed_calendly_url: calendlyUrlSchema.optional(),
+        one_on_one_calendly_url: calendlyUrlSchema.optional(),
+      })
+      .parse(d),
+  )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
     const roles = await supabase.from("user_roles").select("role").eq("user_id", userId);
@@ -1129,15 +1149,25 @@ export const updateMySchedulingSettings = createServerFn({ method: "POST" })
     const isPrivileged = roleList.some(
       (r) => r === "manager" || r === "admin" || r === "super_admin",
     );
-    if (!isPrivileged && !prof?.can_schedule_licensed) {
-      throw new Error("You don't have permission to set a licensed Calendly link.");
+    const patch: Record<string, string | null> = {};
+    if (data.licensed_calendly_url !== undefined) {
+      if (!isPrivileged && !prof?.can_schedule_licensed) {
+        throw new Error("You don't have permission to set a licensed Calendly link.");
+      }
+      patch.licensed_calendly_url = data.licensed_calendly_url || null;
+      patch.licensed_calendly_updated_at = new Date().toISOString();
     }
+    if (data.one_on_one_calendly_url !== undefined) {
+      if (!isPrivileged && !roleList.includes("leader")) {
+        throw new Error("You don't have permission to set a 1:1 call link.");
+      }
+      patch.one_on_one_calendly_url = data.one_on_one_calendly_url || null;
+      patch.one_on_one_calendly_updated_at = new Date().toISOString();
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
     const { error } = await supabase
       .from("profiles")
-      .update({
-        licensed_calendly_url: data.licensed_calendly_url || null,
-        licensed_calendly_updated_at: new Date().toISOString(),
-      })
+      .update(patch as never)
       .eq("id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
