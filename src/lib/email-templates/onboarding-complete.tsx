@@ -5,12 +5,14 @@ import { Shell, greet, paragraph } from './_shell'
 
 interface Props {
   firstName?: string
+  /** Recruiting agent's copy — names the applicant this went to. */
+  copyFor?: string
 }
 
 const TITLE = "You're fully onboarded — welcome to training"
 
-const Email = ({ firstName }: Props) => (
-  <Shell preview={TITLE} title={TITLE}>
+const Email = ({ firstName, copyFor }: Props) => (
+  <Shell preview={TITLE} title={TITLE} copyFor={copyFor}>
     <Text style={paragraph}>
       Nice work, {greet(firstName)} — every onboarding step is done. You&apos;re officially set up
       and a real part of the Vantage team.
