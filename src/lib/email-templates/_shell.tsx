@@ -34,7 +34,9 @@ export interface EmailLinkProps {
 }
 
 
-export const FALLBACK_LINKS: Required<EmailLinkProps> = {
+type ResolvedLinks = Required<Omit<EmailLinkProps, 'copyFor'>>
+
+export const FALLBACK_LINKS: ResolvedLinks = {
   overviewUrl: 'https://vantage-financial.net/apply',
   ownerCalendlyUrl: 'https://vantage-financial.net/apply',
   courseUrl: XCEL_COURSE_URL,
