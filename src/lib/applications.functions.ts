@@ -68,11 +68,12 @@ export const submitApplication = createServerFn({ method: "POST" })
     };
 
     // Persist the overview slot they picked on the form so the pipeline shows an
-    // intended date even before Calendly confirms it. Never blocks submission.
+    // intended date even before Calendly confirms it. "none" means they couldn't
+    // attend any date and want a 1:1 call instead. Never blocks submission.
     if (data.requested_overview_at) {
       const { error: slotError } = await (supabase as any).rpc("set_requested_overview", {
         _token: res.token,
-        _at: data.requested_overview_at,
+        _at: data.requested_overview_at === "none" ? null : data.requested_overview_at,
       });
       if (slotError) console.error("set_requested_overview failed", slotError.message);
     }
@@ -227,6 +228,10 @@ export type OverviewBooking = {
   /** Calendly URL, deep-linked to the chosen slot and pre-filled when possible. */
   url: string | null;
   requested_overview_at: string | null;
+  /** True when the applicant said none of the overview dates worked. */
+  wants_one_on_one: boolean;
+  /** Nearest leader's 1:1 Calendly link, pre-filled. */
+  one_on_one_url: string | null;
 };
 
 /**
@@ -236,7 +241,7 @@ export type OverviewBooking = {
  */
 export const getOverviewBooking = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
-    z.object({ token: z.string().min(10).max(128), base_url: z.string().min(1).max(600) }).parse(data),
+    z.object({ token: z.string().min(10).max(128), base_url: z.string().max(600).default("") }).parse(data),
   )
   .handler(async ({ data }) => {
     const { buildPrefilledUrl } = await import("@/lib/calendly.server");
@@ -251,16 +256,36 @@ export const getOverviewBooking = createServerFn({ method: "POST" })
       first_name?: string | null;
       last_name?: string | null;
       email?: string | null;
+      phone?: string | null;
+      referrer_name?: string | null;
+      wants_one_on_one?: boolean | null;
+      one_on_one_url?: string | null;
     };
-    if (!row.found) return { found: false, url: null, requested_overview_at: null } as OverviewBooking;
+    if (!row.found)
+      return {
+        found: false,
+        url: null,
+        requested_overview_at: null,
+        wants_one_on_one: false,
+        one_on_one_url: null,
+      } as OverviewBooking;
     const name = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
+    const prefill = {
+      name,
+      email: row.email ?? null,
+      token: data.token,
+      phone: row.phone ?? null,
+      referrerName: row.referrer_name ?? null,
+    };
     return {
       found: true,
       requested_overview_at: row.requested_overview_at ?? null,
-      url: buildPrefilledUrl(data.base_url, row.requested_overview_at ?? null, {
-        name,
-        email: row.email ?? null,
-        token: data.token,
-      }),
+      wants_one_on_one: Boolean(row.wants_one_on_one),
+      url: data.base_url
+        ? buildPrefilledUrl(data.base_url, row.requested_overview_at ?? null, prefill, "overview")
+        : null,
+      one_on_one_url: row.one_on_one_url
+        ? buildPrefilledUrl(row.one_on_one_url, null, prefill, "one_on_one")
+        : null,
     } as OverviewBooking;
   });

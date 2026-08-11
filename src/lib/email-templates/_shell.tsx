@@ -1,4 +1,6 @@
 import * as React from 'react'
+import { DISCORD_INVITE_URL, XCEL_COURSE_URL } from '@/lib/next-steps'
+
 import {
   Body,
   Button,
@@ -29,9 +31,10 @@ export interface EmailLinkProps {
 export const FALLBACK_LINKS: Required<EmailLinkProps> = {
   overviewUrl: 'https://vantage-financial.net/apply',
   ownerCalendlyUrl: 'https://vantage-financial.net/apply',
-  courseUrl: 'https://vantage-financial.net/apply',
-  discordInviteUrl: 'https://vantage-financial.net/apply',
+  courseUrl: XCEL_COURSE_URL,
+  discordInviteUrl: DISCORD_INVITE_URL,
 }
+
 
 const main: React.CSSProperties = {
   backgroundColor: '#ffffff',

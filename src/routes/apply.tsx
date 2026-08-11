@@ -317,10 +317,12 @@ function ApplyPage() {
                     {s.seatsLeft !== null && s.seatsLeft <= 5 ? ` — ${s.seatsLeft} seats left` : ""}
                   </option>
                 ))}
+                <option value="none">None of these work — I'd like a 1:1 call</option>
               </select>
               <p className="mt-2 text-[12.5px] leading-relaxed text-vantage-muted">
-                Live availability from our calendar. After you submit, your seat is pre-filled — one
-                tap confirms it.
+                {form.overview_slot === "none"
+                  ? "No problem — after you submit we'll give you a link to book a 1:1 call with a team leader."
+                  : "Live availability from our calendar. After you submit, your seat is pre-filled — one tap confirms it."}
               </p>
             </Field>
           )}

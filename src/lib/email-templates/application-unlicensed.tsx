@@ -22,9 +22,14 @@ const Email = ({ firstName, ...rest }: Props) => {
       <GoldButton href={L.overviewUrl} label="Book the overview" />
       <Text style={paragraph}>
         Don&apos;t wait on us to get moving — you can get a head start on licensing today.
-        Start the approved course now so you&apos;re ahead of the game:
+        Start the approved Xcel Solutions pre-licensing course now and use partner code{' '}
+        <strong>karmakore</strong> at checkout for our discounted rate:
       </Text>
       <GoldButton href={L.courseUrl} label="Start the licensing course" />
+      <Text style={paragraph}>
+        Then join the Vantage Discord — that&apos;s where training, announcements, and the team live:
+      </Text>
+      <GoldButton href={L.discordInviteUrl} label="Join the Discord" />
       <Text style={paragraph}>
         After the overview, if it&apos;s a fit, we&apos;ll send you a short form to officially
         join the team. Let&apos;s get to work.
@@ -32,6 +37,7 @@ const Email = ({ firstName, ...rest }: Props) => {
     </Shell>
   )
 }
+
 
 export const template = {
   component: Email,

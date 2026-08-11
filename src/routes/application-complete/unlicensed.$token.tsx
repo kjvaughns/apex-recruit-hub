@@ -1,14 +1,14 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
+import { DISCORD_INVITE_URL, XCEL_COURSE_URL, XCEL_PARTNER_CODE } from "@/lib/next-steps";
 import {
   getOverviewBooking,
   getSchedulingContext,
   markScheduled,
 } from "@/lib/applications.functions";
-
 
 export const Route = createFileRoute("/application-complete/unlicensed/$token")({
   head: () => ({
@@ -33,17 +33,18 @@ export const Route = createFileRoute("/application-complete/unlicensed/$token")(
 function UnlicensedComplete() {
   const { ctx } = Route.useLoaderData();
   const { token } = Route.useParams();
-  const navigate = useNavigate();
   const mark = useServerFn(markScheduled);
   const resolveBooking = useServerFn(getOverviewBooking);
   const [firstName, setFirstName] = useState(ctx.first_name || "there");
+  const [booked, setBooked] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Deep-link the exact Monday slot they chose on the application, pre-filled
-  // with their name and email. Calendly requires the final confirm tap.
+  // with their name, email and referrer. Calendly requires the final confirm tap.
   const bookingQuery = useQuery({
     queryKey: ["overview-booking", token],
     queryFn: () => resolveBooking({ data: { token, base_url: ctx.calendly_url ?? "" } }),
-    enabled: Boolean(ctx.found && ctx.calendly_url),
+    enabled: ctx.found,
     retry: false,
   });
 
@@ -52,7 +53,6 @@ function UnlicensedComplete() {
       setFirstName(sessionStorage.getItem("vantage_applicant_first") || "there");
     }
   }, [ctx.first_name]);
-
 
   if (!ctx.found) {
     return (
@@ -72,11 +72,14 @@ function UnlicensedComplete() {
     );
   }
 
-  // Unlicensed branch: no embedded Calendly. We route everyone to the Overview
-  // meeting via a link (delivered again by email in Phase 3), and lead with the
-  // "what happens next" checklist so they know exactly where they stand.
+  // Unlicensed branch: no embedded Calendly. Everyone either confirms the Monday
+  // overview seat they picked, or — when no date worked — books a 1:1 call with
+  // the nearest leader above their recruiter. They stay on this page either way.
+  const wantsOneOnOne = bookingQuery.data?.wants_one_on_one ?? false;
+  const oneOnOneUrl = bookingQuery.data?.one_on_one_url ?? null;
   const chosenIso = bookingQuery.data?.requested_overview_at ?? null;
   const overviewUrl = bookingQuery.data?.url || ctx.calendly_url || null;
+  const bookingUrl = wantsOneOnOne ? oneOnOneUrl : overviewUrl;
   const chosenLabel = chosenIso
     ? new Intl.DateTimeFormat("en-US", {
         timeZone: "America/Chicago",
@@ -88,14 +91,25 @@ function UnlicensedComplete() {
       }).format(new Date(chosenIso)) + " CT"
     : null;
 
+  const heading = wantsOneOnOne
+    ? "Book a 1:1 call"
+    : chosenLabel
+      ? "Confirm your overview seat"
+      : "Book your Vantage overview";
+  const blurb = wantsOneOnOne
+    ? "None of the Monday overview dates worked for you, so grab a time for a 1:1 call with a Vantage team leader. Your details are already filled in."
+    : chosenLabel
+      ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks in your seat.`
+      : "Monday nights, 7:00 PM CT / 8:00 PM ET. This is where we walk you through how it all works and what's next.";
 
-  async function onBooked() {
+  async function copyCode() {
     try {
-      await mark({ data: { token } });
+      await navigator.clipboard.writeText(XCEL_PARTNER_CODE);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
     } catch {
-      /* non-blocking */
+      /* noop */
     }
-    navigate({ to: "/application-complete" });
   }
 
   return (
@@ -110,37 +124,43 @@ function UnlicensedComplete() {
             You're in, {firstName} — here's your next step
           </h1>
           <p className="mx-auto mt-4 max-w-[560px] text-[16px] leading-relaxed text-vantage-muted">
-            We've got your application. The next step is the Vantage overview call — and you can get
-            a head start on licensing today so you're never waiting on us to move.
+            We've got your application. The next step is your call with us — and you can get a head
+            start on licensing today so you're never waiting on us to move.
           </p>
         </div>
 
-        {/* Primary next step — book the overview (link, not an embed) */}
+        {/* Primary next step — confirm the overview seat, or book a 1:1 */}
         <div className="vantage-card vantage-card-gold mt-10 flex flex-col items-start gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-8">
           <div>
             <div className="font-display text-[24px] leading-tight text-vantage-ivory">
-              {chosenLabel ? "Confirm your overview seat" : "Book your Vantage overview"}
+              {booked ? "You're booked — see you there" : heading}
             </div>
             <p className="mt-1.5 text-[14px] leading-relaxed text-vantage-muted">
-              {chosenLabel
-                ? `You picked ${chosenLabel}. Your details are already filled in — one tap locks in your seat.`
-                : "Monday nights, 7:00 PM CT / 8:00 PM ET. This is where we walk you through how it all works and what's next."}
+              {booked
+                ? "Check your email for the calendar invite. Keep working through the steps below in the meantime."
+                : blurb}
             </p>
           </div>
-          {overviewUrl ? (
+          {bookingUrl ? (
             <a
-              href={overviewUrl}
+              href={bookingUrl}
               target="_blank"
               rel="noreferrer noopener"
               onClick={() => {
+                setBooked(true);
                 // best-effort: record that they were routed to book
                 mark({ data: { token } }).catch(() => {});
               }}
               className="vantage-btn-primary flex-none px-6 py-3.5 text-[15px]"
             >
-              {chosenLabel ? "Confirm my seat →" : "Book the overview →"}
+              {booked
+                ? "Reschedule →"
+                : wantsOneOnOne
+                  ? "Book my 1:1 call →"
+                  : chosenLabel
+                    ? "Confirm my seat →"
+                    : "Book the overview →"}
             </a>
-
           ) : (
             <span className="flex-none text-[13px] text-vantage-faint">
               We'll email you the booking link shortly.
@@ -148,18 +168,58 @@ function UnlicensedComplete() {
           )}
         </div>
 
-        {overviewUrl && (
-          <div className="mt-3 text-center">
+        {/* Head start: licensing course + community */}
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="vantage-card flex flex-col gap-3 p-6">
+            <div className="font-display text-[20px] leading-tight text-vantage-ivory">
+              Start your pre-licensing course
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-vantage-dim">
+              Life insurance pre-licensing through Xcel Solutions. Use our partner code at checkout
+              for the discounted rate.
+            </p>
             <button
-              onClick={onBooked}
-              className="text-[13px] text-vantage-dim underline-offset-4 transition hover:text-vantage-gold hover:underline"
+              onClick={copyCode}
+              className="flex items-center justify-between gap-3 rounded-[10px] border border-vantage-gold/40 bg-vantage-gold/[0.08] px-4 py-2.5 text-left transition hover:border-vantage-gold"
             >
-              I've already booked — continue →
+              <span className="text-[12px] uppercase tracking-[0.08em] text-vantage-muted">
+                Partner code
+              </span>
+              <span className="font-display text-[18px] tracking-wide text-vantage-gold">
+                {XCEL_PARTNER_CODE}
+              </span>
+              <span className="text-[12px] text-vantage-faint">{copied ? "Copied" : "Copy"}</span>
             </button>
+            <a
+              href={XCEL_COURSE_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
+            >
+              Open the course →
+            </a>
           </div>
-        )}
 
-        {/* What happens next — mirrors the Phase 3 unlicensed email copy */}
+          <div className="vantage-card flex flex-col gap-3 p-6">
+            <div className="font-display text-[20px] leading-tight text-vantage-ivory">
+              Join the Vantage Discord
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-vantage-dim">
+              This is where the team lives — training, announcements, and the people who'll help you
+              get licensed and producing fast.
+            </p>
+            <a
+              href={DISCORD_INVITE_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
+            >
+              Join the Discord →
+            </a>
+          </div>
+        </div>
+
+        {/* What happens next — mirrors the unlicensed email copy */}
         <div className="mt-14">
           <div className="vantage-kicker mb-4">What happens next</div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -187,8 +247,8 @@ function UnlicensedComplete() {
               ))}
             </div>
             <p className="mt-4 text-[12.5px] leading-relaxed text-vantage-faint">
-              You don't need to finish licensing before the overview — the Monday overview is your
-              main next appointment. Getting a head start just means you move faster once you're in.
+              You don't need to finish licensing before we talk — the call is your main next
+              appointment. Getting a head start just means you move faster once you're in.
             </p>
           </div>
         </div>
@@ -200,25 +260,25 @@ function UnlicensedComplete() {
 const NEXT_STEPS = [
   {
     n: "1",
-    t: "Book the overview",
-    d: "Reserve your seat at the next Monday Vantage overview using the button above.",
+    t: "Lock in your call",
+    d: "Confirm your Monday overview seat — or your 1:1 call — using the button above.",
   },
   {
     n: "2",
     t: "Get a head start",
-    d: "Start the approved licensing course today so you're not waiting on us to move forward.",
+    d: "Start the Xcel pre-licensing course with partner code karmakore and join the Discord.",
   },
   {
     n: "3",
     t: "Attend & join",
-    d: "Attend the overview. If it's a fit, you'll get a short form to officially join the team.",
+    d: "Attend the call. If it's a fit, you'll get a short form to officially join the team.",
   },
 ];
 
 const LICENSING_CHECKLIST = [
-  "Attend the Monday overview",
-  "Receive the approved licensing course instructions",
-  "Purchase and begin the course",
+  "Attend the Monday overview (or your 1:1 call)",
+  "Purchase the Xcel course with partner code karmakore",
+  "Join the Vantage Discord",
   "Complete the required education",
   "Schedule the state exam",
   "Pass the state exam",
