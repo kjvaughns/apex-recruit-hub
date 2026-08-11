@@ -351,7 +351,7 @@ function ApplyPage() {
   );
 }
 
-const VALUE_PROPS = ["Paid weekly", "Warm inbound leads", "Free licensing & training"];
+const VALUE_PROPS = ["Daily pay", "Unlimited leads", "Discounted licensing & training"];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
