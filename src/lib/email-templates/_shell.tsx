@@ -1,4 +1,6 @@
 import * as React from 'react'
+import { DISCORD_INVITE_URL, XCEL_COURSE_URL } from '@/lib/next-steps'
+
 import {
   Body,
   Button,
