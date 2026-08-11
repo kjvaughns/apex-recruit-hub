@@ -33,7 +33,7 @@ function UnlicensedComplete() {
 
   useEffect(() => {
     if (!ctx.first_name) {
-      setFirstName(sessionStorage.getItem("apex_applicant_first") || "there");
+      setFirstName(sessionStorage.getItem("vantage_applicant_first") || "there");
     }
   }, [ctx.first_name]);
 

@@ -66,11 +66,11 @@ function ApplicantsPage() {
 
   useEffect(() => {
     const saved =
-      typeof window !== "undefined" ? (localStorage.getItem("apex_crm_scope") as Scope | null) : null;
+      typeof window !== "undefined" ? (localStorage.getItem("vantage_crm_scope") as Scope | null) : null;
     if (saved && ["mine", "direct", "downline", "all"].includes(saved)) setScope(saved);
   }, []);
   useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem("apex_crm_scope", scope);
+    if (typeof window !== "undefined") localStorage.setItem("vantage_crm_scope", scope);
   }, [scope]);
 
   const fn = useServerFn(listApplicants);

@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
-export const APEX_LOGO_URL = "/vantage-logo.png";
+export const VANTAGE_LOGO_URL = "/vantage-logo.png";
 
-export function ApexLogo({ className = "h-10 w-auto" }: { className?: string }) {
-  return <img src={APEX_LOGO_URL} alt="Vantage Financial" className={className} />;
+export function VantageLogo({ className = "h-10 w-auto" }: { className?: string }) {
+  return <img src={VANTAGE_LOGO_URL} alt="Vantage Financial" className={className} />;
 }
 
 export function AuroraBackdrop() {

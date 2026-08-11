@@ -10,7 +10,7 @@ export type ReferralAttribution = {
   invalid: boolean; // slug was present but did not resolve to an active recruiter
 };
 
-const KEY = "apex_referral";
+const KEY = "vantage_referral";
 
 export function saveReferral(a: ReferralAttribution): void {
   if (typeof window === "undefined") return;

@@ -1,7 +1,7 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ApexLogo } from "@/components/vantage/brand";
+import { VantageLogo } from "@/components/vantage/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -167,7 +167,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
             className={`flex h-[56px] shrink-0 items-center gap-2 border-b ${collapsed ? "justify-center px-2" : "px-4"}`}
             style={{ borderColor: "var(--p-border)" }}
           >
-            <ApexLogo className="vantage-brand-mark h-7 w-auto" />
+            <VantageLogo className="vantage-brand-mark h-7 w-auto" />
           </div>
 
           <nav className="flex-1 overflow-y-auto px-2 py-3">

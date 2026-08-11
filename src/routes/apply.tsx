@@ -159,7 +159,7 @@ function ApplyPage() {
           invalid_referral_slug: invalidSlug,
         },
       });
-      sessionStorage.setItem("apex_applicant_first", form.first_name.trim());
+      sessionStorage.setItem("vantage_applicant_first", form.first_name.trim());
       // Route by the applicant's own answer (source of truth on the client),
       // falling back to the server's echo. Prevents any drift between the two.
       const isLicensed =
