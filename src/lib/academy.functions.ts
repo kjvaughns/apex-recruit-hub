@@ -414,3 +414,163 @@ export const adminDeleteTag = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/* ============================================================ */
+/* Learner: course player                                        */
+/* ============================================================ */
+
+async function resolveEnrollment(s: any, userId: string, courseId: string): Promise<string> {
+  const { data: existing } = await s
+    .from("enrollments")
+    .select("id")
+    .eq("course_id", courseId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (existing?.id) return existing.id;
+  const { data: created, error } = await s
+    .from("enrollments")
+    .insert({ course_id: courseId, user_id: userId })
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return created.id as string;
+}
+
+/** After any progress change, stamp/clear completion + final score. */
+async function recomputeCompletion(s: any, enrollmentId: string, courseId: string) {
+  const { data: mods } = await s.from("course_modules").select("id").eq("course_id", courseId);
+  const modIds = (mods ?? []).map((m: any) => m.id);
+  const { data: lessons } = modIds.length
+    ? await s.from("course_lessons").select("id").in("module_id", modIds)
+    : { data: [] };
+  const lessonIds = (lessons ?? []).map((l: any) => l.id);
+  const { data: prog } = await s
+    .from("lesson_progress")
+    .select("lesson_id, completed_at, quiz_score")
+    .eq("enrollment_id", enrollmentId);
+  const completed = new Set((prog ?? []).filter((p: any) => p.completed_at).map((p: any) => p.lesson_id));
+  const allDone = lessonIds.length > 0 && lessonIds.every((id: string) => completed.has(id));
+  const { data: enr } = await s.from("enrollments").select("completed_at").eq("id", enrollmentId).maybeSingle();
+  if (allDone && !enr?.completed_at) {
+    const scores = (prog ?? []).filter((p: any) => p.quiz_score != null).map((p: any) => Number(p.quiz_score));
+    const final = scores.length ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : null;
+    await s.from("enrollments").update({ completed_at: new Date().toISOString(), final_score: final }).eq("id", enrollmentId);
+  } else if (!allDone && enr?.completed_at) {
+    await s.from("enrollments").update({ completed_at: null, final_score: null }).eq("id", enrollmentId);
+  }
+}
+
+/** Resolve a published course by slug, auto-enroll the caller, and return the
+ *  full tree + the caller's progress. Quiz answers (correct_index) are never
+ *  sent to the client — scoring happens server-side. */
+export const getCourseLearner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ slug: z.string().min(1).max(200) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const s = supabase as any;
+    const { data: course } = await s.from("courses").select("*").eq("slug", data.slug).maybeSingle();
+    if (!course) return { found: false as const };
+
+    const enrollmentId = await resolveEnrollment(s, userId, course.id);
+    const { data: modules } = await s
+      .from("course_modules")
+      .select("*")
+      .eq("course_id", course.id)
+      .order("position");
+    const modIds = (modules ?? []).map((m: any) => m.id);
+    const { data: lessons } = modIds.length
+      ? await s.from("course_lessons").select("*").in("module_id", modIds).order("position")
+      : { data: [] };
+    const quizIds = (lessons ?? []).filter((l: any) => l.kind === "quiz").map((l: any) => l.id);
+    const { data: questions } = quizIds.length
+      ? await s.from("quiz_questions").select("id, lesson_id, question_text, options, position").in("lesson_id", quizIds).order("position")
+      : { data: [] };
+    const { data: progress } = await s
+      .from("lesson_progress")
+      .select("lesson_id, completed_at, quiz_score")
+      .eq("enrollment_id", enrollmentId);
+    const { data: enrollment } = await s.from("enrollments").select("*").eq("id", enrollmentId).maybeSingle();
+
+    return {
+      found: true as const,
+      course,
+      modules: modules ?? [],
+      lessons: lessons ?? [],
+      questions: questions ?? [], // no correct_index
+      progress: progress ?? [],
+      enrollment,
+    };
+  });
+
+async function lessonCourseId(s: any, lessonId: string): Promise<{ courseId: string; threshold: number } | null> {
+  const { data: lesson } = await s
+    .from("course_lessons")
+    .select("id, module_id, quiz_pass_threshold")
+    .eq("id", lessonId)
+    .maybeSingle();
+  if (!lesson) return null;
+  const { data: mod } = await s.from("course_modules").select("course_id").eq("id", lesson.module_id).maybeSingle();
+  if (!mod) return null;
+  return { courseId: mod.course_id, threshold: Number(lesson.quiz_pass_threshold ?? 0.75) };
+}
+
+export const markLessonComplete = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ lesson_id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const s = supabase as any;
+    const info = await lessonCourseId(s, data.lesson_id);
+    if (!info) throw new Error("Lesson not found");
+    const enrollmentId = await resolveEnrollment(s, userId, info.courseId);
+    await s
+      .from("lesson_progress")
+      .upsert(
+        { enrollment_id: enrollmentId, lesson_id: data.lesson_id, completed_at: new Date().toISOString() },
+        { onConflict: "enrollment_id,lesson_id" },
+      );
+    await recomputeCompletion(s, enrollmentId, info.courseId);
+    return { ok: true };
+  });
+
+export const submitQuiz = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ lesson_id: z.string().uuid(), answers: z.array(z.number().int()).max(50) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const s = supabase as any;
+    const info = await lessonCourseId(s, data.lesson_id);
+    if (!info) throw new Error("Quiz not found");
+    const { data: questions } = await s
+      .from("quiz_questions")
+      .select("id, correct_index, position")
+      .eq("lesson_id", data.lesson_id)
+      .order("position");
+    const qs = questions ?? [];
+    if (qs.length === 0) throw new Error("This quiz has no questions yet.");
+    let correct = 0;
+    qs.forEach((qq: any, i: number) => {
+      if (data.answers[i] === qq.correct_index) correct += 1;
+    });
+    const score = correct / qs.length;
+    const passed = score >= info.threshold;
+
+    const enrollmentId = await resolveEnrollment(s, userId, info.courseId);
+    // Current-attempt-only: overwrite. completed_at set only on pass.
+    await s
+      .from("lesson_progress")
+      .upsert(
+        {
+          enrollment_id: enrollmentId,
+          lesson_id: data.lesson_id,
+          quiz_score: score,
+          completed_at: passed ? new Date().toISOString() : null,
+        },
+        { onConflict: "enrollment_id,lesson_id" },
+      );
+    await recomputeCompletion(s, enrollmentId, info.courseId);
+    return { passed, score, threshold: info.threshold };
+  });
