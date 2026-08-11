@@ -838,6 +838,39 @@ export const adminSetSetting = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Post a sample "new recruit" card to the configured Discord webhook so the
+ *  admin can confirm the bot lands in the right channel. Admin-only. */
+export const adminTestDiscordWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { getDiscordWebhookUrl, postRecruitAlert } = await import("@/lib/discord.server");
+    const url = await getDiscordWebhookUrl(supabase as never);
+    if (!url) {
+      return {
+        ok: false,
+        message: "No valid Discord webhook URL saved yet. Paste one above and save it first.",
+      };
+    }
+    const sent = await postRecruitAlert(url, {
+      firstName: "Test",
+      lastName: "Recruit",
+      recruiterName: "Vantage Financial",
+      licensed: false,
+      requestedOverviewAt: null,
+      wantsOneOnOne: false,
+      state: "TX",
+    });
+    return {
+      ok: sent,
+      message: sent
+        ? "Test card posted — check your Discord channel."
+        : "Discord rejected the post. Double-check the webhook URL.",
+    };
+  });
+
+
 /* ============================================================
    Tasks
    ============================================================ */
