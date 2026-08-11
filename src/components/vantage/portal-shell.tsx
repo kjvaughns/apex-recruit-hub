@@ -189,6 +189,18 @@ export function PortalShell({ children }: { children: ReactNode }) {
             style={{ borderColor: "var(--p-border)" }}
           >
             <VantageLogo className="vantage-brand-mark h-7 w-auto" />
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`${btnClass("ghost", "sm")} ml-auto hidden md:inline-flex`}
+            >
+              {collapsed ? (
+                <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
           </div>
 
           <nav className="flex-1 overflow-y-auto px-2 py-3">
