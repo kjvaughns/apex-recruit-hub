@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { writeAudit } from "@/lib/audit";
 import { queueEmail, firstNameFrom } from "@/lib/emails/send";
+import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 
 const APP_URL = () =>
   (process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "");
@@ -72,10 +73,8 @@ async function recruiterCopy(
   }
 }
 
-/** Enqueue the "Welcome to Onboarding" email (best-effort, never throws). Also
- *  enrolls the agent in the Academy onboarding course if they already have a
- *  portal account (otherwise they auto-enroll when they open the course). The
- *  existing onboarding_steps checklist remains the source of truth. */
+/** Enqueue the "Welcome to Onboarding" email (best-effort, never throws). The
+ *  onboarding_steps checklist on the Onboarding page is the source of truth. */
 async function enqueueWelcomeOnboarding(supabase: any, a: OnboardingApplicant): Promise<void> {
   if (!a.email) return;
   const portalLink = await resolveOnboardingPortalLink(supabase, a);
@@ -89,14 +88,6 @@ async function enqueueWelcomeOnboarding(supabase: any, a: OnboardingApplicant): 
     copyTo: await recruiterCopy(supabase, a.id),
     copyForName: applicantName ?? a.email,
   });
-
-  if (a.portal_profile_id) {
-    try {
-      await supabase.rpc("academy_enroll", { _slug: "vantage-onboarding", _user: a.portal_profile_id });
-    } catch {
-      /* best-effort — the course also auto-enrolls on open */
-    }
-  }
 }
 
 /** Current user profile + roles + team. */
@@ -454,18 +445,23 @@ export const getMyOnboarding = createServerFn({ method: "POST" })
       hasOnboarding: true as const,
       steps: res.steps ?? {},
       done: res.done ?? 0,
-      total: res.total ?? 4,
+      total: res.total ?? ONBOARDING_STEP_ORDER.length,
       complete: !!res.complete,
     };
   });
 
-/** Agent self-checks one of the 3 manual onboarding steps. */
+/** Agent self-checks one of the manual onboarding steps. */
 export const completeOnboardingStep = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
       .object({
-        step: z.enum(["agentspace_contracting", "discord_role_update", "expectations_reviewed"]),
+        step: z.enum([
+          "agentspace_contracting",
+          "discord_role_update",
+          "expectations_reviewed",
+          "complete_vantage_closer_course",
+        ]),
       })
       .parse(d),
   )
@@ -478,7 +474,12 @@ export const completeOnboardingStep = createServerFn({ method: "POST" })
     const r = (res ?? { found: false }) as OnboardingResult;
     if (!r.found) throw new Error("No onboarding record found for your account.");
     await afterOnboardingUpdate(supabase, r);
-    return { steps: r.steps ?? {}, done: r.done ?? 0, total: r.total ?? 4, complete: !!r.complete };
+    return {
+      steps: r.steps ?? {},
+      done: r.done ?? 0,
+      total: r.total ?? ONBOARDING_STEP_ORDER.length,
+      complete: !!r.complete,
+    };
   });
 
 export const updateApplicantStage = createServerFn({ method: "POST" })

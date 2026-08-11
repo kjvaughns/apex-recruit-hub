@@ -6,13 +6,15 @@ export type OnboardingStepKey =
   | "agentspace_contracting"
   | "discord_role_update"
   | "portal_account_setup"
-  | "expectations_reviewed";
+  | "expectations_reviewed"
+  | "complete_vantage_closer_course";
 
 export const ONBOARDING_STEP_ORDER: OnboardingStepKey[] = [
   "agentspace_contracting",
   "discord_role_update",
   "portal_account_setup",
   "expectations_reviewed",
+  "complete_vantage_closer_course",
 ];
 
 export const ONBOARDING_STEP_LABELS: Record<OnboardingStepKey, string> = {
@@ -20,13 +22,15 @@ export const ONBOARDING_STEP_LABELS: Record<OnboardingStepKey, string> = {
   discord_role_update: "Discord role update",
   portal_account_setup: "Portal account setup",
   expectations_reviewed: "Expectations reviewed",
+  complete_vantage_closer_course: "Complete the Vantage Closer Course",
 };
 
-// The 3 steps an agent self-checks (portal_account_setup is automatic).
+// The steps an agent self-checks (portal_account_setup is automatic).
 export const SELF_CHECK_STEPS: OnboardingStepKey[] = [
   "agentspace_contracting",
   "discord_role_update",
   "expectations_reviewed",
+  "complete_vantage_closer_course",
 ];
 
 export type OnboardingStepState = { completed: boolean; completed_at: string | null };
@@ -39,6 +43,7 @@ export function initialOnboardingSteps(): OnboardingSteps {
     discord_role_update: { completed: false, completed_at: null },
     portal_account_setup: { completed: false, completed_at: null },
     expectations_reviewed: { completed: false, completed_at: null },
+    complete_vantage_closer_course: { completed: false, completed_at: null },
   };
 }
 

@@ -39,8 +39,13 @@ function OnboardingPage() {
   });
 
   const mut = useMutation({
-    mutationFn: (step: "agentspace_contracting" | "discord_role_update" | "expectations_reviewed") =>
-      completeStep({ data: { step } }),
+    mutationFn: (
+      step:
+        | "agentspace_contracting"
+        | "discord_role_update"
+        | "expectations_reviewed"
+        | "complete_vantage_closer_course",
+    ) => completeStep({ data: { step } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-onboarding"] });
       qc.invalidateQueries({ queryKey: ["applicants"] });
@@ -60,20 +65,21 @@ function OnboardingPage() {
   }
 
   if (!data?.hasOnboarding) {
+    // Accounts not tied to a recruited applicant (e.g. owners/admins) have no live
+    // checklist — show the standard steps as a read-only preview instead of an empty page.
     return (
       <PortalShell>
         <PageBody>
-          <PageHeader title="Onboarding" description="Welcome to Vantage" />
-          <Panel className="max-w-[560px]">
-            <p className="p-secondary">
-              You don't have any onboarding steps assigned. You're all set — head to your dashboard.
-            </p>
-            <Link to="/portal">
-              <Button variant="primary" className="mt-4">
-                Go to dashboard →
-              </Button>
-            </Link>
-          </Panel>
+          <PageHeader title="Onboarding checklist" description="Welcome to Vantage" />
+          <div className="max-w-[820px] space-y-4">
+            <Panel>
+              <p className="p-secondary">
+                This is the checklist new Vantage agents complete when they join. Your account doesn't
+                have an active onboarding checklist, so these steps are shown here as a preview.
+              </p>
+            </Panel>
+            <StepList preview />
+          </div>
         </PageBody>
       </PortalShell>
     );
@@ -88,15 +94,7 @@ function OnboardingPage() {
   return (
     <PortalShell>
       <PageBody>
-        <PageHeader
-          title="Your onboarding checklist"
-          description="Welcome to Vantage"
-          actions={
-            <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-onboarding" }}>
-              <Button variant="secondary" size="sm">View in Academy</Button>
-            </Link>
-          }
-        />
+        <PageHeader title="Your onboarding checklist" description="Welcome to Vantage" />
 
         <div className="max-w-[820px] space-y-4">
           <Panel>
@@ -133,63 +131,112 @@ function OnboardingPage() {
             </Panel>
           )}
 
-          <StepCard
-            n={1}
-            title="AgentSpace contracting"
-            state={stepState(steps, "agentspace_contracting")}
-            onComplete={() => mut.mutate("agentspace_contracting")}
-            pending={mut.isPending}
-            actionLabel="I've completed this"
-          >
-            <p className="p-secondary">
-              Click the link below, select <strong style={{ color: "var(--p-text)" }}>"Join Agency,"</strong>{" "}
-              and paste in the agency code.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <a href={AGENTSPACE_URL} target="_blank" rel="noreferrer noopener">
-                <Button variant="secondary" size="sm">Open AgentSpace →</Button>
-              </a>
-              <CopyCode code={AGENCY_CODE} />
-            </div>
-          </StepCard>
-
-          <StepCard
-            n={2}
-            title="Discord role update"
-            state={stepState(steps, "discord_role_update")}
-            onComplete={() => mut.mutate("discord_role_update")}
-            pending={mut.isPending}
-            actionLabel="I've completed this"
-          >
-            <p className="p-secondary">
-              Follow these steps in our Discord server to get your Licensed Agent role.{" "}
-              <span className="p-muted">(Exact instructions coming soon.)</span>
-            </p>
-          </StepCard>
-
-          <StepCard n={3} title="Portal account setup" state={stepState(steps, "portal_account_setup")} auto>
-            <p className="p-secondary">
-              Done automatically — you're logged into the portal right now, which is all this step
-              needs.
-            </p>
-          </StepCard>
-
-          <StepCard
-            n={4}
-            title="Expectations reviewed"
-            state={stepState(steps, "expectations_reviewed")}
-            onComplete={() => mut.mutate("expectations_reviewed")}
-            pending={mut.isPending}
-            actionLabel="I've reviewed this"
-          >
-            <p className="p-secondary">
-              Review our hours, standing meetings, and team standards so you know how we operate.{" "}
-              <span className="p-muted">(Full expectations copy coming soon.)</span>
-            </p>
-          </StepCard>
+          <StepList steps={steps} onComplete={(s) => mut.mutate(s)} pending={mut.isPending} />
         </div>
       </PageBody>
     </PortalShell>
+  );
+}
+
+/** The onboarding steps. Shared by the live agent checklist and the read-only
+ *  preview shown to accounts without an assigned checklist. */
+function StepList({
+  steps,
+  onComplete,
+  pending,
+  preview,
+}: {
+  steps?: Record<string, OnboardingStepState>;
+  onComplete?: (
+    step:
+      | "agentspace_contracting"
+      | "discord_role_update"
+      | "expectations_reviewed"
+      | "complete_vantage_closer_course",
+  ) => void;
+  pending?: boolean;
+  preview?: boolean;
+}) {
+  return (
+    <>
+      <StepCard
+        n={1}
+        title="AgentSpace contracting"
+        state={stepState(steps, "agentspace_contracting")}
+        onComplete={() => onComplete?.("agentspace_contracting")}
+        pending={pending}
+        preview={preview}
+        actionLabel="I've completed this"
+      >
+        <p className="p-secondary">
+          Click the link below, select <strong style={{ color: "var(--p-text)" }}>"Join Agency,"</strong>{" "}
+          and paste in the agency code.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <a href={AGENTSPACE_URL} target="_blank" rel="noreferrer noopener">
+            <Button variant="secondary" size="sm">Open AgentSpace →</Button>
+          </a>
+          <CopyCode code={AGENCY_CODE} />
+        </div>
+      </StepCard>
+
+      <StepCard
+        n={2}
+        title="Discord role update"
+        state={stepState(steps, "discord_role_update")}
+        onComplete={() => onComplete?.("discord_role_update")}
+        pending={pending}
+        preview={preview}
+        actionLabel="I've completed this"
+      >
+        <p className="p-secondary">
+          Follow these steps in our Discord server to get your Licensed Agent role.{" "}
+          <span className="p-muted">(Exact instructions coming soon.)</span>
+        </p>
+      </StepCard>
+
+      <StepCard n={3} title="Portal account setup" state={stepState(steps, "portal_account_setup")} auto preview={preview}>
+        <p className="p-secondary">
+          Done automatically — you're logged into the portal right now, which is all this step
+          needs.
+        </p>
+      </StepCard>
+
+      <StepCard
+        n={4}
+        title="Expectations reviewed"
+        state={stepState(steps, "expectations_reviewed")}
+        onComplete={() => onComplete?.("expectations_reviewed")}
+        pending={pending}
+        preview={preview}
+        actionLabel="I've reviewed this"
+      >
+        <p className="p-secondary">
+          Review our hours, standing meetings, and team standards so you know how we operate.{" "}
+          <span className="p-muted">(Full expectations copy coming soon.)</span>
+        </p>
+      </StepCard>
+
+      <StepCard
+        n={5}
+        title="Complete the Vantage Closer Course"
+        state={stepState(steps, "complete_vantage_closer_course")}
+        onComplete={() => onComplete?.("complete_vantage_closer_course")}
+        pending={pending}
+        preview={preview}
+        actionLabel="I've completed this"
+      >
+        <p className="p-secondary">
+          Work through the Vantage Closer Course in the Academy — the initial training every new agent
+          completes. Come back and check this off once you've finished.
+        </p>
+        <div className="mt-3">
+          <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-closer" }}>
+            <Button variant="secondary" size="sm">Go to Vantage Closer Course →</Button>
+          </Link>
+        </div>
+      </StepCard>
+    </>
   );
 }
 
@@ -201,6 +248,7 @@ function StepCard({
   actionLabel,
   auto,
   pending,
+  preview,
   children,
 }: {
   n: number;
@@ -210,6 +258,7 @@ function StepCard({
   actionLabel?: string;
   auto?: boolean;
   pending?: boolean;
+  preview?: boolean;
   children: React.ReactNode;
 }) {
   const done = state.completed;
@@ -233,18 +282,20 @@ function StepCard({
           </div>
           <div className="mt-1.5">{children}</div>
 
-          <div className="mt-3">
-            {done ? (
-              <div className="p-muted text-[12px]" style={{ color: "var(--p-green)" }}>
-                Completed
-                {state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
-              </div>
-            ) : auto ? null : (
-              <Button variant="primary" size="sm" onClick={onComplete} disabled={pending}>
-                {actionLabel ?? "Mark complete"}
-              </Button>
-            )}
-          </div>
+          {!preview && (
+            <div className="mt-3">
+              {done ? (
+                <div className="p-muted text-[12px]" style={{ color: "var(--p-green)" }}>
+                  Completed
+                  {state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
+                </div>
+              ) : auto ? null : (
+                <Button variant="primary" size="sm" onClick={onComplete} disabled={pending}>
+                  {actionLabel ?? "Mark complete"}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Panel>
