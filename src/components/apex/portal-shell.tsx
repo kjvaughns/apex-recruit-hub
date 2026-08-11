@@ -1,10 +1,12 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { ApexLogo } from "@/components/apex/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMe } from "@/lib/portal.functions";
+import { AddAgentModal } from "@/components/apex/add-agent-modal";
 
 const NAV = [
   { to: "/portal", label: "Dashboard", icon: "◈" },
@@ -22,6 +24,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [addAgentOpen, setAddAgentOpen] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
 
@@ -115,6 +118,16 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 >
                   Management
                 </div>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    setAddAgentOpen(true);
+                  }}
+                  className="mb-1 flex w-full items-center gap-3 rounded-[10px] border border-apex-gold/25 bg-apex-gold/[0.06] px-3 py-2.5 text-[14px] font-medium text-apex-gold transition hover:bg-apex-gold/[0.12]"
+                >
+                  <span className="w-5 text-center">＋</span>
+                  {!collapsed && <span>Add Agent</span>}
+                </button>
                 <Link
                   to="/portal/invitations"
                   onClick={() => setMobileOpen(false)}
@@ -205,6 +218,17 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
         <main className="min-w-0 flex-1">{children}</main>
       </div>
+
+      {addAgentOpen && (
+        <AddAgentModal
+          onClose={() => setAddAgentOpen(false)}
+          onSubmit={async () => {
+            // Phase 2 wires this to the addAgent server fn.
+            toast.info("Agent invites go live in the next update.");
+            setAddAgentOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

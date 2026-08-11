@@ -12,6 +12,11 @@ import {
   setDiscordConfirmed,
 } from "@/lib/portal.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
+import {
+  onboardingProgress,
+  ONBOARDING_STEP_ORDER,
+  ONBOARDING_STEP_LABELS,
+} from "@/lib/onboarding";
 
 export const Route = createFileRoute("/_authenticated/portal/crm/$applicantId")({
   head: () => ({
@@ -142,6 +147,10 @@ function ApplicantDetailPage() {
                 </div>
               )}
             </div>
+
+            {currentStage?.slug === "onboarding" && (
+              <OnboardingProgressCard steps={(a as any).onboarding_steps} />
+            )}
 
             <div className="apx-card p-6">
               <h2 className="mb-4 font-display text-[20px] leading-none">Move to stage</h2>
@@ -645,6 +654,46 @@ function SendEvaluationCard({ applicant }: { applicant: any }) {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function OnboardingProgressCard({ steps }: { steps: unknown }) {
+  const { done, total } = onboardingProgress(steps);
+  const s = (steps ?? {}) as Record<string, { completed?: boolean; completed_at?: string | null }>;
+  return (
+    <div className="apx-card p-6">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-display text-[20px] leading-none">Onboarding progress</h2>
+        <span
+          className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+            done === total
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              : "border-apex-gold/30 bg-apex-gold/10 text-apex-gold"
+          }`}
+        >
+          {done}/{total}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {ONBOARDING_STEP_ORDER.map((k) => {
+          const done = s[k]?.completed === true;
+          return (
+            <div key={k} className="flex items-center gap-2.5 text-[13.5px]">
+              <span
+                className={`flex h-4 w-4 flex-none items-center justify-center rounded-full border text-[10px] ${
+                  done ? "border-emerald-400 bg-emerald-400 text-black" : "border-white/25 text-transparent"
+                }`}
+              >
+                ✓
+              </span>
+              <span className={done ? "text-apex-fog" : "text-apex-dim"}>
+                {ONBOARDING_STEP_LABELS[k]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
