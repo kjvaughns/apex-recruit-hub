@@ -4,6 +4,7 @@ import { template as applicationLicensed } from './application-licensed'
 import { template as applicationUnlicensed } from './application-unlicensed'
 import { template as welcomeHired } from './welcome-hired'
 import { template as followupCheckin } from './followup-checkin'
+import { template as welcomeOnboarding } from './welcome-onboarding'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -23,4 +24,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'application-unlicensed': applicationUnlicensed,
   'welcome-hired': welcomeHired,
   'followup-checkin': followupCheckin,
+  'welcome-onboarding': welcomeOnboarding,
 }

@@ -71,13 +71,15 @@ export type TemplateKey =
   | "application_licensed"
   | "application_unlicensed"
   | "welcome_hired"
-  | "followup_checkin";
+  | "followup_checkin"
+  | "welcome_onboarding";
 
 export type RenderedEmail = { subject: string; html: string };
 
 export type TemplateParams = {
   firstName?: string;
   licensed?: boolean;
+  portalLink?: string;
   links?: EmailLinks;
 };
 
@@ -168,6 +170,29 @@ export function followupCheckin(params: TemplateParams): RenderedEmail {
   return { subject: "Quick check-in — how's the course going?", html: layout(inner) };
 }
 
+// ONBOARDING EMAIL 1 — stage becomes "Onboarding".
+export function welcomeOnboarding(params: TemplateParams): RenderedEmail {
+  const portal = params.portalLink && params.portalLink !== "#" ? params.portalLink : "#";
+  const inner =
+    h1("Welcome to the team — let's get you set up") +
+    p(
+      `Congrats ${greet(params.firstName)} — you're officially on board as a licensed Vantage agent. Welcome.`,
+    ) +
+    p(
+      `Your first stop is the agent portal. That's where you'll find your full onboarding checklist — log in and knock it out:`,
+    ) +
+    button(portal, "Open your portal") +
+    p(`Here's what's waiting for you, four quick steps:`) +
+    `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:4px 0 14px 0">` +
+    li("AgentSpace contracting") +
+    li("Discord role update") +
+    li("Portal setup") +
+    li("Expectations review") +
+    `</table>` +
+    p(`Knock these out and you're fully onboarded. Let's build.`);
+  return { subject: "Welcome to the team — let's get you set up", html: layout(inner) };
+}
+
 export function render(key: TemplateKey, params: TemplateParams): RenderedEmail {
   switch (key) {
     case "application_licensed":
@@ -178,5 +203,7 @@ export function render(key: TemplateKey, params: TemplateParams): RenderedEmail 
       return welcomeHired(params);
     case "followup_checkin":
       return followupCheckin(params);
+    case "welcome_onboarding":
+      return welcomeOnboarding(params);
   }
 }
