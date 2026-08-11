@@ -76,11 +76,59 @@
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.10);
   --ring: rgba(201, 168, 76, 0.6);
+
+  /* Portal surface tokens — theme-aware. Dark defaults here; the light theme
+   * (.apx-theme-light, scoped to the portal shell) overrides them below. The
+   * public marketing site + emails never get the light class, so they stay
+   * dark by design. */
+  --apx-page-bg: #000000;
+  --apx-sidebar-bg: rgba(5, 5, 5, 0.95);
+  --apx-hairline: rgba(255, 255, 255, 0.08);
+  --apx-hairline-2: rgba(255, 255, 255, 0.06);
+  --apx-hover: rgba(255, 255, 255, 0.03);
+  --apx-card-bg: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012));
+  --apx-card-border: rgba(255, 255, 255, 0.09);
+  --apx-card-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 44px rgba(0,0,0,0.40);
+  --apx-ghost-bg: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+  --apx-ghost-border: rgba(255, 255, 255, 0.10);
+  --apx-ghost-border-hover: rgba(255, 255, 255, 0.24);
+  --apx-ghost-text: #F4F2ED;
+  --apx-input-bg: rgba(0, 0, 0, 0.35);
+  --apx-input-border: rgba(255, 255, 255, 0.10);
+  --apx-input-text: #F4F2ED;
 }
 
 .dark {
   --background: #000000;
   --foreground: #F4F2ED;
+}
+
+/* Light portal theme — a genuine warm-light surface, not an invert. Applied on
+ * the PortalShell root so the cascade themes portal children only. Overrides the
+ * apex text tokens (so text-apex-ivory/fog/etc. flip dark-on-light) plus the
+ * portal surface tokens. Gold accents are kept for brand identity. */
+.apx-theme-light {
+  --color-apex-ivory: #201d16;
+  --color-apex-fog: #3b372e;
+  --color-apex-muted: #5f5a4e;
+  --color-apex-dim: #6d6858;
+  --color-apex-faint: #8d8778;
+
+  --apx-page-bg: #F5F3EC;
+  --apx-sidebar-bg: rgba(255, 255, 255, 0.94);
+  --apx-hairline: rgba(30, 26, 15, 0.10);
+  --apx-hairline-2: rgba(30, 26, 15, 0.07);
+  --apx-hover: rgba(30, 26, 15, 0.04);
+  --apx-card-bg: linear-gradient(160deg, #ffffff, #fbfaf6);
+  --apx-card-border: rgba(30, 26, 15, 0.10);
+  --apx-card-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 12px 30px rgba(40,33,12,0.10);
+  --apx-ghost-bg: #ffffff;
+  --apx-ghost-border: rgba(30, 26, 15, 0.14);
+  --apx-ghost-border-hover: rgba(30, 26, 15, 0.30);
+  --apx-ghost-text: #201d16;
+  --apx-input-bg: #ffffff;
+  --apx-input-border: rgba(30, 26, 15, 0.16);
+  --apx-input-text: #201d16;
 }
 
 @layer base {
@@ -146,24 +194,24 @@
 
 .apx-btn-ghost {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+  background: var(--apx-ghost-bg);
   backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  color: #F4F2ED;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--apx-ghost-text);
+  border: 1px solid var(--apx-ghost-border);
   border-radius: 12px; font-weight: 600;
   transition: 0.16s;
   box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset;
 }
-.apx-btn-ghost:hover { border-color: rgba(255, 255, 255, 0.24); transform: translateY(-1px); }
+.apx-btn-ghost:hover { border-color: var(--apx-ghost-border-hover); transform: translateY(-1px); }
 
 .apx-card {
   position: relative;
-  background: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012));
+  background: var(--apx-card-bg);
   backdrop-filter: blur(22px) saturate(1.3);
   -webkit-backdrop-filter: blur(22px) saturate(1.3);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--apx-card-border);
   border-radius: 18px;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 44px rgba(0,0,0,0.4);
+  box-shadow: var(--apx-card-shadow);
 }
 
 .apx-card-gold {
@@ -174,12 +222,12 @@
 
 .apx-input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--apx-input-bg);
+  border: 1px solid var(--apx-input-border);
   border-radius: 10px;
   padding: 0 14px;
   height: 50px;
-  color: #F4F2ED;
+  color: var(--apx-input-text);
   font-size: 15px;
   outline: none;
   transition: border-color 0.16s;

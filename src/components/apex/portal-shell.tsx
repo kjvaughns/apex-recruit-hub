@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMe, addAgent, getMyOnboarding } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/apex/add-agent-modal";
+import { useTheme } from "@/components/apex/theme";
 
 const NAV = [
   { to: "/portal", label: "Dashboard", icon: "◈" },
@@ -27,6 +28,17 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { theme, toggle: toggleTheme } = useTheme();
+
+  // Persist sidebar collapse across navigations/reloads.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem("vantage_sidebar_collapsed") === "1") setCollapsed(true);
+  }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined")
+      localStorage.setItem("vantage_sidebar_collapsed", collapsed ? "1" : "0");
+  }, [collapsed]);
 
   const fetchMe = useServerFn(getMe);
   const addAgentFn = useServerFn(addAgent);
@@ -67,11 +79,17 @@ export function PortalShell({ children }: { children: ReactNode }) {
     ((profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "")).toUpperCase() || "A";
 
   return (
-    <div className="relative min-h-screen bg-black text-apex-ivory">
+    <div
+      className={`relative min-h-screen text-apex-ivory ${theme === "light" ? "apx-theme-light" : ""}`}
+      style={{ background: "var(--apx-page-bg)" }}
+    >
       <div className="pointer-events-none fixed inset-x-0 top-0 h-[360px] bg-[radial-gradient(circle_at_50%_-20%,rgba(201,168,76,0.10),transparent_70%)]" />
 
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[0.06] bg-black/70 px-4 py-3 backdrop-blur-xl md:hidden">
+      <div
+        className="sticky top-0 z-40 flex items-center justify-between border-b px-4 py-3 backdrop-blur-xl md:hidden"
+        style={{ background: "var(--apx-sidebar-bg)", borderColor: "var(--apx-hairline-2)" }}
+      >
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="apx-btn-ghost px-3 py-2 text-sm"
@@ -87,9 +105,13 @@ export function PortalShell({ children }: { children: ReactNode }) {
       <div className="relative flex">
         {/* Sidebar */}
         <aside
-          className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex ${collapsed ? "w-[72px]" : "w-[248px]"} flex-col border-r border-white/[0.06] bg-[#050505]/95 backdrop-blur-2xl transition-all md:sticky md:top-0 md:h-screen md:translate-x-0`}
+          className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex ${collapsed ? "w-[72px]" : "w-[248px]"} flex-col border-r backdrop-blur-2xl transition-all md:sticky md:top-0 md:h-screen md:translate-x-0`}
+          style={{ background: "var(--apx-sidebar-bg)", borderColor: "var(--apx-hairline-2)" }}
         >
-          <div className="flex h-[76px] items-center gap-3 border-b border-white/[0.06] px-5">
+          <div
+            className="flex h-[76px] items-center gap-3 border-b px-5"
+            style={{ borderColor: "var(--apx-hairline-2)" }}
+          >
             <ApexLogo className={collapsed ? "h-8 w-auto" : "h-9 w-auto"} />
             {!collapsed && (
               <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.22em] text-apex-gold">
@@ -195,7 +217,17 @@ export function PortalShell({ children }: { children: ReactNode }) {
               </>
             )}
           </nav>
-          <div className="border-t border-white/[0.06] p-3">
+          <div className="border-t p-3" style={{ borderColor: "var(--apx-hairline-2)" }}>
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className={`mb-2 flex w-full items-center gap-3 rounded-[10px] border border-transparent px-3 py-2.5 text-[13px] font-medium text-apex-dim transition hover:text-apex-ivory ${collapsed ? "justify-center" : ""}`}
+              style={{ background: "var(--apx-hover)" }}
+            >
+              <span className="w-5 text-center text-[15px]">{theme === "dark" ? "☀" : "☾"}</span>
+              {!collapsed && <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>}
+            </button>
             <div
               className={`flex items-center gap-3 rounded-[10px] p-2 ${collapsed ? "justify-center" : ""}`}
             >
@@ -269,7 +301,10 @@ export function PortalHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="border-b border-white/[0.06] bg-black/40 px-6 pt-8 pb-6 backdrop-blur-md md:px-10">
+    <div
+      className="border-b px-6 pt-8 pb-6 backdrop-blur-md md:px-10"
+      style={{ borderColor: "var(--apx-hairline-2)" }}
+    >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           {kicker && <div className="apx-kicker mb-2">{kicker}</div>}
