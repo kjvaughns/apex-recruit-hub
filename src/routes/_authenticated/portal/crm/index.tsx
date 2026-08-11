@@ -106,12 +106,13 @@ function CRMListPage() {
         </div>
 
         <div className="apx-card overflow-hidden p-0">
-          <div className="hidden grid-cols-[1.6fr_1.3fr_1fr_1fr_0.8fr] gap-4 border-b border-white/[0.06] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-apex-faint md:grid">
+          <div className="hidden grid-cols-[1.5fr_1.2fr_0.9fr_0.9fr_0.6fr_auto] gap-4 border-b border-white/[0.06] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-apex-faint md:grid">
             <div>Applicant</div>
             <div>Contact</div>
             <div>Stage</div>
             <div>Signals</div>
-            <div className="text-right">Updated</div>
+            <div>Updated</div>
+            <div className="text-right">Actions</div>
           </div>
 
           {isLoading ? (
@@ -129,22 +130,24 @@ function CRMListPage() {
               {(data?.applicants ?? []).map((a) => {
                 const s = a.current_stage_id ? stageMap[a.current_stage_id] : null;
                 return (
-                  <Link
+                  <div
                     key={a.id}
-                    to="/portal/crm/$applicantId"
-                    params={{ applicantId: a.id }}
-                    className="grid grid-cols-1 gap-1 border-b border-white/[0.04] px-5 py-4 transition hover:bg-white/[0.02] md:grid-cols-[1.6fr_1.3fr_1fr_1fr_0.8fr] md:items-center md:gap-4"
+                    className="grid grid-cols-1 gap-1 border-b border-white/[0.04] px-5 py-4 transition hover:bg-white/[0.02] md:grid-cols-[1.5fr_1.2fr_0.9fr_0.9fr_0.6fr_auto] md:items-center md:gap-4"
                   >
-                    <div>
-                      <div className="text-[14.5px] font-semibold text-apex-ivory">
+                    <Link
+                      to="/portal/crm/$applicantId"
+                      params={{ applicantId: a.id }}
+                      className="min-w-0"
+                    >
+                      <div className="text-[14.5px] font-semibold text-apex-ivory hover:text-apex-gold">
                         {a.first_name} {a.last_name}
                       </div>
                       <div className="text-[12px] text-apex-faint">
                         {a.city || "—"}
                         {a.state ? `, ${a.state}` : ""}
                       </div>
-                    </div>
-                    <div className="text-[13px] text-apex-dim">
+                    </Link>
+                    <div className="min-w-0 text-[13px] text-apex-dim">
                       <div className="truncate">{a.email}</div>
                       <div className="text-[11.5px] text-apex-faint">{a.phone}</div>
                     </div>
@@ -173,10 +176,18 @@ function CRMListPage() {
                       {a.evaluation_completed_at && <Chip>Evaluated</Chip>}
                       {a.calendly_scheduled_at && <Chip>Scheduled</Chip>}
                     </div>
-                    <div className="text-right text-[11.5px] text-apex-faint">
-                      {relative(a.updated_at)}
+                    <div className="text-[11.5px] text-apex-faint">{relative(a.updated_at)}</div>
+                    {/* Quick-action slot — wired up functionally in Phase 4 */}
+                    <div className="flex items-center justify-start gap-1.5 md:justify-end">
+                      <Link
+                        to="/portal/crm/$applicantId"
+                        params={{ applicantId: a.id }}
+                        className="apx-btn-ghost px-2.5 py-1.5 text-[11.5px]"
+                      >
+                        Open →
+                      </Link>
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>

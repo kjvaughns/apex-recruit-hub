@@ -7,63 +7,69 @@ import { submitEvaluation } from "@/lib/applications.functions";
 export const Route = createFileRoute("/evaluation")({
   head: () => ({
     meta: [
-      { title: "Complete your evaluation — Vantage Financial" },
-      { name: "description", content: "Finish your Vantage application with a two-minute evaluation." },
+      { title: "Join the team — Vantage Financial" },
+      { name: "description", content: "Finish your Vantage application in about two minutes." },
       { property: "og:title", content: "Vantage evaluation" },
-      { property: "og:description", content: "Four questions. About two minutes." },
+      { property: "og:description", content: "A few quick details. About two minutes." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: EvaluationPage,
 });
 
-const QUESTIONS = [
-  {
-    key: "income", kicker: "Question 1 of 4", title: "What's your monthly income goal?",
-    options: ["$8–10k / month", "$10–20k / month", "$20k+ / month", "Replace my current income"],
-  },
-  {
-    key: "licensing", kicker: "Question 2 of 4", title: "Where are you with licensing?",
-    options: ["Not licensed yet", "Studying / exam scheduled", "Licensed — life", "Licensed — life & health"],
-  },
-  {
-    key: "availability", kicker: "Question 3 of 4", title: "How much time can you commit?",
-    options: ["Part-time (nights & weekends)", "Full-time now", "Transitioning within 30 days"],
-  },
-  {
-    key: "commitment", kicker: "Question 4 of 4", title: "How serious are you about starting?",
-    options: ["Just exploring options", "Serious — ready to start", "All-in — this is my priority"],
-  },
+const LICENSING_OPTIONS = [
+  "Not licensed yet",
+  "Studying / exam scheduled",
+  "Licensed — Life",
+  "Licensed — Life & Health",
 ] as const;
 
 function EvaluationPage() {
   const submit = useServerFn(submitEvaluation);
-  const [step, setStep] = useState(0);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [needsEmail, setNeedsEmail] = useState(true);
+  const [phone, setPhone] = useState("");
+  const [licensing, setLicensing] = useState("");
+  const [why, setWhy] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function pick(opt: string) {
-    const q = QUESTIONS[step];
-    const next = { ...answers, [q.key]: opt };
-    setAnswers(next);
-    if (step < QUESTIONS.length - 1) setStep(step + 1);
-    else finish(next);
-  }
-
-  async function finish(finalAnswers: Record<string, string>) {
+  async function onSubmit() {
     setError(null);
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Please add your first and last name.");
+      return;
+    }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setNeedsEmail(true);
       setError("Please enter a valid email.");
+      return;
+    }
+    if (!licensing) {
+      setError("Please tell us your current licensing status.");
+      return;
+    }
+    if (!why.trim() || why.trim().length < 10) {
+      setError("Tell us a little about why you want to join (at least a sentence).");
       return;
     }
     setSubmitting(true);
     try {
-      await submit({ data: { email: email.trim(), answers: finalAnswers } });
+      // Open-ended single form. Logic unchanged: we still submit through the
+      // existing submit_evaluation RPC (email + a flat answers map). Phase 2
+      // rebuilds this to prefill + auto-hire.
+      await submit({
+        data: {
+          email: email.trim(),
+          answers: {
+            full_name: `${firstName.trim()} ${lastName.trim()}`,
+            phone: phone.trim(),
+            licensing_status: licensing,
+            why: why.trim(),
+          },
+        },
+      });
       setDone(true);
     } catch (e) {
       setError((e as Error).message || "Something went wrong.");
@@ -81,64 +87,126 @@ function EvaluationPage() {
               ✓
             </div>
             <h1 className="font-display text-[clamp(38px,6vw,58px)] leading-[0.96]">
-              Thanks — your evaluation is complete.
+              You're on the team.
             </h1>
-            <p className="mt-4 text-apex-muted">Your recruiter will follow up shortly with next steps.</p>
+            <p className="mx-auto mt-4 max-w-[440px] text-apex-muted">
+              We've got your details — your recruiter will follow up shortly with your exact next
+              steps.
+            </p>
             <Link to="/" className="apx-btn-ghost mt-6 inline-flex px-6 py-3 text-[14px]">
               Back to home
             </Link>
           </div>
-        ) : needsEmail ? (
-          <div className="apx-card p-8 md:p-10">
-            <div className="apx-kicker mb-3">Step 3 of 3</div>
-            <h1 className="font-display text-[clamp(34px,5.5vw,52px)] leading-[0.96]">Your evaluation</h1>
-            <p className="mt-3 max-w-[440px] text-[15px] leading-relaxed text-apex-muted">
-              Four quick questions. Takes about two minutes. Start by confirming the email you applied with.
-            </p>
-            <div className="mt-6">
-              <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-muted">Email</label>
-              <input
-                type="email"
-                className="apx-input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            {error && <div className="mt-4 text-[13.5px] text-red-300">{error}</div>}
-            <button
-              onClick={() => { if (email.trim()) setNeedsEmail(false); }}
-              className="apx-btn-primary mt-6 w-full px-6 py-4 text-[15px]"
-            >
-              Start the evaluation →
-            </button>
-          </div>
         ) : (
-          <div className="apx-card p-8 md:p-10">
-            <div className="apx-kicker mb-2">{QUESTIONS[step].kicker}</div>
-            <h2 className="font-display text-[clamp(26px,4vw,40px)] leading-[1]">{QUESTIONS[step].title}</h2>
-            <div className="mt-6 flex flex-col gap-3">
-              {QUESTIONS[step].options.map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => pick(opt)}
-                  disabled={submitting}
-                  className="rounded-[12px] border border-white/10 bg-white/[0.02] px-5 py-4 text-left text-[15px] text-apex-fog transition hover:border-apex-gold/50 hover:bg-apex-gold/[0.06] hover:text-apex-ivory disabled:opacity-60"
-                >
-                  {opt}
-                </button>
-              ))}
+          <>
+            <div className="text-center">
+              <div className="apx-eyebrow-pill mb-5 inline-flex">Final step</div>
+              <h1 className="font-display text-[clamp(36px,5.5vw,58px)] leading-[0.96]">
+                Join the Vantage team
+              </h1>
+              <p className="mx-auto mt-4 max-w-[500px] text-[16px] leading-relaxed text-apex-muted">
+                A few quick details and you're in. Takes about two minutes — no résumé, no quiz.
+              </p>
             </div>
-            {error && <div className="mt-4 text-[13.5px] text-red-300">{error}</div>}
-            <div className="mt-6 flex items-center justify-between text-[12px] text-apex-faint">
-              <button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0} className="disabled:opacity-40">
-                ← Back
+
+            <div className="apx-card mt-10 grid gap-4 p-6 md:p-10">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="First name *">
+                  <input
+                    className="apx-input"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </Field>
+                <Field label="Last name *">
+                  <input
+                    className="apx-input"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </Field>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field label="Email *">
+                  <input
+                    type="email"
+                    className="apx-input"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </Field>
+                <Field label="Phone">
+                  <input
+                    type="tel"
+                    className="apx-input"
+                    placeholder="(optional)"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </Field>
+              </div>
+
+              <Field label="What's your current licensing status? *">
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  {LICENSING_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setLicensing(opt)}
+                      className={`rounded-[12px] border px-4 py-3 text-left text-[14px] transition ${
+                        licensing === opt
+                          ? "border-apex-gold bg-apex-gold/[0.08] text-apex-ivory"
+                          : "border-white/10 bg-white/[0.02] text-apex-fog hover:border-apex-gold/40"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="Why do you want to join Vantage? *">
+                <textarea
+                  className="apx-input min-h-[160px] leading-relaxed"
+                  rows={6}
+                  placeholder="Tell us what's driving you — your goals, your background, and why now."
+                  value={why}
+                  onChange={(e) => setWhy(e.target.value)}
+                />
+                <p className="mt-2 text-[12px] text-apex-faint">
+                  No wrong answer — we just want to hear it in your own words.
+                </p>
+              </Field>
+
+              {error && (
+                <div className="rounded-[10px] border border-red-500/30 bg-red-500/10 p-3.5 text-[13.5px] text-red-200">
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={onSubmit}
+                disabled={submitting}
+                className="apx-btn-primary mt-2 w-full px-6 py-4 text-[16px] disabled:opacity-60"
+              >
+                {submitting ? "Submitting…" : <>Submit & join the team →</>}
               </button>
-              <span>{step + 1} / {QUESTIONS.length}</span>
             </div>
-          </div>
+          </>
         )}
       </div>
     </PublicShell>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="block">
+      <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-muted">
+        {label}
+      </span>
+      {children}
+    </div>
   );
 }
