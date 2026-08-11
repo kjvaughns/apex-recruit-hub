@@ -191,6 +191,7 @@ export type Database = {
           success_page_type: string | null
           team_id: string | null
           updated_at: string
+          wants_one_on_one: boolean
           why_text: string | null
           zip: string | null
         }
@@ -255,6 +256,7 @@ export type Database = {
           success_page_type?: string | null
           team_id?: string | null
           updated_at?: string
+          wants_one_on_one?: boolean
           why_text?: string | null
           zip?: string | null
         }
@@ -319,6 +321,7 @@ export type Database = {
           success_page_type?: string | null
           team_id?: string | null
           updated_at?: string
+          wants_one_on_one?: boolean
           why_text?: string | null
           zip?: string | null
         }
@@ -1047,6 +1050,8 @@ export type Database = {
           manager_id: string | null
           notification_prefs: Json | null
           npn: string | null
+          one_on_one_calendly_updated_at: string | null
+          one_on_one_calendly_url: string | null
           organization_path: string | null
           parent_user_id: string | null
           phone: string | null
@@ -1079,6 +1084,8 @@ export type Database = {
           manager_id?: string | null
           notification_prefs?: Json | null
           npn?: string | null
+          one_on_one_calendly_updated_at?: string | null
+          one_on_one_calendly_url?: string | null
           organization_path?: string | null
           parent_user_id?: string | null
           phone?: string | null
@@ -1111,6 +1118,8 @@ export type Database = {
           manager_id?: string | null
           notification_prefs?: Json | null
           npn?: string | null
+          one_on_one_calendly_updated_at?: string | null
+          one_on_one_calendly_url?: string | null
           organization_path?: string | null
           parent_user_id?: string | null
           phone?: string | null
@@ -1562,6 +1571,7 @@ export type Database = {
       mark_scheduled_by_token: { Args: { _token: string }; Returns: Json }
       promote_applicant_to_agent: { Args: { payload: Json }; Returns: Json }
       resend_invitation: { Args: { _id: string }; Returns: Json }
+      resolve_one_on_one_url: { Args: { _profile_id: string }; Returns: string }
       resolve_scheduling_context: { Args: { _token: string }; Returns: Json }
       search_recruiters: {
         Args: { _q: string }
