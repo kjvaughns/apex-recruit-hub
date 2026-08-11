@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "vantagefinancial"
+const SITE_NAME = "Vantage Financial"
 const SENDER_DOMAIN = "notify.vantage-financial.net"
 const ROOT_DOMAIN = "vantage-financial.net"
 const FROM_DOMAIN = "notify.vantage-financial.net"

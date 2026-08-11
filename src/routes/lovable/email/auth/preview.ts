@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "vantagefinancial"
+const SITE_NAME = "Vantage Financial"
 const ROOT_DOMAIN = "vantage-financial.net"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
