@@ -139,7 +139,7 @@ function ApplyPage() {
     if (!form.phone.trim() || form.phone.replace(/\D/g, "").length < 7) errs.push("phone");
     if (!form.state) errs.push("your state");
     if (form.licensed === null) errs.push("your licensing status");
-    if (slots.length > 0 && !form.overview_slot) errs.push("the overview date you can attend");
+    if (!slotsQuery.isLoading && !form.overview_slot) errs.push("the overview date you can attend");
     if (!recruiter) errs.push("who referred you");
 
     if (!form.why_text.trim() || form.why_text.trim().length < 10)
@@ -303,29 +303,38 @@ function ApplyPage() {
             </div>
           </Field>
 
-          {slots.length > 0 && (
+          {!slotsQuery.isLoading && (
             <Field label="Which overview can you attend? *">
               <select
                 className="vantage-input w-full appearance-none"
                 value={form.overview_slot}
                 onChange={(e) => set("overview_slot", e.target.value)}
               >
-                <option value="">Select a Monday overview…</option>
+                <option value="">
+                  {slots.length > 0 ? "Select a Monday overview…" : "Select an option…"}
+                </option>
                 {slots.map((s) => (
                   <option key={s.startIso} value={s.startIso}>
                     {s.label}
                     {s.seatsLeft !== null && s.seatsLeft <= 5 ? ` — ${s.seatsLeft} seats left` : ""}
                   </option>
                 ))}
-                <option value="none">None of these work — I'd like a 1:1 call</option>
+                <option value="none">
+                  {slots.length > 0
+                    ? "None of these work — I'd like a 1:1 call"
+                    : "I'd like a 1:1 call"}
+                </option>
               </select>
               <p className="mt-2 text-[12.5px] leading-relaxed text-vantage-muted">
                 {form.overview_slot === "none"
                   ? "No problem — after you submit we'll give you a link to book a 1:1 call with a team leader."
-                  : "Live availability from our calendar. After you submit, your seat is pre-filled — one tap confirms it."}
+                  : slots.length > 0
+                    ? "Live availability from our calendar. After you submit, your seat is pre-filled — one tap confirms it."
+                    : "No Monday overviews are open right now — pick a 1:1 call and we'll get you scheduled."}
               </p>
             </Field>
           )}
+
 
 
 
