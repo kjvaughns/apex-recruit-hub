@@ -244,12 +244,26 @@ function CRMListPage() {
                     <div className="text-[11.5px] text-apex-faint">
                       <div>Applied {shortDate(a.created_at)}</div>
                       <div>Active {relative(a.updated_at)}</div>
-                      {view === "pre_licensing" && (
-                        <div className="text-apex-dim">
-                          Follow-up{" "}
-                          {a.last_follow_up_at ? relative(a.last_follow_up_at) + " ago" : "never"}
-                        </div>
-                      )}
+                      {view === "pre_licensing" &&
+                        (() => {
+                          const days = a.last_follow_up_at ? daysSince(a.last_follow_up_at) : null;
+                          const overdue = days === null || days > 7;
+                          return (
+                            <div className="mt-0.5">
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold ${
+                                  overdue
+                                    ? "border-red-500/40 bg-red-500/10 text-red-300"
+                                    : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                }`}
+                              >
+                                {days === null
+                                  ? "No follow-up yet"
+                                  : `${days}d since follow-up`}
+                              </span>
+                            </div>
+                          );
+                        })()}
                     </div>
                     <div className="flex items-center justify-start gap-1.5 md:justify-end">
                       {next && (
@@ -314,6 +328,10 @@ function Chip({
 
 function shortDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function daysSince(iso: string) {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400_000);
 }
 
 function relative(iso: string) {

@@ -37,6 +37,46 @@ function DashboardPage() {
               <Stat label="Evaluated (30d)" value={data?.counts.evaluated30d ?? 0} />
             </div>
 
+            {(data?.needsFollowUp ?? []).length > 0 && (
+              <div className="apx-card apx-card-gold mt-8 p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="font-display text-[22px] leading-none">
+                    Needs follow-up this week
+                  </h2>
+                  <Link
+                    to="/portal/crm"
+                    className="text-[12px] text-apex-gold hover:underline"
+                  >
+                    Open Pre-Licensing →
+                  </Link>
+                </div>
+                <p className="mb-4 text-[12.5px] text-apex-muted">
+                  Hired but not yet licensed, and it's been more than a week (or never) since their
+                  last check-in.
+                </p>
+                <div className="flex flex-col divide-y divide-white/[0.06]">
+                  {(data?.needsFollowUp ?? []).map((p) => {
+                    const days = p.last_follow_up_at ? daysSince(p.last_follow_up_at) : null;
+                    return (
+                      <Link
+                        key={p.id}
+                        to="/portal/crm/$applicantId"
+                        params={{ applicantId: p.id }}
+                        className="flex items-center justify-between gap-3 py-2.5 transition hover:text-apex-gold"
+                      >
+                        <span className="text-[13.5px] text-apex-ivory">
+                          {p.first_name} {p.last_name}
+                        </span>
+                        <span className="rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-red-300">
+                          {days === null ? "Never followed up" : `${days}d overdue`}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
               <div className="apx-card p-6">
                 <div className="mb-4 flex items-center justify-between">
@@ -124,6 +164,10 @@ function eventLabel(t: string) {
     note: "Note added",
   };
   return map[t] ?? t.replace(/_/g, " ");
+}
+
+function daysSince(iso: string) {
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400_000);
 }
 
 function relative(iso: string) {
