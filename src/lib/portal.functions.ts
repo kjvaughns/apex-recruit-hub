@@ -422,15 +422,19 @@ type OnboardingResult = {
 /** After the RPC updates steps, send the completion email once (best-effort). */
 async function afterOnboardingUpdate(supabase: any, res: OnboardingResult) {
   if (res.just_completed && res.email) {
+    const applicantName = `${res.first_name ?? ""} ${res.last_name ?? ""}`.trim() || undefined;
     await queueEmail(supabase, {
       to: res.email,
-      toName: `${res.first_name ?? ""} ${res.last_name ?? ""}`.trim() || undefined,
+      toName: applicantName,
       applicantId: res.applicant_id ?? null,
       template: "onboarding_complete",
       params: { firstName: firstNameFrom(null, res.first_name) },
+      copyTo: await recruiterCopy(supabase, res.applicant_id ?? null),
+      copyForName: applicantName ?? res.email,
     });
   }
 }
+
 
 /** The signed-in agent's onboarding state. Marks portal_account_setup complete
  *  on first view (logging in proves it) and fires the completion email if that
