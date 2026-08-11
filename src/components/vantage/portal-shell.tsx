@@ -288,13 +288,6 @@ export function PortalShell({ children }: { children: ReactNode }) {
                 Sign out
               </button>
             )}
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              className="p-focus mt-1 hidden h-7 w-full rounded-[8px] text-[11.5px] transition hover:bg-[var(--p-hover)] md:block"
-              style={{ color: "var(--p-text-3)" }}
-            >
-              {collapsed ? "→" : "← Collapse"}
-            </button>
           </div>
         </aside>
 
