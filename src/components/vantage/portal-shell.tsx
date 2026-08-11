@@ -47,7 +47,7 @@ const ROLE_LABEL: Record<string, string> = {
 /** Compact sidebar row. Active state is a subtle gold tint — no heavy outline. */
 function NavRow({
   to,
-  icon,
+  icon: Icon,
   label,
   active,
   collapsed,
@@ -55,7 +55,7 @@ function NavRow({
   accent,
 }: {
   to: string;
-  icon: ReactNode;
+  icon: LucideIcon;
   label: string;
   active: boolean;
   collapsed: boolean;
@@ -76,11 +76,12 @@ function NavRow({
           : { color: accent ? "var(--p-gold)" : "var(--p-text-2)" }
       }
     >
-      <span className="w-4 shrink-0 text-center text-[14px]">{icon}</span>
+      <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />
       {!collapsed && <span className="truncate">{label}</span>}
     </Link>
   );
 }
+
 
 function GroupLabel({ children, hidden }: { children: ReactNode; hidden?: boolean }) {
   if (hidden) return null;
