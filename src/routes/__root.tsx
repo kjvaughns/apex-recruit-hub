@@ -69,13 +69,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Uncapped commissions paid weekly, warm inbound leads, and free licensing and training. Join the Vantage Financial recruiting team.",
+          "Uncapped commissions with daily pay, unlimited leads, and discounted licensing and training. Join the Vantage Financial recruiting team.",
       },
       { name: "author", content: "Vantage Financial" },
       { property: "og:title", content: "Vantage Financial" },
       {
         property: "og:description",
-        content: "Build your empire in insurance sales — uncapped weekly commissions, warm leads, and free training.",
+        content: "Build your empire in insurance sales — uncapped commissions with daily pay, unlimited leads, and discounted licensing.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
