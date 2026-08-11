@@ -68,11 +68,12 @@ export const submitApplication = createServerFn({ method: "POST" })
     };
 
     // Persist the overview slot they picked on the form so the pipeline shows an
-    // intended date even before Calendly confirms it. Never blocks submission.
+    // intended date even before Calendly confirms it. "none" means they couldn't
+    // attend any date and want a 1:1 call instead. Never blocks submission.
     if (data.requested_overview_at) {
       const { error: slotError } = await (supabase as any).rpc("set_requested_overview", {
         _token: res.token,
-        _at: data.requested_overview_at,
+        _at: data.requested_overview_at === "none" ? null : data.requested_overview_at,
       });
       if (slotError) console.error("set_requested_overview failed", slotError.message);
     }
