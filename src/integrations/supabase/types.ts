@@ -765,6 +765,7 @@ export type Database = {
           licensed_calendly_updated_at: string | null
           licensed_calendly_url: string | null
           manager_id: string | null
+          notification_prefs: Json | null
           npn: string | null
           organization_path: string | null
           parent_user_id: string | null
@@ -796,6 +797,7 @@ export type Database = {
           licensed_calendly_updated_at?: string | null
           licensed_calendly_url?: string | null
           manager_id?: string | null
+          notification_prefs?: Json | null
           npn?: string | null
           organization_path?: string | null
           parent_user_id?: string | null
@@ -827,6 +829,7 @@ export type Database = {
           licensed_calendly_updated_at?: string | null
           licensed_calendly_url?: string | null
           manager_id?: string | null
+          notification_prefs?: Json | null
           npn?: string | null
           organization_path?: string | null
           parent_user_id?: string | null
