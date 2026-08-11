@@ -52,7 +52,10 @@ async function resolveOnboardingPortalLink(
   return `${APP_URL()}/login`;
 }
 
-/** Enqueue the "Welcome to Onboarding" email (best-effort, never throws). */
+/** Enqueue the "Welcome to Onboarding" email (best-effort, never throws). Also
+ *  enrolls the agent in the Academy onboarding course if they already have a
+ *  portal account (otherwise they auto-enroll when they open the course). The
+ *  existing onboarding_steps checklist remains the source of truth. */
 async function enqueueWelcomeOnboarding(supabase: any, a: OnboardingApplicant): Promise<void> {
   if (!a.email) return;
   const portalLink = await resolveOnboardingPortalLink(supabase, a);
@@ -63,6 +66,13 @@ async function enqueueWelcomeOnboarding(supabase: any, a: OnboardingApplicant): 
     template: "welcome_onboarding",
     params: { firstName: firstNameFrom(null, a.first_name), portalLink },
   });
+  if (a.portal_profile_id) {
+    try {
+      await supabase.rpc("academy_enroll", { _slug: "vantage-onboarding", _user: a.portal_profile_id });
+    } catch {
+      /* best-effort — the course also auto-enrolls on open */
+    }
+  }
 }
 
 /** Current user profile + roles + team. */
