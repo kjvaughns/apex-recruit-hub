@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { PublicShell } from "@/components/apex/brand";
+import { PublicShell } from "@/components/vantage/brand";
 import { getRecruiterBySlug } from "@/lib/applications.functions";
 import { saveReferral } from "@/lib/referral";
 
@@ -24,11 +24,11 @@ export const Route = createFileRoute("/")({
         content:
           "Uncapped commission, daily pay opportunities, unlimited leads, and a real path into leadership. Apply and attend the weekly Vantage Company Overview.",
       },
-      { property: "og:image", content: "https://vantagefinancial.lovable.app/apex-og.png" },
+      { property: "og:image", content: "https://vantagefinancial.lovable.app/vantage-og.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:type", content: "image/png" },
-      { name: "twitter:image", content: "https://vantagefinancial.lovable.app/apex-og.png" },
+      { name: "twitter:image", content: "https://vantagefinancial.lovable.app/vantage-og.png" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
@@ -213,16 +213,16 @@ function LandingPage() {
       {/* HERO */}
       <div id="top" className="relative overflow-hidden">
         <div className="mx-auto max-w-[920px] px-6 pt-[60px] pb-14 text-center md:px-8">
-          <div className="apx-reveal flex flex-col items-center">
-            <div className="apx-eyebrow-pill mb-5">
-              <span className="apx-glow-dot h-1.5 w-1.5 rounded-full bg-apex-gold shadow-[0_0_10px_rgba(201,168,76,0.8)]" />
+          <div className="vantage-reveal flex flex-col items-center">
+            <div className="vantage-eyebrow-pill mb-5">
+              <span className="vantage-glow-dot h-1.5 w-1.5 rounded-full bg-vantage-gold shadow-[0_0_10px_rgba(201,168,76,0.8)]" />
               Now Hiring Serious Agents
             </div>
-            <h1 className="max-w-[16ch] font-display text-[clamp(48px,8vw,100px)] leading-[0.9] text-apex-ivory text-balance">
-              Build a real career in <span className="apx-gold-text">life insurance</span>
+            <h1 className="max-w-[16ch] font-display text-[clamp(48px,8vw,100px)] leading-[0.9] text-vantage-ivory text-balance">
+              Build a real career in <span className="vantage-gold-text">life insurance</span>
             </h1>
 
-            <p className="mt-8 max-w-[560px] text-[17px] leading-relaxed text-apex-muted">
+            <p className="mt-8 max-w-[560px] text-[17px] leading-relaxed text-vantage-muted">
               Join a technology-driven life insurance agency built for serious agents who want
               uncapped commission, daily pay opportunities, unlimited lead access, hands-on
               training, and a real path into leadership.
@@ -231,23 +231,23 @@ function LandingPage() {
               <Link
                 to="/apply"
                 search={applySearch}
-                className="apx-btn-primary px-7 py-4 text-[16px]"
+                className="vantage-btn-primary px-7 py-4 text-[16px]"
               >
                 Start Your Application <span>→</span>
               </Link>
-              <a href="#overview" className="apx-btn-ghost px-7 py-4 text-[16px]">
+              <a href="#overview" className="vantage-btn-ghost px-7 py-4 text-[16px]">
                 See the Overview
               </a>
             </div>
-            <p className="mt-4 text-[13.5px] text-apex-faint">
+            <p className="mt-4 text-[13.5px] text-vantage-faint">
               Licensed and unlicensed candidates may apply.
             </p>
 
             {/* Credibility row */}
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 text-[12.5px] text-apex-muted">
+            <div className="mt-7 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 text-[12.5px] text-vantage-muted">
               {heroStats.map((c, i) => (
                 <span key={c} className="flex items-center gap-2.5">
-                  {i > 0 && <span className="text-apex-gold/40">•</span>}
+                  {i > 0 && <span className="text-vantage-gold/40">•</span>}
                   {c}
                 </span>
               ))}
@@ -263,17 +263,17 @@ function LandingPage() {
           {highlights.map((o) => (
             <div
               key={o.t}
-              className="apx-card flex flex-col gap-2.5 p-6 transition hover:-translate-y-1 hover:border-apex-gold/50"
+              className="vantage-card flex flex-col gap-2.5 p-6 transition hover:-translate-y-1 hover:border-vantage-gold/50"
             >
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 text-apex-gold">✦</span>
-                <div className="font-display text-[22px] leading-tight text-apex-ivory">{o.t}</div>
+                <span className="mt-0.5 text-vantage-gold">✦</span>
+                <div className="font-display text-[22px] leading-tight text-vantage-ivory">{o.t}</div>
               </div>
-              <div className="text-[14px] leading-relaxed text-apex-dim">{o.d}</div>
+              <div className="text-[14px] leading-relaxed text-vantage-dim">{o.d}</div>
             </div>
           ))}
         </div>
-        <p className="mt-5 max-w-[820px] text-[12.5px] leading-relaxed text-apex-faint">
+        <p className="mt-5 max-w-[820px] text-[12.5px] leading-relaxed text-vantage-faint">
           Income is not guaranteed. Results vary based on licensing, effort, activity, skill, policy
           placement, carrier approvals, chargebacks, and consistency.
         </p>
@@ -286,11 +286,11 @@ function LandingPage() {
           title="What is Vantage Financial?"
           body="Vantage Financial is a life insurance agency and brokerage built for serious agents who want to produce at a high level and grow into leadership. We provide access to multiple insurance carriers, lead opportunities, modern sales technology, hands-on training, and a structured path for personal production and team building."
         />
-        <div className="apx-card apx-card-gold p-7 md:p-8">
-          <p className="text-[16px] leading-relaxed text-apex-fog">
+        <div className="vantage-card vantage-card-gold p-7 md:p-8">
+          <p className="text-[16px] leading-relaxed text-vantage-fog">
             The full company structure, sales system, compensation path, training process, and
             career opportunity are explained during the weekly{" "}
-            <a href="#overview" className="font-semibold text-apex-gold hover:underline">
+            <a href="#overview" className="font-semibold text-vantage-gold hover:underline">
               Vantage Company Overview
             </a>
             .
@@ -303,18 +303,18 @@ function LandingPage() {
         <SectionHead kicker="Built for Producers" title="Why serious agents choose Vantage" />
         <div className="grid gap-4 md:grid-cols-3">
           {whyCols.map((c) => (
-            <div key={c.t} className="apx-card flex flex-col gap-3 p-7">
-              <div className="font-display text-[28px] leading-none text-apex-gold">{c.t}</div>
-              <div className="text-[14.5px] leading-relaxed text-apex-dim">{c.d}</div>
+            <div key={c.t} className="vantage-card flex flex-col gap-3 p-7">
+              <div className="font-display text-[28px] leading-none text-vantage-gold">{c.t}</div>
+              <div className="text-[14.5px] leading-relaxed text-vantage-dim">{c.d}</div>
             </div>
           ))}
         </div>
         <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-apex-faint">
+          <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-vantage-faint">
             Built on
           </span>
           {values.map((v) => (
-            <span key={v} className="apx-eyebrow-pill text-[12px]">
+            <span key={v} className="vantage-eyebrow-pill text-[12px]">
               {v}
             </span>
           ))}
@@ -325,40 +325,40 @@ function LandingPage() {
       <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
         <SectionHead kicker="Two Ways In" title="Licensed or unlicensed, there's a path forward" />
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="apx-card flex flex-col gap-4 p-8">
-            <div className="font-display text-[26px] leading-none text-apex-gold">
+          <div className="vantage-card flex flex-col gap-4 p-8">
+            <div className="font-display text-[26px] leading-none text-vantage-gold">
               Already licensed?
             </div>
-            <p className="text-[15px] leading-relaxed text-apex-muted">
+            <p className="text-[15px] leading-relaxed text-vantage-muted">
               Licensed applicants are reviewed quickly and contacted directly by their recruiter or
               manager.
             </p>
             <div className="flex flex-col gap-2.5">
               {licensedFlow.map((s) => (
-                <div key={s} className="flex items-start gap-3 text-[15px] text-apex-fog">
-                  <span className="mt-0.5 text-apex-gold">✦</span>
+                <div key={s} className="flex items-start gap-3 text-[15px] text-vantage-fog">
+                  <span className="mt-0.5 text-vantage-gold">✦</span>
                   {s}
                 </div>
               ))}
             </div>
-            <p className="mt-1 text-[12.5px] text-apex-faint">
+            <p className="mt-1 text-[12.5px] text-vantage-faint">
               Licensed applicants don't wait for the Monday overview unless their recruiter or
               manager decides it's appropriate.
             </p>
           </div>
-          <div className="apx-card flex flex-col gap-4 p-8">
-            <div className="font-display text-[26px] leading-none text-apex-ivory">
+          <div className="vantage-card flex flex-col gap-4 p-8">
+            <div className="font-display text-[26px] leading-none text-vantage-ivory">
               Not licensed yet?
             </div>
-            <p className="text-[15px] leading-relaxed text-apex-muted">
+            <p className="text-[15px] leading-relaxed text-vantage-muted">
               You don't need an active life insurance license to apply. Unlicensed applicants attend
               the weekly Vantage Company Overview to understand the opportunity before beginning the
               licensing process.
             </p>
             <div className="flex flex-col gap-2.5">
               {unlicensedFlow.map((s) => (
-                <div key={s} className="flex items-start gap-3 text-[15px] text-apex-fog">
-                  <span className="mt-0.5 text-apex-gold">✦</span>
+                <div key={s} className="flex items-start gap-3 text-[15px] text-vantage-fog">
+                  <span className="mt-0.5 text-vantage-gold">✦</span>
                   {s}
                 </div>
               ))}
@@ -369,42 +369,42 @@ function LandingPage() {
 
       {/* COMPANY OVERVIEW CTA */}
       <div id="overview" className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
-        <div className="apx-card apx-card-gold grid gap-8 p-10 md:grid-cols-2 md:p-14">
+        <div className="vantage-card vantage-card-gold grid gap-8 p-10 md:grid-cols-2 md:p-14">
           <div>
-            <div className="mb-3 apx-kicker">The Full Opportunity</div>
+            <div className="mb-3 vantage-kicker">The Full Opportunity</div>
             <h2 className="font-display text-[clamp(36px,5vw,62px)] leading-[0.96]">
               See the full Vantage opportunity
             </h2>
-            <p className="mt-5 text-[16.5px] leading-relaxed text-apex-muted">
+            <p className="mt-5 text-[16.5px] leading-relaxed text-vantage-muted">
               The website gives you the highlights. The Vantage Company Overview explains the
               complete opportunity.
             </p>
             <div className="mt-6 flex flex-col gap-2.5">
               {overviewCovers.map((c) => (
-                <div key={c} className="flex items-start gap-3 text-[15px] text-apex-fog">
-                  <span className="mt-0.5 text-apex-gold">✦</span>
+                <div key={c} className="flex items-start gap-3 text-[15px] text-vantage-fog">
+                  <span className="mt-0.5 text-vantage-gold">✦</span>
                   {c}
                 </div>
               ))}
             </div>
           </div>
           <div className="flex flex-col justify-center gap-5">
-            <div className="rounded-[16px] border border-apex-gold/30 bg-black/30 p-6 text-center">
-              <div className="apx-kicker mb-2 justify-center">Every Monday</div>
-              <div className="font-display text-[clamp(30px,4vw,44px)] leading-none text-apex-gold">
+            <div className="rounded-[16px] border border-vantage-gold/30 bg-black/30 p-6 text-center">
+              <div className="vantage-kicker mb-2 justify-center">Every Monday</div>
+              <div className="font-display text-[clamp(30px,4vw,44px)] leading-none text-vantage-gold">
                 7:00 PM CT
               </div>
-              <div className="mt-1 font-display text-[clamp(22px,3vw,30px)] leading-none text-apex-ivory">
+              <div className="mt-1 font-display text-[clamp(22px,3vw,30px)] leading-none text-vantage-ivory">
                 8:00 PM ET
               </div>
             </div>
-            <p className="text-center text-[14px] font-semibold leading-relaxed text-apex-fog">
+            <p className="text-center text-[14px] font-semibold leading-relaxed text-vantage-fog">
               This is not just an information call. It is part of our selection process.
             </p>
             <Link
               to="/apply"
               search={applySearch}
-              className="apx-btn-primary w-full px-8 py-5 text-[17px]"
+              className="vantage-btn-primary w-full px-8 py-5 text-[17px]"
             >
               Start Your Application <span>→</span>
             </Link>
@@ -415,16 +415,16 @@ function LandingPage() {
       {/* WHO THIS IS FOR */}
       <div className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
         <SectionHead kicker="Selective by Design" title="Who we are looking for" />
-        <div className="apx-card p-8 md:p-10">
+        <div className="vantage-card p-8 md:p-10">
           <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
             {whoFor.map((w) => (
-              <div key={w} className="flex items-start gap-3 text-[15px] text-apex-fog">
-                <span className="mt-0.5 text-apex-gold">✦</span>
+              <div key={w} className="flex items-start gap-3 text-[15px] text-vantage-fog">
+                <span className="mt-0.5 text-vantage-gold">✦</span>
                 {w}
               </div>
             ))}
           </div>
-          <p className="mt-6 border-t border-white/[0.08] pt-6 text-[14px] leading-relaxed text-apex-muted">
+          <p className="mt-6 border-t border-white/[0.08] pt-6 text-[14px] leading-relaxed text-vantage-muted">
             Vantage is not designed for people looking for guaranteed income, passive work, or a
             casual way to test the industry.
           </p>
@@ -436,21 +436,21 @@ function LandingPage() {
         <SectionHead kicker="Agent Voices" title="Results from our agents" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {testimonials.map((t) => (
-            <div key={t.name} className="apx-card flex flex-col justify-between gap-6 p-7">
-              <p className="text-[15.5px] leading-relaxed text-apex-fog">"{t.quote}"</p>
+            <div key={t.name} className="vantage-card flex flex-col justify-between gap-6 p-7">
+              <p className="text-[15.5px] leading-relaxed text-vantage-fog">"{t.quote}"</p>
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-apex-gold/15 font-display text-apex-gold">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-vantage-gold/15 font-display text-vantage-gold">
                   {t.initials}
                 </div>
                 <div>
-                  <div className="text-[14px] font-semibold text-apex-ivory">{t.name}</div>
-                  <div className="text-[12px] text-apex-faint">{t.role}</div>
+                  <div className="text-[14px] font-semibold text-vantage-ivory">{t.name}</div>
+                  <div className="text-[12px] text-vantage-faint">{t.role}</div>
                 </div>
               </div>
             </div>
           ))}
         </div>
-        <p className="mt-5 max-w-[820px] text-[12.5px] leading-relaxed text-apex-faint">
+        <p className="mt-5 max-w-[820px] text-[12.5px] leading-relaxed text-vantage-faint">
           Testimonials reflect individual experiences. Results are not typical or guaranteed.
         </p>
       </div>
@@ -466,18 +466,18 @@ function LandingPage() {
             >
               <button
                 onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
-                className="flex w-full items-center justify-between gap-4 p-5 text-left text-apex-ivory"
+                className="flex w-full items-center justify-between gap-4 p-5 text-left text-vantage-ivory"
               >
                 <span className="text-[16.5px] font-semibold leading-snug">{f.q}</span>
                 <span
-                  className="flex-none text-[20px] text-apex-gold transition-transform"
+                  className="flex-none text-[20px] text-vantage-gold transition-transform"
                   style={{ transform: openFaq === i ? "rotate(45deg)" : "rotate(0deg)" }}
                 >
                   +
                 </span>
               </button>
               {openFaq === i && (
-                <div className="px-5 pb-5 text-[15px] leading-relaxed text-apex-dim">{f.a}</div>
+                <div className="px-5 pb-5 text-[15px] leading-relaxed text-vantage-dim">{f.a}</div>
               )}
             </div>
           ))}
@@ -486,12 +486,12 @@ function LandingPage() {
 
       {/* APPLY CTA */}
       <div id="apply" className="mx-auto max-w-[1240px] px-6 pt-24 md:px-8">
-        <div className="apx-card apx-card-gold grid gap-8 p-10 md:grid-cols-2 md:p-14">
+        <div className="vantage-card vantage-card-gold grid gap-8 p-10 md:grid-cols-2 md:p-14">
           <div>
             <h2 className="font-display text-[clamp(40px,5vw,70px)] leading-[0.94]">
               Your empire starts with one application
             </h2>
-            <p className="mt-5 text-[16.5px] leading-relaxed text-apex-muted">
+            <p className="mt-5 text-[16.5px] leading-relaxed text-vantage-muted">
               Complete the short application and tell us why you believe you would be a strong fit
               for Vantage. Licensed applicants are contacted quickly. Unlicensed applicants receive
               the licensing steps and reserve a seat for the next Monday company overview.
@@ -501,11 +501,11 @@ function LandingPage() {
             <Link
               to="/apply"
               search={applySearch}
-              className="apx-btn-primary w-full px-8 py-5 text-[17px]"
+              className="vantage-btn-primary w-full px-8 py-5 text-[17px]"
             >
               Start Your Application <span>→</span>
             </Link>
-            <p className="text-[13px] text-apex-faint">
+            <p className="text-[13px] text-vantage-faint">
               No résumé required — just a few quick details.
             </p>
           </div>
@@ -518,9 +518,9 @@ function LandingPage() {
 function SectionHead({ kicker, title, body }: { kicker: string; title: string; body?: string }) {
   return (
     <div className="mb-10 max-w-[720px]">
-      <div className="mb-3 apx-kicker">{kicker}</div>
+      <div className="mb-3 vantage-kicker">{kicker}</div>
       <h2 className="font-display text-[clamp(34px,5vw,58px)] leading-none">{title}</h2>
-      {body && <p className="mt-4 text-[16px] leading-relaxed text-apex-muted">{body}</p>}
+      {body && <p className="mt-4 text-[16px] leading-relaxed text-vantage-muted">{body}</p>}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { getOrganizationTree, type OrgNode } from "@/lib/portal.functions";
 import { PageHeader, PageBody, Panel, Avatar, Badge, EmptyState, type BadgeTone } from "@/components/portal/ui";
 

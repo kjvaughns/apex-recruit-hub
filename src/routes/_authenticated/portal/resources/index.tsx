@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { getResourceHub } from "@/lib/resources.functions";
 import { getMe } from "@/lib/portal.functions";
 import { PageHeader, PageBody, TableWrap, Table, THead, TH, TR, TD, Panel, Button } from "@/components/portal/ui";

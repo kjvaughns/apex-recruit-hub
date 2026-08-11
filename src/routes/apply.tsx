@@ -3,9 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
-import { PublicShell } from "@/components/apex/brand";
-import { StateCombobox } from "@/components/apex/state-combobox";
-import { RecruiterCombobox, type RecruiterSelection } from "@/components/apex/recruiter-combobox";
+import { PublicShell } from "@/components/vantage/brand";
+import { StateCombobox } from "@/components/vantage/state-combobox";
+import { RecruiterCombobox, type RecruiterSelection } from "@/components/vantage/recruiter-combobox";
 import {
   submitApplication,
   getRecruiterBySlug,
@@ -159,7 +159,7 @@ function ApplyPage() {
           invalid_referral_slug: invalidSlug,
         },
       });
-      sessionStorage.setItem("apex_applicant_first", form.first_name.trim());
+      sessionStorage.setItem("vantage_applicant_first", form.first_name.trim());
       // Route by the applicant's own answer (source of truth on the client),
       // falling back to the server's echo. Prevents any drift between the two.
       const isLicensed =
@@ -179,12 +179,12 @@ function ApplyPage() {
   return (
     <PublicShell>
       <div className="mx-auto max-w-[900px] px-6 pt-14 pb-24 md:px-8">
-        <div className="apx-reveal text-center">
-          <div className="apx-eyebrow-pill mb-5 inline-flex">Join the team</div>
+        <div className="vantage-reveal text-center">
+          <div className="vantage-eyebrow-pill mb-5 inline-flex">Join the team</div>
           <h1 className="font-display text-[clamp(40px,6vw,68px)] leading-none">
             Build your empire in insurance sales
           </h1>
-          <p className="mx-auto mt-4 max-w-[540px] text-[16px] leading-relaxed text-apex-muted">
+          <p className="mx-auto mt-4 max-w-[540px] text-[16px] leading-relaxed text-vantage-muted">
             Uncapped commissions with daily pay, unlimited leads, and discounted licensing and
             training.
             Three minutes to apply — no résumé required.
@@ -195,39 +195,39 @@ function ApplyPage() {
             {VALUE_PROPS.map((v) => (
               <span
                 key={v}
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-[12.5px] font-medium text-apex-fog"
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 text-[12.5px] font-medium text-vantage-fog"
               >
-                <span className="text-apex-gold">✓</span>
+                <span className="text-vantage-gold">✓</span>
                 {v}
               </span>
             ))}
           </div>
 
           {recruiter && (
-            <div className="mx-auto mt-7 inline-flex items-center gap-3 rounded-full border border-apex-gold/30 bg-apex-gold/[0.08] py-2 pl-2 pr-5">
-              <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-apex-gold text-[13px] font-bold text-apex-card">
+            <div className="mx-auto mt-7 inline-flex items-center gap-3 rounded-full border border-vantage-gold/30 bg-vantage-gold/[0.08] py-2 pl-2 pr-5">
+              <span className="flex h-8 w-8 flex-none items-center justify-center rounded-full bg-vantage-gold text-[13px] font-bold text-vantage-card">
                 {(recruiter.full_name ?? "?").slice(0, 1).toUpperCase()}
               </span>
-              <span className="text-[13.5px] text-apex-dim">
+              <span className="text-[13.5px] text-vantage-dim">
                 Referred by{" "}
-                <span className="font-semibold text-apex-ivory">{recruiter.full_name}</span>
+                <span className="font-semibold text-vantage-ivory">{recruiter.full_name}</span>
               </span>
             </div>
           )}
         </div>
 
-        <div className="apx-card mt-12 grid gap-4 p-6 md:p-10">
+        <div className="vantage-card mt-12 grid gap-4 p-6 md:p-10">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="First name *">
               <input
-                className="apx-input"
+                className="vantage-input"
                 value={form.first_name}
                 onChange={(e) => set("first_name", e.target.value)}
               />
             </Field>
             <Field label="Last name *">
               <input
-                className="apx-input"
+                className="vantage-input"
                 value={form.last_name}
                 onChange={(e) => set("last_name", e.target.value)}
               />
@@ -236,7 +236,7 @@ function ApplyPage() {
           <Field label="Email *">
             <input
               type="email"
-              className="apx-input"
+              className="vantage-input"
               value={form.email}
               onChange={(e) => set("email", e.target.value)}
             />
@@ -244,7 +244,7 @@ function ApplyPage() {
           <Field label="Phone *">
             <input
               type="tel"
-              className="apx-input"
+              className="vantage-input"
               value={form.phone}
               onChange={(e) => set("phone", e.target.value)}
             />
@@ -268,10 +268,10 @@ function ApplyPage() {
                     aria-pressed={active}
                     onClick={() => set("licensed", opt.value)}
                     className={cn(
-                      "apx-input flex min-h-[54px] cursor-pointer touch-manipulation items-center justify-center gap-2 text-center font-semibold transition-colors select-none",
+                      "vantage-input flex min-h-[54px] cursor-pointer touch-manipulation items-center justify-center gap-2 text-center font-semibold transition-colors select-none",
                       active
-                        ? "border-apex-gold bg-apex-gold text-apex-card shadow-[0_0_24px_rgba(201,168,76,0.25)]"
-                        : "text-apex-muted hover:border-apex-gold/50 hover:text-apex-ivory active:border-apex-gold",
+                        ? "border-vantage-gold bg-vantage-gold text-vantage-card shadow-[0_0_24px_rgba(201,168,76,0.25)]"
+                        : "text-vantage-muted hover:border-vantage-gold/50 hover:text-vantage-ivory active:border-vantage-gold",
                     )}
                   >
                     {active && <span aria-hidden>✓</span>}
@@ -289,7 +289,7 @@ function ApplyPage() {
               invalid={errors.includes("who referred you")}
             />
             {invalidSlug && !recruiter && (
-              <p className="mt-2 text-[12.5px] text-apex-muted">
+              <p className="mt-2 text-[12.5px] text-vantage-muted">
                 We couldn't match that referral link — search below, or type your recruiter's name
                 and choose "Add" if they aren't listed yet.
               </p>
@@ -297,7 +297,7 @@ function ApplyPage() {
           </Field>
           <Field label="Instagram handle">
             <input
-              className="apx-input"
+              className="vantage-input"
               placeholder="@yourhandle (optional)"
               value={form.instagram_handle}
               onChange={(e) => set("instagram_handle", e.target.value)}
@@ -305,18 +305,18 @@ function ApplyPage() {
           </Field>
           <Field label="Why do you want to work with Vantage? *">
             <textarea
-              className="apx-input"
+              className="vantage-input"
               rows={4}
               value={form.why_text}
               onChange={(e) => set("why_text", e.target.value)}
             />
           </Field>
-          <label className="flex items-start gap-3 text-[14px] leading-relaxed text-apex-fog">
+          <label className="flex items-start gap-3 text-[14px] leading-relaxed text-vantage-fog">
             <input
               type="checkbox"
               checked={form.consent_contact}
               onChange={(e) => set("consent_contact", e.target.checked)}
-              className="mt-1 h-4 w-4 accent-apex-gold"
+              className="mt-1 h-4 w-4 accent-vantage-gold"
             />
             I agree to be contacted by Vantage Financial about agent opportunities and confirm my
             information is accurate. *
@@ -331,7 +331,7 @@ function ApplyPage() {
           <button
             onClick={onSubmit}
             disabled={submitting}
-            className="apx-btn-primary mt-2 w-full px-6 py-4 text-[16px] disabled:opacity-60"
+            className="vantage-btn-primary mt-2 w-full px-6 py-4 text-[16px] disabled:opacity-60"
           >
             {submitting ? (
               "Submitting…"
@@ -341,13 +341,13 @@ function ApplyPage() {
               </>
             )}
           </button>
-          <p className="text-center text-[12px] text-apex-faint">
+          <p className="text-center text-[12px] text-vantage-faint">
             By applying you agree to be contacted about agent opportunities. No spam.
           </p>
 
-          <div className="mt-2 text-center text-[13px] text-apex-faint">
+          <div className="mt-2 text-center text-[13px] text-vantage-faint">
             Already an agent?{" "}
-            <Link to="/login" className="text-apex-gold hover:underline">
+            <Link to="/login" className="text-vantage-gold hover:underline">
               Log in
             </Link>
           </div>
@@ -362,7 +362,7 @@ const VALUE_PROPS = ["Daily pay", "Unlimited leads", "Discounted licensing & tra
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="block">
-      <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-muted">
+      <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-vantage-muted">
         {label}
       </span>
       {children}

@@ -1,13 +1,13 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ApexLogo } from "@/components/apex/brand";
+import { VantageLogo } from "@/components/vantage/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMe, addAgent, getMyOnboarding } from "@/lib/portal.functions";
-import { AddAgentModal } from "@/components/apex/add-agent-modal";
-import { useTheme } from "@/components/apex/theme";
+import { AddAgentModal } from "@/components/vantage/add-agent-modal";
+import { useTheme } from "@/components/vantage/theme";
 import { Avatar, Badge, btnClass } from "@/components/portal/ui";
 
 const NAV = [
@@ -152,7 +152,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className={`apx-portal relative min-h-screen ${theme === "light" ? "apx-theme-light" : ""}`}
+      className={`vantage-portal relative min-h-screen ${theme === "light" ? "vantage-theme-light" : ""}`}
       style={{ background: "var(--p-bg)", color: "var(--p-text)" }}
     >
       <div className="relative flex">
@@ -167,7 +167,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
             className={`flex h-[56px] shrink-0 items-center gap-2 border-b ${collapsed ? "justify-center px-2" : "px-4"}`}
             style={{ borderColor: "var(--p-border)" }}
           >
-            <ApexLogo className="apx-brand-mark h-7 w-auto" />
+            <VantageLogo className="vantage-brand-mark h-7 w-auto" />
           </div>
 
           <nav className="flex-1 overflow-y-auto px-2 py-3">

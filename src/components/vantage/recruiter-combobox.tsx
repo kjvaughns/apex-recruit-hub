@@ -25,7 +25,7 @@ function Avatar({ r }: { r: RecruiterSelection }) {
     return <img src={r.avatar_url} alt="" className="h-7 w-7 shrink-0 rounded-full object-cover" />;
   }
   return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-apex-fog">
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-vantage-fog">
       {initials(r.full_name)}
     </span>
   );
@@ -92,24 +92,24 @@ export function RecruiterCombobox({
           aria-expanded={open}
           aria-invalid={invalid || undefined}
           className={cn(
-            "apx-input flex items-center justify-between gap-2 text-left",
+            "vantage-input flex items-center justify-between gap-2 text-left",
             invalid && "border-red-500/60",
           )}
         >
           {value ? (
             <span className="flex min-w-0 items-center gap-2">
               <Avatar r={value} />
-              <span className="truncate text-apex-ivory">
+              <span className="truncate text-vantage-ivory">
                 {value.full_name}
                 {value.custom && (
-                  <span className="ml-2 text-[11px] font-medium text-apex-gold">Not on platform yet</span>
+                  <span className="ml-2 text-[11px] font-medium text-vantage-gold">Not on platform yet</span>
                 )}
               </span>
             </span>
           ) : (
-            <span className="text-apex-faint">Search for your recruiter…</span>
+            <span className="text-vantage-faint">Search for your recruiter…</span>
           )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-apex-muted" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-vantage-muted" />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -128,7 +128,7 @@ export function RecruiterCombobox({
           />
           <CommandList className="max-h-72 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center gap-2 py-6 text-sm text-apex-muted">
+              <div className="flex items-center justify-center gap-2 py-6 text-sm text-vantage-muted">
                 <Loader2 className="h-4 w-4 animate-spin" /> Searching…
               </div>
             ) : (
@@ -147,13 +147,13 @@ export function RecruiterCombobox({
                       >
                         <Avatar r={r} />
                         <span className="flex min-w-0 flex-col">
-                          <span className="truncate text-apex-ivory">{r.full_name}</span>
+                          <span className="truncate text-vantage-ivory">{r.full_name}</span>
                           {r.team_name && (
-                            <span className="truncate text-[12px] text-apex-faint">{r.team_name}</span>
+                            <span className="truncate text-[12px] text-vantage-faint">{r.team_name}</span>
                           )}
                         </span>
                         {value?.id === r.id && !value.custom && (
-                          <Check className="ml-auto h-4 w-4 text-apex-gold" />
+                          <Check className="ml-auto h-4 w-4 text-vantage-gold" />
                         )}
                       </CommandItem>
                     ))}
@@ -162,12 +162,12 @@ export function RecruiterCombobox({
                 {canAddCustom && (
                   <CommandGroup heading="Not seeing them?">
                     <CommandItem value={`__add__${trimmed}`} onSelect={pickCustom} className="gap-2">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-apex-gold/40 bg-apex-gold/10 text-apex-gold">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-vantage-gold/40 bg-vantage-gold/10 text-vantage-gold">
                         <UserPlus className="h-3.5 w-3.5" />
                       </span>
                       <span className="flex min-w-0 flex-col">
-                        <span className="truncate text-apex-ivory">Add "{trimmed}"</span>
-                        <span className="truncate text-[12px] text-apex-faint">
+                        <span className="truncate text-vantage-ivory">Add "{trimmed}"</span>
+                        <span className="truncate text-[12px] text-vantage-faint">
                           We'll follow up to link them to your application
                         </span>
                       </span>
@@ -175,7 +175,7 @@ export function RecruiterCombobox({
                   </CommandGroup>
                 )}
                 {results.length === 0 && !canAddCustom && (
-                  <div className="py-6 text-center text-sm text-apex-muted">
+                  <div className="py-6 text-center text-sm text-vantage-muted">
                     {trimmed.length < 2 ? "Start typing a name…" : "Type a full name to add them"}
                   </div>
                 )}

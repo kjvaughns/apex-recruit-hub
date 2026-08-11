@@ -86,14 +86,14 @@ export function StateCombobox({
           aria-expanded={open}
           aria-invalid={invalid || undefined}
           className={cn(
-            "apx-input flex items-center justify-between text-left",
+            "vantage-input flex items-center justify-between text-left",
             invalid && "border-red-500/60",
           )}
         >
-          <span className={cn(!selected && "text-apex-faint")}>
+          <span className={cn(!selected && "text-vantage-faint")}>
             {selected ? selected.name : "Select your state"}
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-apex-muted" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-vantage-muted" />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -107,7 +107,7 @@ export function StateCombobox({
         <Command>
           <CommandInput placeholder="Type a state or abbreviation…" />
           <CommandList className="max-h-72 overflow-y-auto">
-            <CommandEmpty className="text-apex-muted">No state found.</CommandEmpty>
+            <CommandEmpty className="text-vantage-muted">No state found.</CommandEmpty>
             <CommandGroup>
               {US_STATES.map((s) => (
                 <CommandItem
@@ -121,11 +121,11 @@ export function StateCombobox({
                   <Check
                     className={cn(
                       "h-4 w-4",
-                      value === s.abbr ? "opacity-100 text-apex-gold" : "opacity-0",
+                      value === s.abbr ? "opacity-100 text-vantage-gold" : "opacity-0",
                     )}
                   />
                   <span>{s.name}</span>
-                  <span className="ml-auto text-[12px] text-apex-faint">{s.abbr}</span>
+                  <span className="ml-auto text-[12px] text-vantage-faint">{s.abbr}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

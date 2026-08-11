@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { listTasks, createTask, toggleTask, deleteTask } from "@/lib/portal.functions";
-import { DateTimePicker } from "@/components/apex/date-time-picker";
+import { DateTimePicker } from "@/components/vantage/date-time-picker";
 import {
   PageHeader,
   PageBody,

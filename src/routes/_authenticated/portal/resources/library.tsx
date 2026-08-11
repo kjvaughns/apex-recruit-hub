@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { listLibrary } from "@/lib/resources.functions";
-import { LibraryView, type LibraryItem } from "@/components/apex/resources/library";
+import { LibraryView, type LibraryItem } from "@/components/vantage/resources/library";
 import { PageHeader, PageBody, Button } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/resources/library")({

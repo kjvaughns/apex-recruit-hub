@@ -5,7 +5,7 @@
  * keeps its own queries, mutations, filters and role gates and simply renders
  * through these building blocks so the whole portal shares one design language.
  *
- * All colors come from the `.apx-portal` token layer in src/styles.css.
+ * All colors come from the `.vantage-portal` token layer in src/styles.css.
  */
 import {
   createContext,
@@ -491,7 +491,7 @@ export function EmptyState({
 /* -------------------------------------------------------------------------- */
 
 const controlClass =
-  "p-focus w-full rounded-[10px] border px-3 text-[14px] transition placeholder:opacity-60 [background:var(--apx-input-bg)] [border-color:var(--p-border)] [color:var(--p-text)] focus:[border-color:var(--p-gold)]";
+  "p-focus w-full rounded-[10px] border px-3 text-[14px] transition placeholder:opacity-60 [background:var(--vantage-input-bg)] [border-color:var(--p-border)] [color:var(--p-text)] focus:[border-color:var(--p-gold)]";
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cn(controlClass, "h-[40px]", className)} {...rest} />;

@@ -135,12 +135,12 @@ export function DateTimePicker({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="apx-input flex items-center justify-between text-left"
+        className="vantage-input flex items-center justify-between text-left"
       >
-        <span className={cn(!value && "text-apex-faint")}>
+        <span className={cn(!value && "text-vantage-faint")}>
           {summarizeDue(value, displayAllDay)}
         </span>
-        <span className="text-apex-muted">📅</span>
+        <span className="text-vantage-muted">📅</span>
       </button>
 
       {open && (
@@ -255,7 +255,7 @@ export function DateTimePicker({
               value={minutes}
               disabled={allDay}
               onChange={(e) => setMinutes(Number(e.target.value))}
-              className="apx-input h-10 flex-1 text-[13px] disabled:opacity-50"
+              className="vantage-input h-10 flex-1 text-[13px] disabled:opacity-50"
             >
               {TIME_SLOTS.map((s) => (
                 <option key={s.value} value={s.value}>

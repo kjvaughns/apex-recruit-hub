@@ -2,10 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { listPresentersWithRecordings } from "@/lib/resources.functions";
-import { PlayerModal, type Presenter, type Recording } from "@/components/apex/resources/player";
-import { formatDisplayDate } from "@/components/apex/resources/shared";
+import { PlayerModal, type Presenter, type Recording } from "@/components/vantage/resources/player";
+import { formatDisplayDate } from "@/components/vantage/resources/shared";
 import { PageHeader, PageBody, Button, Avatar, EmptyState, TableWrap, Table, THead, TH, TR, TD, Badge } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/resources/presentations")({
