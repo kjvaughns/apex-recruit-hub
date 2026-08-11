@@ -164,7 +164,7 @@ export function greet(name?: string) {
   return name && name.trim() ? name.trim() : 'there'
 }
 
-export function links(p: EmailLinkProps): Required<EmailLinkProps> {
+export function links(p: EmailLinkProps): ResolvedLinks {
   const pick = (v: string | undefined, fallback: string) =>
     v && v.trim() && v.trim() !== "#" ? v.trim() : fallback;
   return {
