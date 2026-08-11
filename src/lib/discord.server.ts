@@ -9,18 +9,10 @@ export const DISCORD_WEBHOOK_SETTING_KEY = "discord_recruiting_webhook_url";
 
 const GOLD = 0xc9a84c;
 
+import { scheduleLabel, type RecruitAlert } from "./recruit-alert";
+
 export type { RecruitAlert };
 
-type _Unused = {
-  firstName: string;
-  lastName: string;
-  recruiterName?: string | null;
-  licensed: boolean;
-  /** ISO-8601 overview slot they picked, when they picked one. */
-  requestedOverviewAt?: string | null;
-  wantsOneOnOne?: boolean;
-  state?: string | null;
-};
 
 type MinimalClient = {
   from: (t: string) => {
