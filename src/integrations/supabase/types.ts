@@ -176,6 +176,7 @@ export type Database = {
           referred_by_name: string | null
           referred_by_name_snapshot: string | null
           referred_by_profile_id: string | null
+          requested_overview_at: string | null
           scheduled_event_end: string | null
           scheduled_event_id: string | null
           scheduled_event_start: string | null
@@ -239,6 +240,7 @@ export type Database = {
           referred_by_name?: string | null
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
+          requested_overview_at?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -302,6 +304,7 @@ export type Database = {
           referred_by_name?: string | null
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
+          requested_overview_at?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -1529,6 +1532,7 @@ export type Database = {
       finalize_invitation_acceptance: { Args: { payload: Json }; Returns: Json }
       get_evaluation_prefill: { Args: { _applicant_id: string }; Returns: Json }
       get_invitation_public: { Args: { _token: string }; Returns: Json }
+      get_overview_prefill: { Args: { _token: string }; Returns: Json }
       get_primary_role: { Args: { _user_id: string }; Returns: string }
       get_recruiter_by_slug: {
         Args: { _slug: string }
@@ -1568,6 +1572,10 @@ export type Database = {
           recruiting_slug: string
           team_name: string
         }[]
+      }
+      set_requested_overview: {
+        Args: { _at: string; _token: string }
+        Returns: Json
       }
       slugify_name: { Args: { _text: string }; Returns: string }
       submit_application: { Args: { payload: Json }; Returns: Json }
