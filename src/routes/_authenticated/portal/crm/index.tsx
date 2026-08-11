@@ -2,9 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/apex/add-applicant-modal";
+import { AddAgentModal } from "@/components/apex/add-agent-modal";
+import { onboardingProgress } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/_authenticated/portal/crm/")({
   head: () => ({ meta: [{ title: "CRM — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
@@ -29,6 +32,7 @@ function CRMListPage() {
   const [stage, setStage] = useState("");
   const [view, setView] = useState<View>("all");
   const [addOpen, setAddOpen] = useState(false);
+  const [addAgentOpen, setAddAgentOpen] = useState(false);
 
   // Remember the last selected CRM scope per user session.
   useEffect(() => {
@@ -56,6 +60,10 @@ function CRMListPage() {
   }, [data?.stages]);
 
   const orderedStages = data?.stages ?? [];
+  const onboardingStageIds = useMemo(
+    () => new Set((data?.stages ?? []).filter((s: any) => s.slug === "onboarding").map((s: any) => s.id)),
+    [data?.stages],
+  );
 
   function nextStageOf(currentId: string | null) {
     if (!currentId) return null;
@@ -93,6 +101,12 @@ function CRMListPage() {
                 </button>
               ))}
             </div>
+            <button
+              onClick={() => setAddAgentOpen(true)}
+              className="rounded-[10px] border border-apex-gold/30 bg-apex-gold/[0.06] px-3 py-2 text-[12.5px] font-medium text-apex-gold transition hover:bg-apex-gold/[0.12]"
+            >
+              + Add Agent
+            </button>
             <button
               onClick={() => setAddOpen(true)}
               className="apx-btn-primary px-3 py-2 text-[12.5px]"
@@ -233,6 +247,16 @@ function CRMListPage() {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-1.5">
+                      {a.current_stage_id && onboardingStageIds.has(a.current_stage_id) ? (
+                        (() => {
+                          const p = onboardingProgress(a.onboarding_steps);
+                          return (
+                            <Chip tone={p.done === p.total ? "good" : "warn"}>
+                              Onboarding {p.done}/{p.total}
+                            </Chip>
+                          );
+                        })()
+                      ) : null}
                       <Chip tone={licensed ? "good" : "warn"}>
                         {licensed ? "Licensed" : "Unlicensed"}
                       </Chip>
@@ -297,6 +321,16 @@ function CRMListPage() {
             setAddOpen(false);
             qc.invalidateQueries({ queryKey: ["applicants"] });
             navigate({ to: "/portal/crm/$applicantId", params: { applicantId: id } });
+          }}
+        />
+      )}
+      {addAgentOpen && (
+        <AddAgentModal
+          onClose={() => setAddAgentOpen(false)}
+          onSubmit={async () => {
+            // Phase 2 wires this to the addAgent server fn.
+            toast.info("Agent invites go live in the next update.");
+            setAddAgentOpen(false);
           }}
         />
       )}
