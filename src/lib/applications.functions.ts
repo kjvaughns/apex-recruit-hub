@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
-import { queueEmail } from "@/lib/emails/send";
+import { queueEmail, sendAgentNewApplicant } from "@/lib/emails/send";
+import { scheduleLabel } from "@/lib/recruit-alert";
 
 function serverClient() {
   const url = process.env.SUPABASE_URL!;
@@ -78,18 +79,93 @@ export const submitApplication = createServerFn({ method: "POST" })
       if (slotError) console.error("set_requested_overview failed", slotError.message);
     }
 
-    // Trigger: application-submitted email (branches on licensing). Stub send —
-    // enqueues into the outbox, never blocks the submission.
+    // Recruiter + applicant details for the agent alert, the agent's copy of the
+    // applicant email, and the Discord recruiting bot. Token-gated RPC — never
+    // blocks the submission.
+    type NotifyContext = {
+      found: boolean;
+      applicant_id?: string;
+      first_name?: string;
+      last_name?: string;
+      email?: string;
+      phone?: string;
+      state?: string;
+      licensed?: boolean;
+      instagram_handle?: string;
+      why_text?: string;
+      requested_overview_at?: string | null;
+      wants_one_on_one?: boolean;
+      referred_by_name?: string | null;
+      recruiter_id?: string | null;
+      recruiter_name?: string | null;
+      recruiter_email?: string | null;
+    };
+    let ctx: NotifyContext = { found: false };
+    try {
+      const { data: raw } = await (supabase as any).rpc("get_applicant_notify_context", {
+        _token: res.token,
+      });
+      if (raw && typeof raw === "object") ctx = raw as NotifyContext;
+    } catch (e) {
+      console.error("get_applicant_notify_context failed", e);
+    }
+
+    const applicantName = `${data.first_name} ${data.last_name}`.trim();
+    const recruiterName = ctx.recruiter_name?.trim() || ctx.referred_by_name?.trim() || data.referred_by_name || null;
+
+    // Trigger: application-submitted email (branches on licensing), with the
+    // recruiting agent copied so they see exactly what their applicant got.
     await queueEmail(supabase as never, {
       to: data.email,
-      toName: `${data.first_name} ${data.last_name}`.trim(),
+      toName: applicantName,
       applicantId: res.id,
       template: res.success_page_type === "licensed" ? "application_licensed" : "application_unlicensed",
       params: { firstName: data.first_name, licensed: res.success_page_type === "licensed" },
+      copyTo: ctx.recruiter_email
+        ? { email: ctx.recruiter_email, name: ctx.recruiter_name }
+        : null,
+      copyForName: applicantName,
+    });
+
+    // Trigger: "you have a new applicant" alert to the recruiting agent.
+    const scheduled = scheduleLabel({
+      requestedOverviewAt: ctx.requested_overview_at ?? null,
+      wantsOneOnOne: !!ctx.wants_one_on_one,
+    });
+    if (ctx.recruiter_email) {
+      await sendAgentNewApplicant(supabase as never, {
+        agentEmail: ctx.recruiter_email,
+        agentName: ctx.recruiter_name,
+        applicantId: res.id,
+        applicantName,
+        applicantEmail: data.email,
+        applicantPhone: data.phone,
+        state: data.state,
+        licensed: res.success_page_type === "licensed",
+        instagramHandle: data.instagram_handle || undefined,
+        whyText: data.why_text,
+        scheduleLabel: scheduled,
+        referredByName: recruiterName ?? undefined,
+        applicantUrl: `${(process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "")}/portal/crm/${res.id}`,
+      });
+    }
+
+    // Trigger: Discord recruiting bot. No-ops when no webhook is configured.
+    // Server-only module — loaded inside the handler so it never ships to the client.
+    const { notifyNewRecruit } = await import("@/lib/discord.server");
+    await notifyNewRecruit(supabase as never, {
+      firstName: data.first_name,
+      lastName: data.last_name,
+      recruiterName,
+      licensed: res.success_page_type === "licensed",
+      requestedOverviewAt: ctx.requested_overview_at ?? null,
+      wantsOneOnOne: !!ctx.wants_one_on_one,
+      state: data.state,
     });
 
     return res;
   });
+
 
 
 const evaluationSchema = z.object({
@@ -109,17 +185,33 @@ export const submitEvaluation = createServerFn({ method: "POST" })
     const res = result as { id: string; matched: boolean; hired: boolean; licensed: boolean };
 
     // Trigger: welcome / auto-hire email (branches on licensing). Only fires on
-    // the first hire. Stub send — enqueues into the outbox.
+    // the first hire. The recruiting agent is copied.
     if (res.hired) {
       const fullName = (data.answers?.full_name as string | undefined) ?? "";
+      let copyTo: { email: string; name: string | null } | null = null;
+      if (data.applicant_id) {
+        try {
+          const { data: r } = await (supabase as any).rpc("get_recruiter_for_applicant", {
+            _applicant_id: data.applicant_id,
+          });
+          if (r?.found && r.recruiter_email) {
+            copyTo = { email: r.recruiter_email, name: r.recruiter_name ?? null };
+          }
+        } catch {
+          /* best-effort */
+        }
+      }
       await queueEmail(supabase as never, {
         to: data.email,
         toName: fullName || undefined,
         applicantId: data.applicant_id || null,
         template: "welcome_hired",
         params: { firstName: fullName.split(/\s+/)[0] || "", licensed: res.licensed },
+        copyTo,
+        copyForName: fullName || data.email,
       });
     }
+
 
     return res;
   });

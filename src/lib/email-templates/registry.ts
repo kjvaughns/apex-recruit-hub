@@ -6,6 +6,7 @@ import { template as welcomeHired } from './welcome-hired'
 import { template as followupCheckin } from './followup-checkin'
 import { template as welcomeOnboarding } from './welcome-onboarding'
 import { template as onboardingComplete } from './onboarding-complete'
+import { template as agentNewApplicant } from './agent-new-applicant'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -27,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'followup-checkin': followupCheckin,
   'welcome-onboarding': welcomeOnboarding,
   'onboarding-complete': onboardingComplete,
+  'agent-new-applicant': agentNewApplicant,
 }

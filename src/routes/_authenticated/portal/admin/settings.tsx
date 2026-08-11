@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { adminGetSettings, adminSetSetting } from "@/lib/portal.functions";
+import { adminGetSettings, adminSetSetting, adminTestDiscordWebhook } from "@/lib/portal.functions";
 import { useState, useEffect } from "react";
 import { PageHeader, PageBody, Panel, Field, Input, Button, Stack } from "@/components/portal/ui";
 
@@ -20,15 +20,23 @@ const KEYS = [
   { key: "support_email", label: "Support email" },
 ];
 
+const DISCORD_KEY = "discord_recruiting_webhook_url";
 
 function SettingsPage() {
   const getFn = useServerFn(adminGetSettings);
   const setFn = useServerFn(adminSetSetting);
+  const testFn = useServerFn(adminTestDiscordWebhook);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["admin", "settings"], queryFn: () => getFn() });
   const save = useMutation({
     mutationFn: (v: { key: string; value: any }) => setFn({ data: v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "settings"] }),
+  });
+  const [testResult, setTestResult] = useState<string | null>(null);
+  const test = useMutation({
+    mutationFn: () => testFn(),
+    onSuccess: (r: { ok: boolean; message: string }) => setTestResult(r.message),
+    onError: (e: unknown) => setTestResult(e instanceof Error ? e.message : "Test failed."),
   });
 
   const [vals, setVals] = useState<Record<string, string>>({});
@@ -40,6 +48,11 @@ function SettingsPage() {
     }
     setVals(map);
   }, [data]);
+
+  const webhook = vals[DISCORD_KEY] ?? "";
+  const webhookValid = /^https:\/\/(canary\.|ptb\.)?discord(app)?\.com\/api\/webhooks\//.test(
+    webhook.trim(),
+  );
 
   return (
     <PortalShell>
@@ -71,7 +84,56 @@ function SettingsPage() {
             </Stack>
           )}
         </Panel>
+
+        <Panel padded>
+          <PageHeader
+            title="Discord recruiting bot"
+            description="Paste a Discord channel webhook URL and every new applicant posts a card with their name, who recruited them, license status, and the date they scheduled."
+          />
+          <Stack className="space-y-4">
+            <Field
+              label="Discord webhook URL"
+              hint="In Discord: Channel settings → Integrations → Webhooks → New Webhook → Copy Webhook URL. Leave blank to turn the bot off."
+            >
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://discord.com/api/webhooks/…"
+                  value={webhook}
+                  onChange={(e) => {
+                    setTestResult(null);
+                    setVals({ ...vals, [DISCORD_KEY]: e.target.value });
+                  }}
+                />
+                <Button
+                  variant="primary"
+                  onClick={() => save.mutate({ key: DISCORD_KEY, value: webhook.trim() })}
+                  disabled={save.isPending}
+                >
+                  Save
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setTestResult(null);
+                    test.mutate();
+                  }}
+                  disabled={test.isPending}
+                >
+                  {test.isPending ? "Sending…" : "Send test card"}
+                </Button>
+              </div>
+            </Field>
+            {webhook.trim() && !webhookValid ? (
+              <div className="p-secondary text-[13px]">
+                That doesn&apos;t look like a Discord webhook URL — it should start with
+                https://discord.com/api/webhooks/
+              </div>
+            ) : null}
+            {testResult ? <div className="p-secondary text-[13px]">{testResult}</div> : null}
+          </Stack>
+        </Panel>
       </PageBody>
     </PortalShell>
   );
 }
+

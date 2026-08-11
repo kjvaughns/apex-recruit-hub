@@ -13,7 +13,7 @@ const TITLE = "Welcome to Vantage — you're officially on the team"
 const Email = ({ firstName, licensed, ...rest }: Props) => {
   const L = links(rest)
   return (
-    <Shell preview={TITLE} title={TITLE}>
+    <Shell preview={TITLE} title={TITLE} copyFor={rest.copyFor}>
       <Text style={paragraph}>
         Congrats {greet(firstName)} — you&apos;re officially on the Vantage team. This is the
         start of something big.

@@ -52,6 +52,26 @@ async function resolveOnboardingPortalLink(
   return `${APP_URL()}/login`;
 }
 
+/** Resolve the recruiting agent who should be copied on an applicant's email.
+ *  Returns null when the applicant has no recruiter or the recruiter has no
+ *  email on file. Best-effort — never throws. */
+async function recruiterCopy(
+  supabase: any,
+  applicantId?: string | null,
+): Promise<{ email: string; name: string | null } | null> {
+  if (!applicantId) return null;
+  try {
+    const { data } = await supabase.rpc("get_recruiter_for_applicant", {
+      _applicant_id: applicantId,
+    });
+    const r = data as { found?: boolean; recruiter_email?: string; recruiter_name?: string } | null;
+    if (!r?.found || !r.recruiter_email) return null;
+    return { email: r.recruiter_email, name: r.recruiter_name ?? null };
+  } catch {
+    return null;
+  }
+}
+
 /** Enqueue the "Welcome to Onboarding" email (best-effort, never throws). Also
  *  enrolls the agent in the Academy onboarding course if they already have a
  *  portal account (otherwise they auto-enroll when they open the course). The
@@ -59,13 +79,17 @@ async function resolveOnboardingPortalLink(
 async function enqueueWelcomeOnboarding(supabase: any, a: OnboardingApplicant): Promise<void> {
   if (!a.email) return;
   const portalLink = await resolveOnboardingPortalLink(supabase, a);
+  const applicantName = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined;
   await queueEmail(supabase, {
     to: a.email,
-    toName: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
+    toName: applicantName,
     applicantId: a.id,
     template: "welcome_onboarding",
     params: { firstName: firstNameFrom(null, a.first_name), portalLink },
+    copyTo: await recruiterCopy(supabase, a.id),
+    copyForName: applicantName ?? a.email,
   });
+
   if (a.portal_profile_id) {
     try {
       await supabase.rpc("academy_enroll", { _slug: "vantage-onboarding", _user: a.portal_profile_id });
@@ -398,15 +422,19 @@ type OnboardingResult = {
 /** After the RPC updates steps, send the completion email once (best-effort). */
 async function afterOnboardingUpdate(supabase: any, res: OnboardingResult) {
   if (res.just_completed && res.email) {
+    const applicantName = `${res.first_name ?? ""} ${res.last_name ?? ""}`.trim() || undefined;
     await queueEmail(supabase, {
       to: res.email,
-      toName: `${res.first_name ?? ""} ${res.last_name ?? ""}`.trim() || undefined,
+      toName: applicantName,
       applicantId: res.applicant_id ?? null,
       template: "onboarding_complete",
       params: { firstName: firstNameFrom(null, res.first_name) },
+      copyTo: await recruiterCopy(supabase, res.applicant_id ?? null),
+      copyForName: applicantName ?? res.email,
     });
   }
 }
+
 
 /** The signed-in agent's onboarding state. Marks portal_account_setup complete
  *  on first view (logging in proves it) and fires the completion email if that
@@ -567,13 +595,17 @@ export const sendFollowUpEmail = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!a?.email) throw new Error("Applicant has no email on file.");
 
+    const applicantName = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined;
     await queueEmail(supabase as never, {
       to: a.email,
-      toName: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
+      toName: applicantName,
       applicantId: a.id,
       template: "followup_checkin",
       params: { firstName: firstNameFrom(null, a.first_name) },
+      copyTo: await recruiterCopy(supabase, a.id),
+      copyForName: applicantName ?? a.email,
     });
+
 
     const now = new Date().toISOString();
     // last_follow_up_at resets the weekly-follow-up counter (Phase 5).
@@ -805,6 +837,39 @@ export const adminSetSetting = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Post a sample "new recruit" card to the configured Discord webhook so the
+ *  admin can confirm the bot lands in the right channel. Admin-only. */
+export const adminTestDiscordWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { getDiscordWebhookUrl, postRecruitAlert } = await import("@/lib/discord.server");
+    const url = await getDiscordWebhookUrl(supabase as never);
+    if (!url) {
+      return {
+        ok: false,
+        message: "No valid Discord webhook URL saved yet. Paste one above and save it first.",
+      };
+    }
+    const sent = await postRecruitAlert(url, {
+      firstName: "Test",
+      lastName: "Recruit",
+      recruiterName: "Vantage Financial",
+      licensed: false,
+      requestedOverviewAt: null,
+      wantsOneOnOne: false,
+      state: "TX",
+    });
+    return {
+      ok: sent,
+      message: sent
+        ? "Test card posted — check your Discord channel."
+        : "Discord rejected the post. Double-check the webhook URL.",
+    };
+  });
+
 
 /* ============================================================
    Tasks

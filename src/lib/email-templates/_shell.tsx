@@ -26,9 +26,17 @@ export interface EmailLinkProps {
   ownerCalendlyUrl?: string
   courseUrl?: string
   discordInviteUrl?: string
+  /**
+   * When set, this render is the recruiting agent's copy of an email that was
+   * sent to the named applicant. Shell renders a banner saying so.
+   */
+  copyFor?: string
 }
 
-export const FALLBACK_LINKS: Required<EmailLinkProps> = {
+
+type ResolvedLinks = Required<Omit<EmailLinkProps, 'copyFor'>>
+
+export const FALLBACK_LINKS: ResolvedLinks = {
   overviewUrl: 'https://vantage-financial.net/apply',
   ownerCalendlyUrl: 'https://vantage-financial.net/apply',
   courseUrl: XCEL_COURSE_URL,
@@ -117,26 +125,46 @@ export function GoldButton({ href, label }: { href: string; label: string }) {
   )
 }
 
+const copyBanner: React.CSSProperties = {
+  margin: '0 0 18px 0',
+  padding: '10px 14px',
+  borderRadius: '10px',
+  border: '1px solid rgba(201,168,76,0.4)',
+  backgroundColor: 'rgba(201,168,76,0.10)',
+  fontSize: '13px',
+  lineHeight: '1.5',
+  color: '#B8B4A8',
+}
+
 export function Shell({
   preview,
   title,
   footerNote,
+  copyFor,
   children,
 }: {
   preview: string
   title: string
   /** Overrides the default recruiting footer line (use for account/auth emails). */
   footerNote?: string
+  /** Recruiting agent's copy — names the applicant this email went to. */
+  copyFor?: string
   children: React.ReactNode
 }) {
   return (
     <Html lang="en" dir="ltr">
       <Head />
-      <Preview>{preview}</Preview>
+      <Preview>{copyFor ? `Copy — sent to ${copyFor}: ${preview}` : preview}</Preview>
       <Body style={main}>
         <Container style={card}>
           <Section style={inner}>
             <Text style={wordmark}>VANTAGE FINANCIAL</Text>
+            {copyFor ? (
+              <Text style={copyBanner}>
+                Your copy — this email was just sent to <strong>{copyFor}</strong>. No action needed
+                unless you want to follow up.
+              </Text>
+            ) : null}
             <Heading style={heading}>{title}</Heading>
             {children}
           </Section>
@@ -144,7 +172,9 @@ export function Shell({
           <Text style={footerStyle}>
             &copy; 2026 Vantage Financial.{' '}
             {footerNote ??
-              "You're receiving this because you applied to join the Vantage team."}
+              (copyFor
+                ? "You're receiving this because you're the recruiting agent on this applicant."
+                : "You're receiving this because you applied to join the Vantage team.")}
           </Text>
         </Container>
       </Body>
@@ -156,7 +186,7 @@ export function greet(name?: string) {
   return name && name.trim() ? name.trim() : 'there'
 }
 
-export function links(p: EmailLinkProps): Required<EmailLinkProps> {
+export function links(p: EmailLinkProps): ResolvedLinks {
   const pick = (v: string | undefined, fallback: string) =>
     v && v.trim() && v.trim() !== "#" ? v.trim() : fallback;
   return {

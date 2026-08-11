@@ -18,7 +18,7 @@ const Bullet = ({ children }: { children: React.ReactNode }) => (
 const Email = ({ firstName, ...rest }: Props) => {
   const L = links(rest)
   return (
-    <Shell preview={TITLE} title={TITLE}>
+    <Shell preview={TITLE} title={TITLE} copyFor={rest.copyFor}>
       <Text style={paragraph}>
         Hey {greet(firstName)}, checking in on your licensing progress.
       </Text>
