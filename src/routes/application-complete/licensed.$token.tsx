@@ -1,9 +1,16 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
 import { CalendlyInline } from "@/components/vantage/calendly-inline";
-import { getSchedulingContext, markLicensedFallback, markScheduled } from "@/lib/applications.functions";
+import { DISCORD_INVITE_URL, XCEL_COURSE_URL, XCEL_PARTNER_CODE } from "@/lib/next-steps";
+import {
+  getOverviewBooking,
+  getSchedulingContext,
+  markLicensedFallback,
+  markScheduled,
+} from "@/lib/applications.functions";
 
 export const Route = createFileRoute("/application-complete/licensed/$token")({
   head: () => ({
