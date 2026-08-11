@@ -52,6 +52,26 @@ async function resolveOnboardingPortalLink(
   return `${APP_URL()}/login`;
 }
 
+/** Resolve the recruiting agent who should be copied on an applicant's email.
+ *  Returns null when the applicant has no recruiter or the recruiter has no
+ *  email on file. Best-effort — never throws. */
+async function recruiterCopy(
+  supabase: any,
+  applicantId?: string | null,
+): Promise<{ email: string; name: string | null } | null> {
+  if (!applicantId) return null;
+  try {
+    const { data } = await supabase.rpc("get_recruiter_for_applicant", {
+      _applicant_id: applicantId,
+    });
+    const r = data as { found?: boolean; recruiter_email?: string; recruiter_name?: string } | null;
+    if (!r?.found || !r.recruiter_email) return null;
+    return { email: r.recruiter_email, name: r.recruiter_name ?? null };
+  } catch {
+    return null;
+  }
+}
+
 /** Enqueue the "Welcome to Onboarding" email (best-effort, never throws). Also
  *  enrolls the agent in the Academy onboarding course if they already have a
  *  portal account (otherwise they auto-enroll when they open the course). The
@@ -59,13 +79,17 @@ async function resolveOnboardingPortalLink(
 async function enqueueWelcomeOnboarding(supabase: any, a: OnboardingApplicant): Promise<void> {
   if (!a.email) return;
   const portalLink = await resolveOnboardingPortalLink(supabase, a);
+  const applicantName = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined;
   await queueEmail(supabase, {
     to: a.email,
-    toName: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
+    toName: applicantName,
     applicantId: a.id,
     template: "welcome_onboarding",
     params: { firstName: firstNameFrom(null, a.first_name), portalLink },
+    copyTo: await recruiterCopy(supabase, a.id),
+    copyForName: applicantName ?? a.email,
   });
+
   if (a.portal_profile_id) {
     try {
       await supabase.rpc("academy_enroll", { _slug: "vantage-onboarding", _user: a.portal_profile_id });
