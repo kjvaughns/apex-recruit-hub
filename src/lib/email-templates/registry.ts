@@ -28,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'followup-checkin': followupCheckin,
   'welcome-onboarding': welcomeOnboarding,
   'onboarding-complete': onboardingComplete,
+  'agent-new-applicant': agentNewApplicant,
 }
