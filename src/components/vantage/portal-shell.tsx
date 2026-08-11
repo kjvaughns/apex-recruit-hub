@@ -14,7 +14,7 @@ import {
   Users,
   CalendarDays,
   Trophy,
-  BookOpen,
+  GraduationCap,
   Network,
   Settings,
   Rocket,
@@ -34,7 +34,7 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: "/portal/applicants", label: "Applicants", icon: Users },
   { to: "/portal/calendar", label: "Calendar", icon: CalendarDays },
   { to: "/portal/leaderboard", label: "Leaderboard", icon: Trophy },
-  { to: "/portal/resources", label: "Resources", icon: BookOpen },
+  { to: "/portal/academy", label: "Academy", icon: GraduationCap },
   { to: "/portal/organization", label: "Organization", icon: Network },
   { to: "/portal/settings", label: "My Settings", icon: Settings },
 ];
