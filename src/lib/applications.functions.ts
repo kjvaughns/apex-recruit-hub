@@ -221,3 +221,46 @@ export const markScheduled = createServerFn({ method: "POST" })
     return result as { matched: boolean; id?: string };
   });
 
+
+export type OverviewBooking = {
+  found: boolean;
+  /** Calendly URL, deep-linked to the chosen slot and pre-filled when possible. */
+  url: string | null;
+  requested_overview_at: string | null;
+};
+
+/**
+ * Resolve the one-tap Calendly confirm URL for an applicant's chosen overview
+ * slot. Calendly does not allow third parties to create a booking on an
+ * invitee's behalf, so the applicant confirms on Calendly — pre-filled.
+ */
+export const getOverviewBooking = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({ token: z.string().min(10).max(128), base_url: z.string().min(1).max(600) }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const { buildPrefilledUrl } = await import("@/lib/calendly.server");
+    const supabase = serverClient();
+    const { data: result, error } = await (supabase as any).rpc("get_overview_prefill", {
+      _token: data.token,
+    });
+    if (error) throw new Error(error.message);
+    const row = (result ?? { found: false }) as {
+      found: boolean;
+      requested_overview_at?: string | null;
+      first_name?: string | null;
+      last_name?: string | null;
+      email?: string | null;
+    };
+    if (!row.found) return { found: false, url: null, requested_overview_at: null } as OverviewBooking;
+    const name = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
+    return {
+      found: true,
+      requested_overview_at: row.requested_overview_at ?? null,
+      url: buildPrefilledUrl(data.base_url, row.requested_overview_at ?? null, {
+        name,
+        email: row.email ?? null,
+        token: data.token,
+      }),
+    } as OverviewBooking;
+  });
