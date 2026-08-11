@@ -11,9 +11,7 @@ import { useTheme } from "@/components/apex/theme";
 
 const NAV = [
   { to: "/portal", label: "Dashboard", icon: "◈" },
-  { to: "/portal/crm", label: "CRM", icon: "◐" },
-  { to: "/portal/pipeline", label: "Pipeline", icon: "▤" },
-  { to: "/portal/tasks", label: "Tasks", icon: "✓" },
+  { to: "/portal/applicants", label: "Applicants", icon: "◐" },
   { to: "/portal/calendar", label: "Calendar", icon: "◗" },
   { to: "/portal/leaderboard", label: "Leaderboard", icon: "★" },
   { to: "/portal/resources", label: "Resources", icon: "▤" },

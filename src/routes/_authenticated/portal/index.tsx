@@ -40,7 +40,7 @@ function DashboardPage() {
         kicker="Command Center"
         title="Your empire, at a glance"
         actions={
-          <Link to="/portal/crm" className="apx-btn-primary px-4 py-2.5 text-[13.5px]">
+          <Link to="/portal/applicants" className="apx-btn-primary px-4 py-2.5 text-[13.5px]">
             Open Applicants →
           </Link>
         }
@@ -68,7 +68,7 @@ function DashboardPage() {
                     Needs follow-up this week
                   </h2>
                   <Link
-                    to="/portal/crm"
+                    to="/portal/applicants"
                     className="text-[12px] text-apex-gold hover:underline"
                   >
                     Open Pre-Licensing →
@@ -84,7 +84,7 @@ function DashboardPage() {
                     return (
                       <Link
                         key={p.id}
-                        to="/portal/crm/$applicantId"
+                        to="/portal/applicants/$applicantId"
                         params={{ applicantId: p.id }}
                         className="flex items-center justify-between gap-3 py-2.5 transition hover:text-apex-gold"
                       >
