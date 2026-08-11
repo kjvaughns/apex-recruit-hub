@@ -24,6 +24,12 @@ export const Route = createFileRoute("/")({
         content:
           "Uncapped commission, daily pay opportunities, unlimited leads, and a real path into leadership. Apply and attend the weekly Vantage Company Overview.",
       },
+      { property: "og:image", content: "https://vantagefinancial.lovable.app/apex-og.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:type", content: "image/png" },
+      { name: "twitter:image", content: "https://vantagefinancial.lovable.app/apex-og.png" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: LandingPage,
