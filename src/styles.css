@@ -8,7 +8,7 @@
  * Vantage Financial design tokens
  * Black canvas, restrained gold accents, premium dark cards.
  * Never hardcode gold or ivory values in components — use utilities driven
- * by these tokens (bg-apex-gold, text-apex-ivory, etc.).
+ * by these tokens (bg-vantage-gold, text-vantage-ivory, etc.).
  */
 
 @theme inline {
@@ -38,18 +38,18 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Vantage brand tokens (usable as bg-apex-gold, text-apex-ivory, etc.) */
-  --color-apex-black: #000000;
-  --color-apex-card: #0A0A0A;
-  --color-apex-panel: #0d0d0d;
-  --color-apex-gold: #C9A84C;
-  --color-apex-gold-hi: #F3DD94;
-  --color-apex-gold-lo: #8a6f2a;
-  --color-apex-ivory: #F4F2ED;
-  --color-apex-fog: #C9C7C0;
-  --color-apex-muted: #9A988F;
-  --color-apex-dim: #8C8A84;
-  --color-apex-faint: #6A6862;
+  /* Vantage brand tokens (usable as bg-vantage-gold, text-vantage-ivory, etc.) */
+  --color-vantage-black: #000000;
+  --color-vantage-card: #0A0A0A;
+  --color-vantage-panel: #0d0d0d;
+  --color-vantage-gold: #C9A84C;
+  --color-vantage-gold-hi: #F3DD94;
+  --color-vantage-gold-lo: #8a6f2a;
+  --color-vantage-ivory: #F4F2ED;
+  --color-vantage-fog: #C9C7C0;
+  --color-vantage-muted: #9A988F;
+  --color-vantage-dim: #8C8A84;
+  --color-vantage-faint: #6A6862;
 
   --font-display: 'Bebas Neue', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
@@ -78,24 +78,24 @@
   --ring: rgba(201, 168, 76, 0.6);
 
   /* Portal surface tokens — theme-aware. Dark defaults here; the light theme
-   * (.apx-theme-light, scoped to the portal shell) overrides them below. The
+   * (.vantage-theme-light, scoped to the portal shell) overrides them below. The
    * public marketing site + emails never get the light class, so they stay
    * dark by design. */
-  --apx-page-bg: #000000;
-  --apx-sidebar-bg: rgba(5, 5, 5, 0.95);
-  --apx-hairline: rgba(255, 255, 255, 0.08);
-  --apx-hairline-2: rgba(255, 255, 255, 0.06);
-  --apx-hover: rgba(255, 255, 255, 0.03);
-  --apx-card-bg: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012));
-  --apx-card-border: rgba(255, 255, 255, 0.09);
-  --apx-card-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 44px rgba(0,0,0,0.40);
-  --apx-ghost-bg: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
-  --apx-ghost-border: rgba(255, 255, 255, 0.10);
-  --apx-ghost-border-hover: rgba(255, 255, 255, 0.24);
-  --apx-ghost-text: #F4F2ED;
-  --apx-input-bg: rgba(0, 0, 0, 0.35);
-  --apx-input-border: rgba(255, 255, 255, 0.10);
-  --apx-input-text: #F4F2ED;
+  --vantage-page-bg: #000000;
+  --vantage-sidebar-bg: rgba(5, 5, 5, 0.95);
+  --vantage-hairline: rgba(255, 255, 255, 0.08);
+  --vantage-hairline-2: rgba(255, 255, 255, 0.06);
+  --vantage-hover: rgba(255, 255, 255, 0.03);
+  --vantage-card-bg: linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012));
+  --vantage-card-border: rgba(255, 255, 255, 0.09);
+  --vantage-card-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 18px 44px rgba(0,0,0,0.40);
+  --vantage-ghost-bg: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015));
+  --vantage-ghost-border: rgba(255, 255, 255, 0.10);
+  --vantage-ghost-border-hover: rgba(255, 255, 255, 0.24);
+  --vantage-ghost-text: #F4F2ED;
+  --vantage-input-bg: rgba(0, 0, 0, 0.35);
+  --vantage-input-border: rgba(255, 255, 255, 0.10);
+  --vantage-input-text: #F4F2ED;
 }
 
 .dark {
@@ -105,30 +105,30 @@
 
 /* Light portal theme — a genuine warm-light surface, not an invert. Applied on
  * the PortalShell root so the cascade themes portal children only. Overrides the
- * apex text tokens (so text-apex-ivory/fog/etc. flip dark-on-light) plus the
+ * vantage text tokens (so text-vantage-ivory/fog/etc. flip dark-on-light) plus the
  * portal surface tokens. Gold accents are kept for brand identity. */
-.apx-theme-light {
-  --color-apex-ivory: #201d16;
-  --color-apex-fog: #3b372e;
-  --color-apex-muted: #5f5a4e;
-  --color-apex-dim: #6d6858;
-  --color-apex-faint: #8d8778;
+.vantage-theme-light {
+  --color-vantage-ivory: #201d16;
+  --color-vantage-fog: #3b372e;
+  --color-vantage-muted: #5f5a4e;
+  --color-vantage-dim: #6d6858;
+  --color-vantage-faint: #8d8778;
 
-  --apx-page-bg: #F5F3EC;
-  --apx-sidebar-bg: rgba(255, 255, 255, 0.94);
-  --apx-hairline: rgba(30, 26, 15, 0.10);
-  --apx-hairline-2: rgba(30, 26, 15, 0.07);
-  --apx-hover: rgba(30, 26, 15, 0.04);
-  --apx-card-bg: linear-gradient(160deg, #ffffff, #fbfaf6);
-  --apx-card-border: rgba(30, 26, 15, 0.10);
-  --apx-card-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 12px 30px rgba(40,33,12,0.10);
-  --apx-ghost-bg: #ffffff;
-  --apx-ghost-border: rgba(30, 26, 15, 0.14);
-  --apx-ghost-border-hover: rgba(30, 26, 15, 0.30);
-  --apx-ghost-text: #201d16;
-  --apx-input-bg: #ffffff;
-  --apx-input-border: rgba(30, 26, 15, 0.16);
-  --apx-input-text: #201d16;
+  --vantage-page-bg: #F5F3EC;
+  --vantage-sidebar-bg: rgba(255, 255, 255, 0.94);
+  --vantage-hairline: rgba(30, 26, 15, 0.10);
+  --vantage-hairline-2: rgba(30, 26, 15, 0.07);
+  --vantage-hover: rgba(30, 26, 15, 0.04);
+  --vantage-card-bg: linear-gradient(160deg, #ffffff, #fbfaf6);
+  --vantage-card-border: rgba(30, 26, 15, 0.10);
+  --vantage-card-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 12px 30px rgba(40,33,12,0.10);
+  --vantage-ghost-bg: #ffffff;
+  --vantage-ghost-border: rgba(30, 26, 15, 0.14);
+  --vantage-ghost-border-hover: rgba(30, 26, 15, 0.30);
+  --vantage-ghost-text: #201d16;
+  --vantage-input-bg: #ffffff;
+  --vantage-input-border: rgba(30, 26, 15, 0.16);
+  --vantage-input-text: #201d16;
 }
 
 @layer base {
@@ -145,37 +145,37 @@
   h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: 0.012em; }
 }
 
-@keyframes apx-reveal {
+@keyframes vantage-reveal {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes apx-aurora-a {
+@keyframes vantage-aurora-a {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50%      { transform: translate(8vw, 6vh) scale(1.18); }
 }
-@keyframes apx-aurora-b {
+@keyframes vantage-aurora-b {
   0%, 100% { transform: translate(0, 0) scale(1.1); }
   50%      { transform: translate(-7vw, -5vh) scale(0.92); }
 }
-@keyframes apx-glow {
+@keyframes vantage-glow {
   0%, 100% { opacity: 0.5; }
   50%      { opacity: 1; }
 }
-@keyframes apx-shimmer {
+@keyframes vantage-shimmer {
   0%       { transform: translateX(-130%); }
   55%, 100%{ transform: translateX(130%); }
 }
 
-.apx-reveal   { animation: apx-reveal 0.9s cubic-bezier(.2,.8,.2,1) both; }
-.apx-glow-dot { animation: apx-glow 2s ease-in-out infinite; }
+.vantage-reveal   { animation: vantage-reveal 0.9s cubic-bezier(.2,.8,.2,1) both; }
+.vantage-glow-dot { animation: vantage-glow 2s ease-in-out infinite; }
 
-.apx-gold-text {
+.vantage-gold-text {
   background: linear-gradient(120deg, #F3DD94, #C9A84C 55%, #8a6f2a);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
 }
 
-.apx-btn-primary {
+.vantage-btn-primary {
   position: relative;
   overflow: hidden;
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
@@ -184,64 +184,64 @@
   transition: 0.16s;
   box-shadow: 0 10px 30px rgba(201, 168, 76, 0.3);
 }
-.apx-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
-.apx-btn-primary::before {
+.vantage-btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.vantage-btn-primary::before {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%);
   transform: translateX(-130%);
-  animation: apx-shimmer 4.5s ease-in-out infinite;
+  animation: vantage-shimmer 4.5s ease-in-out infinite;
 }
 
-.apx-btn-ghost {
+.vantage-btn-ghost {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-  background: var(--apx-ghost-bg);
+  background: var(--vantage-ghost-bg);
   backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-  color: var(--apx-ghost-text);
-  border: 1px solid var(--apx-ghost-border);
+  color: var(--vantage-ghost-text);
+  border: 1px solid var(--vantage-ghost-border);
   border-radius: 12px; font-weight: 600;
   transition: 0.16s;
   box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset;
 }
-.apx-btn-ghost:hover { border-color: var(--apx-ghost-border-hover); transform: translateY(-1px); }
+.vantage-btn-ghost:hover { border-color: var(--vantage-ghost-border-hover); transform: translateY(-1px); }
 
-.apx-card {
+.vantage-card {
   position: relative;
-  background: var(--apx-card-bg);
+  background: var(--vantage-card-bg);
   backdrop-filter: blur(22px) saturate(1.3);
   -webkit-backdrop-filter: blur(22px) saturate(1.3);
-  border: 1px solid var(--apx-card-border);
+  border: 1px solid var(--vantage-card-border);
   border-radius: 18px;
-  box-shadow: var(--apx-card-shadow);
+  box-shadow: var(--vantage-card-shadow);
 }
 
-.apx-card-gold {
+.vantage-card-gold {
   background: linear-gradient(160deg, rgba(201,168,76,0.16), rgba(201,168,76,0.03));
   border: 1px solid rgba(201, 168, 76, 0.5);
   box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 24px 60px rgba(0,0,0,0.5), 0 0 50px rgba(201,168,76,0.16);
 }
 
-.apx-input {
+.vantage-input {
   width: 100%;
-  background: var(--apx-input-bg);
-  border: 1px solid var(--apx-input-border);
+  background: var(--vantage-input-bg);
+  border: 1px solid var(--vantage-input-border);
   border-radius: 10px;
   padding: 0 14px;
   height: 50px;
-  color: var(--apx-input-text);
+  color: var(--vantage-input-text);
   font-size: 15px;
   outline: none;
   transition: border-color 0.16s;
 }
-.apx-input:focus { border-color: #C9A84C; }
-textarea.apx-input { padding: 14px; height: auto; min-height: 110px; resize: vertical; }
+.vantage-input:focus { border-color: #C9A84C; }
+textarea.vantage-input { padding: 14px; height: auto; min-height: 110px; resize: vertical; }
 
-.apx-kicker {
+.vantage-kicker {
   font-size: 12px; font-weight: 600;
   letter-spacing: 0.22em; text-transform: uppercase;
   color: #C9A84C;
 }
 
-.apx-eyebrow-pill {
+.vantage-eyebrow-pill {
   display: inline-flex; align-items: center; gap: 9px;
   font-size: 12px; font-weight: 600;
   letter-spacing: 0.22em; text-transform: uppercase;
@@ -255,11 +255,11 @@ textarea.apx-input { padding: 14px; height: auto; min-height: 110px; resize: ver
 
 /* ============================================================================
  * PORTAL DESIGN SYSTEM (compact operational software)
- * Scoped to `.apx-portal` on the PortalShell root so the public marketing site,
+ * Scoped to `.vantage-portal` on the PortalShell root so the public marketing site,
  * login and emails keep their existing editorial treatment untouched.
  * ==========================================================================*/
 
-.apx-portal {
+.vantage-portal {
   /* Interface font — Bebas Neue is reserved for the logo lockup only */
   --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
 
@@ -292,27 +292,27 @@ textarea.apx-input { padding: 14px; height: auto; min-height: 110px; resize: ver
 
   /* Remap the legacy portal tokens so any not-yet-migrated markup lands in the
    * same neutral system instead of the old glassy gold look. */
-  --apx-page-bg: var(--p-bg);
-  --apx-sidebar-bg: var(--p-sidebar);
-  --apx-hairline: var(--p-border);
-  --apx-hairline-2: var(--p-border);
-  --apx-hover: var(--p-hover);
-  --apx-card-bg: var(--p-panel);
-  --apx-card-border: var(--p-border);
-  --apx-card-shadow: var(--p-shadow);
-  --apx-ghost-bg: var(--p-raised);
-  --apx-ghost-border: var(--p-border);
-  --apx-ghost-border-hover: var(--p-border-strong);
-  --apx-ghost-text: var(--p-text);
-  --apx-input-bg: #101012;
-  --apx-input-border: var(--p-border);
-  --apx-input-text: var(--p-text);
+  --vantage-page-bg: var(--p-bg);
+  --vantage-sidebar-bg: var(--p-sidebar);
+  --vantage-hairline: var(--p-border);
+  --vantage-hairline-2: var(--p-border);
+  --vantage-hover: var(--p-hover);
+  --vantage-card-bg: var(--p-panel);
+  --vantage-card-border: var(--p-border);
+  --vantage-card-shadow: var(--p-shadow);
+  --vantage-ghost-bg: var(--p-raised);
+  --vantage-ghost-border: var(--p-border);
+  --vantage-ghost-border-hover: var(--p-border-strong);
+  --vantage-ghost-text: var(--p-text);
+  --vantage-input-bg: #101012;
+  --vantage-input-border: var(--p-border);
+  --vantage-input-text: var(--p-text);
 
-  --color-apex-ivory: var(--p-text);
-  --color-apex-fog: var(--p-text-2);
-  --color-apex-muted: var(--p-text-2);
-  --color-apex-dim: var(--p-text-2);
-  --color-apex-faint: var(--p-text-3);
+  --color-vantage-ivory: var(--p-text);
+  --color-vantage-fog: var(--p-text-2);
+  --color-vantage-muted: var(--p-text-2);
+  --color-vantage-dim: var(--p-text-2);
+  --color-vantage-faint: var(--p-text-3);
 
   font-family: var(--font-ui);
   font-size: 14px;
@@ -320,7 +320,7 @@ textarea.apx-input { padding: 14px; height: auto; min-height: 110px; resize: ver
   letter-spacing: 0;
 }
 
-.apx-portal.apx-theme-light {
+.vantage-portal.vantage-theme-light {
   --p-bg: #F7F7F8;
   --p-sidebar: #FFFFFF;
   --p-panel: #FFFFFF;
@@ -335,23 +335,23 @@ textarea.apx-input { padding: 14px; height: auto; min-height: 110px; resize: ver
   --p-gold-soft: rgba(201, 168, 76, 0.16);
   --p-gold-line: rgba(151, 120, 31, 0.30);
   --p-shadow: 0 1px 2px rgba(20, 20, 30, 0.08);
-  --apx-input-bg: #FFFFFF;
+  --vantage-input-bg: #FFFFFF;
 }
 
 /* Interface typography — no condensed display font inside the portal */
-.apx-portal h1,
-.apx-portal h2,
-.apx-portal h3,
-.apx-portal h4,
-.apx-portal .font-display {
+.vantage-portal h1,
+.vantage-portal h2,
+.vantage-portal h3,
+.vantage-portal h4,
+.vantage-portal .font-display {
   font-family: var(--font-ui);
   letter-spacing: -0.01em;
   font-weight: 600;
 }
-.apx-portal .apx-brand-mark { font-family: var(--font-display); letter-spacing: 0.012em; }
+.vantage-portal .vantage-brand-mark { font-family: var(--font-display); letter-spacing: 0.012em; }
 
 /* Legacy class overrides inside the portal: flatten glow + gradients */
-.apx-portal .apx-card {
+.vantage-portal .vantage-card {
   background: var(--p-panel);
   border: 1px solid var(--p-border);
   border-radius: var(--p-radius);
@@ -359,37 +359,37 @@ textarea.apx-input { padding: 14px; height: auto; min-height: 110px; resize: ver
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-.apx-portal .apx-card-gold {
+.vantage-portal .vantage-card-gold {
   background: var(--p-panel);
   border: 1px solid var(--p-gold-line);
   box-shadow: var(--p-shadow);
 }
-.apx-portal .apx-btn-primary,
-.apx-portal .apx-btn-ghost { box-shadow: none; border-radius: var(--p-radius-sm); font-weight: 600; }
-.apx-portal .apx-btn-primary::before { display: none; content: none; }
-.apx-portal .apx-btn-primary:hover,
-.apx-portal .apx-btn-ghost:hover { transform: none; filter: brightness(1.06); }
-.apx-portal .apx-btn-ghost { background: var(--p-raised); }
-.apx-portal .apx-input {
+.vantage-portal .vantage-btn-primary,
+.vantage-portal .vantage-btn-ghost { box-shadow: none; border-radius: var(--p-radius-sm); font-weight: 600; }
+.vantage-portal .vantage-btn-primary::before { display: none; content: none; }
+.vantage-portal .vantage-btn-primary:hover,
+.vantage-portal .vantage-btn-ghost:hover { transform: none; filter: brightness(1.06); }
+.vantage-portal .vantage-btn-ghost { background: var(--p-raised); }
+.vantage-portal .vantage-input {
   height: 40px;
   border-radius: var(--p-radius-sm);
   font-size: 14px;
-  background: var(--apx-input-bg);
+  background: var(--vantage-input-bg);
   border-color: var(--p-border);
 }
-.apx-portal textarea.apx-input { min-height: 92px; }
-.apx-portal .apx-kicker {
+.vantage-portal textarea.vantage-input { min-height: 92px; }
+.vantage-portal .vantage-kicker {
   font-size: 11px;
   letter-spacing: 0.08em;
   font-weight: 600;
   color: var(--p-text-3);
 }
-.apx-portal .apx-gold-text {
+.vantage-portal .vantage-gold-text {
   background: none;
   -webkit-text-fill-color: currentColor;
   color: var(--p-gold);
 }
-.apx-portal .apx-eyebrow-pill {
+.vantage-portal .vantage-eyebrow-pill {
   background: var(--p-raised);
   border: 1px solid var(--p-border);
   color: var(--p-text-2);
@@ -399,7 +399,7 @@ textarea.apx-input { padding: 14px; height: auto; min-height: 110px; resize: ver
   letter-spacing: 0.06em;
   box-shadow: none;
 }
-.apx-portal .apx-reveal { animation: none; }
+.vantage-portal .vantage-reveal { animation: none; }
 
 /* --- Portal primitives ---------------------------------------------------- */
 @utility p-panel {

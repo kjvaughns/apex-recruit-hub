@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageHeader, PageBody, TableWrap, Table, THead, TH, TR, TD } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/")({

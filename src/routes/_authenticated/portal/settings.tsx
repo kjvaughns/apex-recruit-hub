@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import {
   PageHeader,
   PageBody,
@@ -27,9 +27,9 @@ import {
   updateMySchedulingSettings,
   getTeamRecruitingLinks,
 } from "@/lib/portal.functions";
-import { CalendlyInline } from "@/components/apex/calendly-inline";
-import { RecruitingLinkCard } from "@/components/apex/recruiting-link-card";
-import { useTheme } from "@/components/apex/theme";
+import { CalendlyInline } from "@/components/vantage/calendly-inline";
+import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
+import { useTheme } from "@/components/vantage/theme";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/portal/settings")({

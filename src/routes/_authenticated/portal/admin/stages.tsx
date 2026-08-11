@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { adminListStages, adminUpsertStage } from "@/lib/portal.functions";
 import { useState } from "react";
 import {

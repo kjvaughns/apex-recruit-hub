@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { getDashboard, getMyOnboarding } from "@/lib/portal.functions";
-import { RecruitingLinkCard } from "@/components/apex/recruiting-link-card";
+import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import {
   PageHeader,
   PageBody,

@@ -19,7 +19,7 @@ export function CalendlyInline({ url, height = 630 }: { url: string; height?: nu
 
   return (
     <div
-      className="mt-8 overflow-hidden rounded-[14px] border border-apex-gold/25 bg-apex-card"
+      className="mt-8 overflow-hidden rounded-[14px] border border-vantage-gold/25 bg-vantage-card"
       style={{ height: `min(80vh, ${height}px)` }}
     >
       {src && (

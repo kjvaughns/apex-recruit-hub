@@ -4,11 +4,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
-import { AddApplicantModal } from "@/components/apex/add-applicant-modal";
-import { AddAgentModal } from "@/components/apex/add-agent-modal";
-import { RecruitingLinkCard } from "@/components/apex/recruiting-link-card";
+import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
+import { AddAgentModal } from "@/components/vantage/add-agent-modal";
+import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
 import {
   PageHeader,

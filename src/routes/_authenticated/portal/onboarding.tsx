@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageHeader, PageBody, Panel, Button, Badge } from "@/components/portal/ui";
 import { getMyOnboarding, completeOnboardingStep } from "@/lib/portal.functions";
 import {

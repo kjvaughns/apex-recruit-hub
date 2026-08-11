@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
-import { PublicShell } from "@/components/apex/brand";
-import { CalendlyInline } from "@/components/apex/calendly-inline";
+import { PublicShell } from "@/components/vantage/brand";
+import { CalendlyInline } from "@/components/vantage/calendly-inline";
 import { getSchedulingContext, markLicensedFallback, markScheduled } from "@/lib/applications.functions";
 
 export const Route = createFileRoute("/application-complete/licensed/$token")({
@@ -49,8 +49,8 @@ function LicensedComplete() {
       <PublicShell>
         <div className="mx-auto max-w-[720px] px-6 pt-24 pb-24 text-center md:px-8">
           <h1 className="font-display text-[clamp(36px,6vw,58px)] leading-none">Link expired</h1>
-          <p className="mt-4 text-apex-muted">We couldn't find your application. Please re-apply.</p>
-          <div className="mt-6"><Link to="/apply" className="apx-btn-primary px-6 py-3.5">Start over →</Link></div>
+          <p className="mt-4 text-vantage-muted">We couldn't find your application. Please re-apply.</p>
+          <div className="mt-6"><Link to="/apply" className="vantage-btn-primary px-6 py-3.5">Start over →</Link></div>
         </div>
       </PublicShell>
     );
@@ -67,16 +67,16 @@ function LicensedComplete() {
   return (
     <PublicShell>
       <div className="mx-auto max-w-[900px] px-6 pt-14 pb-24 text-center md:px-8">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-apex-gold text-[26px] text-apex-card shadow-[0_0_40px_rgba(201,168,76,0.5)]">
+        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-vantage-gold text-[26px] text-vantage-card shadow-[0_0_40px_rgba(201,168,76,0.5)]">
           ✓
         </div>
-        <div className="apx-eyebrow-pill mb-4 inline-flex">Licensed applicant</div>
+        <div className="vantage-eyebrow-pill mb-4 inline-flex">Licensed applicant</div>
         <h1 className="font-display text-[clamp(36px,6vw,58px)] leading-[0.96]">
           Welcome, {firstName} — let's get you interviewed
         </h1>
-        <p className="mx-auto mt-4 max-w-[600px] text-[16px] leading-relaxed text-apex-muted">
+        <p className="mx-auto mt-4 max-w-[600px] text-[16px] leading-relaxed text-vantage-muted">
           You've been identified as a licensed applicant. The next step is a short interview with{" "}
-          {contact ? <span className="text-apex-fog">{contact}</span> : "your assigned Vantage recruiter"}
+          {contact ? <span className="text-vantage-fog">{contact}</span> : "your assigned Vantage recruiter"}
           . Pick a time below to lock it in.
         </p>
 
@@ -84,28 +84,28 @@ function LicensedComplete() {
           <>
             <CalendlyInline url={url} />
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <a href={url} target="_blank" rel="noreferrer noopener" className="apx-btn-ghost px-6 py-3.5 text-[15px]">
+              <a href={url} target="_blank" rel="noreferrer noopener" className="vantage-btn-ghost px-6 py-3.5 text-[15px]">
                 Open Calendly in a new tab →
               </a>
-              <button onClick={onConfirm} className="apx-btn-primary px-6 py-3.5 text-[15px]">
+              <button onClick={onConfirm} className="vantage-btn-primary px-6 py-3.5 text-[15px]">
                 I've booked — continue →
               </button>
             </div>
-            <p className="mt-4 text-[13px] text-apex-faint">
+            <p className="mt-4 text-[13px] text-vantage-faint">
               Your application isn't complete until an interview time is selected.
             </p>
           </>
         ) : (
-          <div className="apx-card apx-card-gold mt-10 p-8 text-left md:p-10">
-            <h2 className="font-display text-[28px] leading-tight text-apex-ivory">Your application was received</h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-apex-muted">
-              {contact ? <>Your recruiting manager, <span className="text-apex-fog">{contact}</span>, will reach out shortly to schedule your interview.</> : "A recruiting manager will contact you shortly to schedule your interview."}
+          <div className="vantage-card vantage-card-gold mt-10 p-8 text-left md:p-10">
+            <h2 className="font-display text-[28px] leading-tight text-vantage-ivory">Your application was received</h2>
+            <p className="mt-3 text-[15px] leading-relaxed text-vantage-muted">
+              {contact ? <>Your recruiting manager, <span className="text-vantage-fog">{contact}</span>, will reach out shortly to schedule your interview.</> : "A recruiting manager will contact you shortly to schedule your interview."}
             </p>
-            <p className="mt-2 text-[14px] text-apex-faint">
+            <p className="mt-2 text-[14px] text-vantage-faint">
               You don't need to do anything else right now — watch your inbox and phone for outreach within one business day.
             </p>
             <div className="mt-6">
-              <Link to="/" className="apx-btn-ghost px-6 py-3.5 text-[15px]">Back to Vantage →</Link>
+              <Link to="/" className="vantage-btn-ghost px-6 py-3.5 text-[15px]">Back to Vantage →</Link>
             </div>
           </div>
         )}

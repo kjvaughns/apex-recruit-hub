@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { PublicShell } from "@/components/apex/brand";
-import { StateCombobox } from "@/components/apex/state-combobox";
+import { PublicShell } from "@/components/vantage/brand";
+import { StateCombobox } from "@/components/vantage/state-combobox";
 import { getInvitationPublic, acceptInvitation } from "@/lib/invitations.functions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,9 +49,9 @@ function InviteAcceptPage() {
           <h1 className="font-display text-[clamp(36px,6vw,56px)] leading-none">
             Invitation unavailable
           </h1>
-          <p className="mt-4 text-apex-muted">{msg}</p>
+          <p className="mt-4 text-vantage-muted">{msg}</p>
           <div className="mt-6">
-            <Link to="/login" className="apx-btn-ghost px-6 py-3.5">
+            <Link to="/login" className="vantage-btn-ghost px-6 py-3.5">
               Go to login
             </Link>
           </div>
@@ -103,26 +103,26 @@ function InviteAcceptPage() {
     <PublicShell>
       <div className="mx-auto max-w-[720px] px-6 pt-14 pb-24 md:px-8">
         <div className="text-center">
-          <div className="apx-eyebrow-pill mb-5 inline-flex">Vantage Portal</div>
+          <div className="vantage-eyebrow-pill mb-5 inline-flex">Vantage Portal</div>
           <h1 className="font-display text-[clamp(38px,6vw,64px)] leading-none">
             Set up your account
           </h1>
-          <p className="mx-auto mt-4 max-w-[520px] text-[16px] leading-relaxed text-apex-muted">
+          <p className="mx-auto mt-4 max-w-[520px] text-[16px] leading-relaxed text-vantage-muted">
             Welcome{fullName ? `, ${fullName}` : ""}. Create your password and confirm your details
             to access your Vantage portal, CRM, pipeline, and recruiting link.
           </p>
-          <p className="mt-2 text-[13px] text-apex-faint">
-            Signing up as <span className="text-apex-fog capitalize">{invitation.role}</span> ·{" "}
+          <p className="mt-2 text-[13px] text-vantage-faint">
+            Signing up as <span className="text-vantage-fog capitalize">{invitation.role}</span> ·{" "}
             {invitation.email}
           </p>
         </div>
 
-        <div className="apx-card mt-10 grid gap-4 p-6 md:p-10">
+        <div className="vantage-card mt-10 grid gap-4 p-6 md:p-10">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Password *">
               <input
                 type="password"
-                className="apx-input"
+                className="vantage-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -130,7 +130,7 @@ function InviteAcceptPage() {
             <Field label="Confirm password *">
               <input
                 type="password"
-                className="apx-input"
+                className="vantage-input"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
               />
@@ -139,7 +139,7 @@ function InviteAcceptPage() {
           <Field label="Phone">
             <input
               type="tel"
-              className="apx-input"
+              className="vantage-input"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
@@ -152,8 +152,8 @@ function InviteAcceptPage() {
               <button
                 type="button"
                 onClick={() => setLicensed(true)}
-                className={`apx-input flex items-center justify-center font-medium ${
-                  licensed ? "border-apex-gold text-apex-ivory" : "text-apex-muted"
+                className={`vantage-input flex items-center justify-center font-medium ${
+                  licensed ? "border-vantage-gold text-vantage-ivory" : "text-vantage-muted"
                 }`}
               >
                 Yes, licensed
@@ -161,8 +161,8 @@ function InviteAcceptPage() {
               <button
                 type="button"
                 onClick={() => setLicensed(false)}
-                className={`apx-input flex items-center justify-center font-medium ${
-                  !licensed ? "border-apex-gold text-apex-ivory" : "text-apex-muted"
+                className={`vantage-input flex items-center justify-center font-medium ${
+                  !licensed ? "border-vantage-gold text-vantage-ivory" : "text-vantage-muted"
                 }`}
               >
                 Not yet
@@ -171,23 +171,23 @@ function InviteAcceptPage() {
           </Field>
           {licensed && (
             <Field label="NPN *">
-              <input className="apx-input" value={npn} onChange={(e) => setNpn(e.target.value)} />
+              <input className="vantage-input" value={npn} onChange={(e) => setNpn(e.target.value)} />
             </Field>
           )}
           <Field label="Instagram handle">
             <input
-              className="apx-input"
+              className="vantage-input"
               placeholder="@yourhandle"
               value={instagram}
               onChange={(e) => setInstagram(e.target.value)}
             />
           </Field>
-          <label className="flex items-start gap-3 text-[14px] leading-relaxed text-apex-fog">
+          <label className="flex items-start gap-3 text-[14px] leading-relaxed text-vantage-fog">
             <input
               type="checkbox"
               checked={terms}
               onChange={(e) => setTerms(e.target.checked)}
-              className="mt-1 h-4 w-4 accent-apex-gold"
+              className="mt-1 h-4 w-4 accent-vantage-gold"
             />
             I accept the Vantage portal terms and confirm my information is accurate.
           </label>
@@ -201,7 +201,7 @@ function InviteAcceptPage() {
           <button
             onClick={onSubmit}
             disabled={busy}
-            className="apx-btn-primary mt-2 w-full px-6 py-4 text-[16px] disabled:opacity-60"
+            className="vantage-btn-primary mt-2 w-full px-6 py-4 text-[16px] disabled:opacity-60"
           >
             {busy ? "Creating your account…" : "Create account & enter portal →"}
           </button>
@@ -214,7 +214,7 @@ function InviteAcceptPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="block">
-      <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-muted">
+      <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-vantage-muted">
         {label}
       </span>
       {children}

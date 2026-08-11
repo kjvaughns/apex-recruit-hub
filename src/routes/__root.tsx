@@ -15,13 +15,13 @@ import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4 text-apex-ivory">
+    <div className="flex min-h-screen items-center justify-center bg-black px-4 text-vantage-ivory">
       <div className="max-w-md text-center">
-        <h1 className="font-display text-[96px] leading-none text-apex-gold">404</h1>
+        <h1 className="font-display text-[96px] leading-none text-vantage-gold">404</h1>
         <h2 className="mt-4 text-xl font-semibold">Page not found</h2>
-        <p className="mt-2 text-sm text-apex-muted">This page doesn't exist or has moved.</p>
+        <p className="mt-2 text-sm text-vantage-muted">This page doesn't exist or has moved.</p>
         <div className="mt-6">
-          <Link to="/" className="apx-btn-primary px-5 py-3 text-sm">
+          <Link to="/" className="vantage-btn-primary px-5 py-3 text-sm">
             Return to Vantage
           </Link>
         </div>
@@ -38,21 +38,21 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4 text-apex-ivory">
+    <div className="flex min-h-screen items-center justify-center bg-black px-4 text-vantage-ivory">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">This page didn't load</h1>
-        <p className="mt-2 text-sm text-apex-muted">Try again, or head back to Vantage.</p>
+        <p className="mt-2 text-sm text-vantage-muted">Try again, or head back to Vantage.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
               router.invalidate();
               reset();
             }}
-            className="apx-btn-primary px-5 py-3 text-sm"
+            className="vantage-btn-primary px-5 py-3 text-sm"
           >
             Try again
           </button>
-          <a href="/" className="apx-btn-ghost px-5 py-3 text-sm">
+          <a href="/" className="vantage-btn-ghost px-5 py-3 text-sm">
             Go home
           </a>
         </div>
