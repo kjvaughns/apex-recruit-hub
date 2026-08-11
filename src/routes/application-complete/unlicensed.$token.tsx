@@ -35,13 +35,24 @@ function UnlicensedComplete() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
   const mark = useServerFn(markScheduled);
+  const resolveBooking = useServerFn(getOverviewBooking);
   const [firstName, setFirstName] = useState(ctx.first_name || "there");
+
+  // Deep-link the exact Monday slot they chose on the application, pre-filled
+  // with their name and email. Calendly requires the final confirm tap.
+  const bookingQuery = useQuery({
+    queryKey: ["overview-booking", token],
+    queryFn: () => resolveBooking({ data: { token, base_url: ctx.calendly_url ?? "" } }),
+    enabled: Boolean(ctx.found && ctx.calendly_url),
+    retry: false,
+  });
 
   useEffect(() => {
     if (!ctx.first_name) {
       setFirstName(sessionStorage.getItem("vantage_applicant_first") || "there");
     }
   }, [ctx.first_name]);
+
 
   if (!ctx.found) {
     return (
