@@ -136,15 +136,31 @@ export async function fetchOverviewSlots(opts?: { weeks?: number; slug?: string 
   }
 }
 
+export type CalendlyPrefill = {
+  name?: string | null;
+  email?: string | null;
+  token?: string | null;
+  /** Applicant phone — used for phone-call events (Calendly `location`). */
+  phone?: string | null;
+  /** Recruiter name — answers the "who referred you" question. */
+  referrerName?: string | null;
+};
+
 /**
  * Build a Calendly URL for a chosen slot, pre-filled with the applicant's
  * details. Calendly requires the invitee to press Schedule themselves — no API
  * can create the booking on their behalf — so this is a one-tap confirm.
+ *
+ * `kind` selects how the answers map to the event's questions:
+ *  - "overview": group Zoom overview — a2 is "Who referred you?"
+ *  - "one_on_one": outbound phone call — `location` carries the phone number
+ *    and a1 (the free-text prep question) carries the referrer.
  */
 export function buildPrefilledUrl(
   baseUrl: string,
   slotIso: string | null,
-  prefill: { name?: string | null; email?: string | null; token?: string | null },
+  prefill: CalendlyPrefill,
+  kind: "overview" | "one_on_one" = "overview",
 ) {
   let url: URL;
   try {
@@ -162,6 +178,13 @@ export function buildPrefilledUrl(
   if (prefill.name) url.searchParams.set("name", prefill.name);
   if (prefill.email) url.searchParams.set("email", prefill.email);
   if (prefill.token) url.searchParams.set("utm_content", prefill.token);
+  if (kind === "one_on_one") {
+    // Outbound-call events ask for a phone number as the meeting location.
+    if (prefill.phone) url.searchParams.set("location", prefill.phone);
+    if (prefill.referrerName) url.searchParams.set("a1", `Referred by ${prefill.referrerName}`);
+  } else if (prefill.referrerName) {
+    url.searchParams.set("a2", prefill.referrerName);
+  }
   if (!url.searchParams.has("hide_gdpr_banner")) url.searchParams.set("hide_gdpr_banner", "1");
   return url.toString();
 }
