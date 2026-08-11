@@ -150,10 +150,12 @@ export function greet(name?: string) {
 }
 
 export function links(p: EmailLinkProps): Required<EmailLinkProps> {
+  const pick = (v: string | undefined, fallback: string) =>
+    v && v.trim() && v.trim() !== "#" ? v.trim() : fallback;
   return {
-    overviewUrl: p.overviewUrl || FALLBACK_LINKS.overviewUrl,
-    ownerCalendlyUrl: p.ownerCalendlyUrl || FALLBACK_LINKS.ownerCalendlyUrl,
-    courseUrl: p.courseUrl || FALLBACK_LINKS.courseUrl,
-    discordInviteUrl: p.discordInviteUrl || FALLBACK_LINKS.discordInviteUrl,
+    overviewUrl: pick(p.overviewUrl, FALLBACK_LINKS.overviewUrl),
+    ownerCalendlyUrl: pick(p.ownerCalendlyUrl, FALLBACK_LINKS.ownerCalendlyUrl),
+    courseUrl: pick(p.courseUrl, FALLBACK_LINKS.courseUrl),
+    discordInviteUrl: pick(p.discordInviteUrl, FALLBACK_LINKS.discordInviteUrl),
   }
 }
