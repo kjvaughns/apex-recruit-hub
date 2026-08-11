@@ -154,6 +154,7 @@ const listInput = z.object({
   q: z.string().optional().default(""),
   stage: z.string().optional().default(""),
   scope: z.enum(["mine", "direct", "downline", "all"]).optional().default("mine"),
+  view: z.enum(["all", "pre_licensing"]).optional().default("all"),
   limit: z.number().int().min(1).max(200).optional().default(100),
 });
 
@@ -165,11 +166,21 @@ export const listApplicants = createServerFn({ method: "POST" })
     let query = supabase
       .from("applicants")
       .select(
-        "id, first_name, last_name, email, phone, state, city, priority, status, current_stage_id, assigned_recruiter_id, evaluation_completed_at, calendly_scheduled_at, licensed, created_at, updated_at, stage_entered_at",
+        "id, first_name, last_name, email, phone, state, city, priority, status, current_stage_id, assigned_recruiter_id, referred_by_profile_id, original_recruiter_id, licensing_status, evaluation_completed_at, calendly_scheduled_at, overview_scheduled_at, overview_completed_at, licensed, hired_at, discord_confirmed, last_contacted_at, last_follow_up_at, created_at, updated_at, stage_entered_at",
       )
       .is("archived_at", null)
-      .order("updated_at", { ascending: false })
       .limit(data.limit);
+
+    // Pre-Licensing Pipeline: hired-but-unlicensed, oldest follow-up first so the
+    // most overdue check-ins float to the top. Otherwise newest-touched first.
+    if (data.view === "pre_licensing") {
+      query = query
+        .eq("licensed", false)
+        .not("hired_at", "is", null)
+        .order("last_follow_up_at", { ascending: true, nullsFirst: true });
+    } else {
+      query = query.order("updated_at", { ascending: false });
+    }
 
     // Scope: mine = own only; direct = self + direct reports; downline/all rely
     // on hierarchy RLS (own + full downline; admins see everything).
@@ -200,7 +211,33 @@ export const listApplicants = createServerFn({ method: "POST" })
         .order("position"),
     ]);
 
-    return { applicants: aRes.data ?? [], stages: stagesRes.data ?? [] };
+    // Resolve referring-recruiter display names in one pass.
+    const applicants = (aRes.data ?? []) as any[];
+    const recruiterIds = Array.from(
+      new Set(
+        applicants
+          .map((a) => a.referred_by_profile_id || a.original_recruiter_id || a.assigned_recruiter_id)
+          .filter(Boolean),
+      ),
+    ) as string[];
+    let nameById: Record<string, string> = {};
+    if (recruiterIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name")
+        .in("id", recruiterIds);
+      for (const p of (profs ?? []) as any[]) {
+        nameById[p.id] = [p.first_name, p.last_name].filter(Boolean).join(" ") || "";
+      }
+    }
+    const withRecruiter = applicants.map((a) => ({
+      ...a,
+      referring_recruiter_name:
+        nameById[a.referred_by_profile_id || a.original_recruiter_id || a.assigned_recruiter_id] ||
+        null,
+    }));
+
+    return { applicants: withRecruiter, stages: stagesRes.data ?? [] };
   });
 
 export const getApplicant = createServerFn({ method: "POST" })
@@ -228,8 +265,25 @@ export const getApplicant = createServerFn({ method: "POST" })
         .order("position"),
     ]);
     if (!aRes.data) throw new Error("Applicant not found");
+    const app = aRes.data as any;
+    const recruiterId =
+      app.referred_by_profile_id || app.original_recruiter_id || app.assigned_recruiter_id;
+    let referringRecruiterName: string | null =
+      (app.referred_by_name_snapshot as string | null) ?? null;
+    if (recruiterId) {
+      const { data: rec } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", recruiterId)
+        .maybeSingle();
+      if (rec) {
+        referringRecruiterName =
+          [rec.first_name, rec.last_name].filter(Boolean).join(" ") || referringRecruiterName;
+      }
+    }
     return {
-      applicant: aRes.data,
+      applicant: app,
+      referringRecruiterName,
       activities: actsRes.data ?? [],
       evaluations: evalRes.data ?? [],
       stages: stagesRes.data ?? [],
@@ -343,14 +397,37 @@ export const sendFollowUpEmail = createServerFn({ method: "POST" })
     });
 
     const now = new Date().toISOString();
+    // last_follow_up_at resets the weekly-follow-up counter (Phase 5).
     await supabase
       .from("applicants")
-      .update({ last_contacted_at: now, updated_at: now } as never)
+      .update({ last_contacted_at: now, last_follow_up_at: now, updated_at: now } as never)
       .eq("id", data.id);
     await supabase.from("applicant_activities").insert({
       applicant_id: data.id,
       event_type: "follow_up_sent",
       summary: "Follow-up email sent",
+      actor_id: userId,
+    } as never);
+    return { ok: true };
+  });
+
+/** Manual "Discord confirmed" flag for unlicensed hires (Phase 4). */
+export const setDiscordConfirmed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), value: z.boolean() }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("applicants")
+      .update({ discord_confirmed: data.value, updated_at: new Date().toISOString() } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await supabase.from("applicant_activities").insert({
+      applicant_id: data.id,
+      event_type: "discord_updated",
+      summary: data.value ? "Discord course post confirmed" : "Discord confirmation cleared",
       actor_id: userId,
     } as never);
     return { ok: true };
