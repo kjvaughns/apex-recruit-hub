@@ -8,6 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getMe, addAgent, getMyOnboarding } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/apex/add-agent-modal";
 import { useTheme } from "@/components/apex/theme";
+import { Avatar, Badge, btnClass } from "@/components/portal/ui";
 
 const NAV = [
   { to: "/portal", label: "Dashboard", icon: "◈" },
@@ -18,6 +19,64 @@ const NAV = [
   { to: "/portal/organization", label: "Organization", icon: "⚇" },
   { to: "/portal/settings", label: "My Settings", icon: "⚙" },
 ];
+
+const ROLE_LABEL: Record<string, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+  manager: "Manager",
+  leader: "Leader",
+  agent: "Agent",
+};
+
+/** Compact sidebar row. Active state is a subtle gold tint — no heavy outline. */
+function NavRow({
+  to,
+  icon,
+  label,
+  active,
+  collapsed,
+  onClick,
+  accent,
+}: {
+  to: string;
+  icon: ReactNode;
+  label: string;
+  active: boolean;
+  collapsed: boolean;
+  onClick?: () => void;
+  accent?: boolean;
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      title={collapsed ? label : undefined}
+      className={`p-focus mb-0.5 flex h-[38px] items-center gap-2.5 rounded-[8px] px-2.5 text-[14px] font-medium transition ${
+        collapsed ? "justify-center" : ""
+      } ${active ? "" : "hover:bg-[var(--p-hover)]"}`}
+      style={
+        active
+          ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+          : { color: accent ? "var(--p-gold)" : "var(--p-text-2)" }
+      }
+    >
+      <span className="w-4 shrink-0 text-center text-[14px]">{icon}</span>
+      {!collapsed && <span className="truncate">{label}</span>}
+    </Link>
+  );
+}
+
+function GroupLabel({ children, hidden }: { children: ReactNode; hidden?: boolean }) {
+  if (hidden) return null;
+  return (
+    <div
+      className="mt-4 mb-1.5 px-2.5 text-[11px] font-semibold uppercase tracking-[0.08em]"
+      style={{ color: "var(--p-text-3)" }}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function PortalShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
@@ -43,8 +102,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const fetchOnboarding = useServerFn(getMyOnboarding);
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => fetchMe() });
   const onboardingQ = useQuery({ queryKey: ["my-onboarding"], queryFn: () => fetchOnboarding() });
-  const showOnboardingNav =
-    !!onboardingQ.data?.hasOnboarding && !onboardingQ.data.complete;
+  const showOnboardingNav = !!onboardingQ.data?.hasOnboarding && !onboardingQ.data.complete;
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
@@ -73,185 +131,160 @@ export function PortalShell({ children }: { children: ReactNode }) {
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
     profile?.email ||
     "Agent";
-  const initials =
-    ((profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "")).toUpperCase() || "A";
+  const primaryRole =
+    roles.find((r) => r === "super_admin") ??
+    roles.find((r) => r === "admin") ??
+    roles.find((r) => r === "manager") ??
+    roles.find((r) => r === "leader") ??
+    roles[0];
+
+  const current =
+    [...NAV]
+      .sort((a, b) => b.to.length - a.to.length)
+      .find((n) => (n.to === "/portal" ? path === "/portal" : path.startsWith(n.to)))?.label ??
+    (path.startsWith("/portal/admin")
+      ? "Admin"
+      : path.startsWith("/portal/invitations")
+        ? "Invitations"
+        : path.startsWith("/portal/onboarding")
+          ? "Onboarding"
+          : "Portal");
 
   return (
     <div
-      className={`relative min-h-screen text-apex-ivory ${theme === "light" ? "apx-theme-light" : ""}`}
-      style={{ background: "var(--apx-page-bg)" }}
+      className={`apx-portal relative min-h-screen ${theme === "light" ? "apx-theme-light" : ""}`}
+      style={{ background: "var(--p-bg)", color: "var(--p-text)" }}
     >
-      <div className="pointer-events-none fixed inset-x-0 top-0 h-[360px] bg-[radial-gradient(circle_at_50%_-20%,rgba(201,168,76,0.10),transparent_70%)]" />
-
-      {/* Mobile top bar */}
-      <div
-        className="sticky top-0 z-40 flex items-center justify-between border-b px-4 py-3 backdrop-blur-xl md:hidden"
-        style={{ background: "var(--apx-sidebar-bg)", borderColor: "var(--apx-hairline-2)" }}
-      >
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="apx-btn-ghost px-3 py-2 text-sm"
-        >
-          ☰
-        </button>
-        <ApexLogo className="h-7 w-auto" />
-        <div className="h-8 w-8 rounded-full bg-apex-gold/15 text-center leading-8 font-display text-apex-gold">
-          {initials}
-        </div>
-      </div>
-
       <div className="relative flex">
         {/* Sidebar */}
         <aside
-          className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex ${collapsed ? "w-[72px]" : "w-[248px]"} flex-col border-r backdrop-blur-2xl transition-all md:sticky md:top-0 md:h-screen md:translate-x-0`}
-          style={{ background: "var(--apx-sidebar-bg)", borderColor: "var(--apx-hairline-2)" }}
+          className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex ${
+            collapsed ? "w-[64px]" : "w-[240px]"
+          } flex-col border-r transition-[width,transform] md:sticky md:top-0 md:h-screen md:translate-x-0`}
+          style={{ background: "var(--p-sidebar)", borderColor: "var(--p-border)" }}
         >
           <div
-            className="flex h-[76px] items-center gap-3 border-b px-5"
-            style={{ borderColor: "var(--apx-hairline-2)" }}
+            className={`flex h-[56px] shrink-0 items-center gap-2 border-b ${collapsed ? "justify-center px-2" : "px-4"}`}
+            style={{ borderColor: "var(--p-border)" }}
           >
-            <ApexLogo className={collapsed ? "h-8 w-auto" : "h-9 w-auto"} />
-            {!collapsed && (
-              <span className="ml-auto text-[10px] font-semibold uppercase tracking-[0.22em] text-apex-gold">
-                Portal
-              </span>
-            )}
+            <ApexLogo className="apx-brand-mark h-7 w-auto" />
           </div>
-          <nav className="flex-1 overflow-y-auto p-3">
+
+          <nav className="flex-1 overflow-y-auto px-2 py-3">
             {showOnboardingNav && (
-              <Link
+              <NavRow
                 to="/portal/onboarding"
+                icon="◆"
+                label="Onboarding"
+                accent
+                active={path.startsWith("/portal/onboarding")}
+                collapsed={collapsed}
                 onClick={() => setMobileOpen(false)}
-                className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-semibold transition ${
-                  path.startsWith("/portal/onboarding")
-                    ? "border border-apex-gold/40 bg-apex-gold/15 text-apex-gold"
-                    : "border border-apex-gold/25 bg-apex-gold/[0.06] text-apex-gold hover:bg-apex-gold/[0.12]"
-                }`}
-              >
-                <span className="w-5 text-center text-[15px]">◆</span>
-                {!collapsed && <span>Onboarding</span>}
-              </Link>
+              />
             )}
-            {NAV.map((n) => {
-              const active = n.to === "/portal" ? path === "/portal" : path.startsWith(n.to);
-              return (
-                <Link
-                  key={n.to}
-                  to={n.to}
-                  onClick={() => setMobileOpen(false)}
-                  className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition ${
-                    active
-                      ? "bg-apex-gold/10 text-apex-gold border border-apex-gold/25"
-                      : "border border-transparent text-apex-dim hover:bg-white/[0.03] hover:text-apex-ivory"
-                  }`}
-                >
-                  <span className="w-5 text-center text-[15px]">{n.icon}</span>
-                  {!collapsed && <span>{n.label}</span>}
-                </Link>
-              );
-            })}
+            {NAV.map((n) => (
+              <NavRow
+                key={n.to}
+                to={n.to}
+                icon={n.icon}
+                label={n.label}
+                active={n.to === "/portal" ? path === "/portal" : path.startsWith(n.to)}
+                collapsed={collapsed}
+                onClick={() => setMobileOpen(false)}
+              />
+            ))}
+
             {canInvite && (
               <>
-                <div
-                  className={`mt-5 mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-apex-faint ${collapsed && "hidden"}`}
-                >
-                  Management
-                </div>
+                <GroupLabel hidden={collapsed}>Management</GroupLabel>
                 <button
                   onClick={() => {
                     setMobileOpen(false);
                     setAddAgentOpen(true);
                   }}
-                  className="mb-1 flex w-full items-center gap-3 rounded-[10px] border border-apex-gold/25 bg-apex-gold/[0.06] px-3 py-2.5 text-[14px] font-medium text-apex-gold transition hover:bg-apex-gold/[0.12]"
+                  title={collapsed ? "Add Agent" : undefined}
+                  className={`p-focus mb-0.5 flex h-[38px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[14px] font-medium transition hover:bg-[var(--p-hover)] ${
+                    collapsed ? "justify-center" : ""
+                  }`}
+                  style={{ color: "var(--p-gold)" }}
                 >
-                  <span className="w-5 text-center">＋</span>
+                  <span className="w-4 shrink-0 text-center">＋</span>
                   {!collapsed && <span>Add Agent</span>}
                 </button>
-                <Link
+                <NavRow
                   to="/portal/invitations"
+                  icon="✉"
+                  label="Invitations"
+                  active={path.startsWith("/portal/invitations")}
+                  collapsed={collapsed}
                   onClick={() => setMobileOpen(false)}
-                  className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition ${
-                    path.startsWith("/portal/invitations")
-                      ? "bg-apex-gold/10 text-apex-gold border border-apex-gold/25"
-                      : "border border-transparent text-apex-dim hover:bg-white/[0.03] hover:text-apex-ivory"
-                  }`}
-                >
-                  <span className="w-5 text-center">✉</span>
-                  {!collapsed && <span>Invitations</span>}
-                </Link>
+                />
               </>
             )}
+
             {isAdmin && (
               <>
-                <div
-                  className={`mt-5 mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-apex-faint ${collapsed && "hidden"}`}
-                >
-                  Admin
-                </div>
-                <Link
+                <GroupLabel hidden={collapsed}>Admin</GroupLabel>
+                <NavRow
                   to="/portal/admin"
+                  icon="⚙"
+                  label="Admin"
+                  active={
+                    path.startsWith("/portal/admin") && !path.startsWith("/portal/admin/audit")
+                  }
+                  collapsed={collapsed}
                   onClick={() => setMobileOpen(false)}
-                  className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition ${
-                    path.startsWith("/portal/admin")
-                      ? "bg-apex-gold/10 text-apex-gold border border-apex-gold/25"
-                      : "border border-transparent text-apex-dim hover:bg-white/[0.03] hover:text-apex-ivory"
-                  }`}
-                >
-                  <span className="w-5 text-center">⚙</span>
-                  {!collapsed && <span>Admin</span>}
-                </Link>
-                <Link
+                />
+                <NavRow
                   to="/portal/admin/audit"
+                  icon="◫"
+                  label="Audit Log"
+                  active={path.startsWith("/portal/admin/audit")}
+                  collapsed={collapsed}
                   onClick={() => setMobileOpen(false)}
-                  className={`mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition ${
-                    path.startsWith("/portal/admin/audit")
-                      ? "bg-apex-gold/10 text-apex-gold border border-apex-gold/25"
-                      : "border border-transparent text-apex-dim hover:bg-white/[0.03] hover:text-apex-ivory"
-                  }`}
-                >
-                  <span className="w-5 text-center">◫</span>
-                  {!collapsed && <span>Audit Log</span>}
-                </Link>
+                />
               </>
             )}
           </nav>
-          <div className="border-t p-3" style={{ borderColor: "var(--apx-hairline-2)" }}>
-            {/* Theme toggle */}
+
+          <div className="shrink-0 border-t p-2" style={{ borderColor: "var(--p-border)" }}>
             <button
               onClick={toggleTheme}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className={`mb-2 flex w-full items-center gap-3 rounded-[10px] border border-transparent px-3 py-2.5 text-[13px] font-medium text-apex-dim transition hover:text-apex-ivory ${collapsed ? "justify-center" : ""}`}
-              style={{ background: "var(--apx-hover)" }}
+              className={`p-focus mb-1 flex h-[34px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[13px] font-medium transition hover:bg-[var(--p-hover)] ${
+                collapsed ? "justify-center" : ""
+              }`}
+              style={{ color: "var(--p-text-2)" }}
             >
-              <span className="w-5 text-center text-[15px]">{theme === "dark" ? "☀" : "☾"}</span>
+              <span className="w-4 shrink-0 text-center text-[14px]">
+                {theme === "dark" ? "☀" : "☾"}
+              </span>
               {!collapsed && <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>}
             </button>
+
             <div
-              className={`flex items-center gap-3 rounded-[10px] p-2 ${collapsed ? "justify-center" : ""}`}
+              className={`flex items-center gap-2.5 rounded-[8px] px-1.5 py-2 ${collapsed ? "justify-center" : ""}`}
             >
-              <div className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-apex-gold/15 font-display text-apex-gold">
-                {initials}
-              </div>
+              <Avatar name={displayName} email={profile?.email} size={30} />
               {!collapsed && (
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13.5px] font-semibold text-apex-ivory">
-                    {displayName}
+                  <div className="truncate text-[13px] font-semibold">{displayName}</div>
+                  <div className="truncate text-[11.5px]" style={{ color: "var(--p-text-3)" }}>
+                    {profile?.email}
                   </div>
-                  <div className="truncate text-[11.5px] text-apex-faint">{profile?.email}</div>
                 </div>
               )}
             </div>
+
             {!collapsed && (
-              <button
-                onClick={signOut}
-                className="mt-2 w-full rounded-[10px] border border-white/10 px-3 py-2 text-[12.5px] text-apex-dim transition hover:border-apex-gold/30 hover:text-apex-ivory"
-              >
+              <button onClick={signOut} className={`${btnClass("secondary", "sm")} mt-1 w-full`}>
                 Sign out
               </button>
             )}
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="mt-2 hidden w-full rounded-[10px] border border-white/[0.06] px-3 py-1.5 text-[11px] text-apex-faint hover:border-white/20 md:block"
+              className="p-focus mt-1 hidden h-7 w-full rounded-[8px] text-[11.5px] transition hover:bg-[var(--p-hover)] md:block"
+              style={{ color: "var(--p-text-3)" }}
             >
               {collapsed ? "→" : "← Collapse"}
             </button>
@@ -260,12 +293,48 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
         {mobileOpen && (
           <div
-            className="fixed inset-0 z-40 bg-black/70 md:hidden"
+            className="fixed inset-0 z-40 bg-black/60 md:hidden"
             onClick={() => setMobileOpen(false)}
           />
         )}
 
-        <main className="min-w-0 flex-1">{children}</main>
+        <div className="flex min-w-0 flex-1 flex-col">
+          {/* Top bar */}
+          <header
+            className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center gap-3 border-b px-3 backdrop-blur-xl md:px-6"
+            style={{
+              borderColor: "var(--p-border)",
+              background: "color-mix(in oklab, var(--p-bg) 88%, transparent)",
+            }}
+          >
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle navigation"
+              className={`${btnClass("ghost", "sm")} md:hidden`}
+            >
+              ☰
+            </button>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[14px] font-semibold">{current}</div>
+            </div>
+            {primaryRole && (
+              <Badge tone="neutral" className="hidden sm:inline-flex">
+                {ROLE_LABEL[primaryRole] ?? primaryRole}
+              </Badge>
+            )}
+            {canInvite && (
+              <button
+                onClick={() => setAddAgentOpen(true)}
+                className={`${btnClass("primary", "sm")} hidden sm:inline-flex`}
+              >
+                ＋ Add Agent
+              </button>
+            )}
+            <Avatar name={displayName} email={profile?.email} size={28} />
+          </header>
+
+          <main className="min-w-0 flex-1">{children}</main>
+        </div>
       </div>
 
       {addAgentOpen && (
@@ -289,6 +358,10 @@ export function PortalShell({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Legacy page header kept for API compatibility with existing routes. Restyled
+ * as a compact operational header (no oversized display type, no gold kicker).
+ */
 export function PortalHeader({
   title,
   kicker,
@@ -299,14 +372,15 @@ export function PortalHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div
-      className="border-b px-6 pt-8 pb-6 backdrop-blur-md md:px-10"
-      style={{ borderColor: "var(--apx-hairline-2)" }}
-    >
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="px-4 pt-5 pb-1 md:px-6">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
         <div className="min-w-0">
-          {kicker && <div className="apx-kicker mb-2">{kicker}</div>}
-          <h1 className="font-display text-[clamp(28px,4vw,44px)] leading-none">{title}</h1>
+          <h1 className="p-title truncate">{title}</h1>
+          {kicker && (
+            <div className="p-secondary mt-1 truncate">
+              {kicker.charAt(0) + kicker.slice(1).toLowerCase()}
+            </div>
+          )}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
