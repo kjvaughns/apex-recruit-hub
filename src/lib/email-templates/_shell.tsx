@@ -26,7 +26,13 @@ export interface EmailLinkProps {
   ownerCalendlyUrl?: string
   courseUrl?: string
   discordInviteUrl?: string
+  /**
+   * When set, this render is the recruiting agent's copy of an email that was
+   * sent to the named applicant. Shell renders a banner saying so.
+   */
+  copyFor?: string
 }
+
 
 export const FALLBACK_LINKS: Required<EmailLinkProps> = {
   overviewUrl: 'https://vantage-financial.net/apply',
