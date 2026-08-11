@@ -6,6 +6,8 @@ import { GoldButton, Shell, greet, paragraph, bullet, GOLD } from './_shell'
 interface Props {
   firstName?: string
   portalLink?: string
+  /** Recruiting agent's copy — names the applicant this went to. */
+  copyFor?: string
 }
 
 const TITLE = "Welcome to the team — let's get you set up"
@@ -16,8 +18,8 @@ const Step = ({ label }: { label: string }) => (
   </Text>
 )
 
-const Email = ({ firstName, portalLink }: Props) => (
-  <Shell preview={TITLE} title={TITLE}>
+const Email = ({ firstName, portalLink, copyFor }: Props) => (
+  <Shell preview={TITLE} title={TITLE} copyFor={copyFor}>
     <Text style={paragraph}>
       Congrats {greet(firstName)} — you&apos;re officially on board as a licensed Vantage agent.
       Welcome.
