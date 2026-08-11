@@ -32,11 +32,22 @@ export const Route = createFileRoute("/application-complete/licensed/$token")({
 function LicensedComplete() {
   const { ctx } = Route.useLoaderData();
   const { token } = Route.useParams();
-  const navigate = useNavigate();
   const mark = useServerFn(markScheduled);
   const markFallback = useServerFn(markLicensedFallback);
+  const resolveBooking = useServerFn(getOverviewBooking);
   const [firstName, setFirstName] = useState(ctx.first_name || "there");
+  const [booked, setBooked] = useState(false);
+  const [copied, setCopied] = useState(false);
   const flagged = useRef(false);
+
+  // Licensed applicants can also grab a 1:1 call with the nearest leader above
+  // their recruiter — pre-filled with their name, email, phone and referrer.
+  const bookingQuery = useQuery({
+    queryKey: ["overview-booking", token],
+    queryFn: () => resolveBooking({ data: { token, base_url: "" } }),
+    enabled: ctx.found,
+    retry: false,
+  });
 
   useEffect(() => {
     if (!ctx.first_name) {
@@ -63,13 +74,25 @@ function LicensedComplete() {
     );
   }
 
+  // Stay on this page after booking — they keep their next steps and resources.
   async function onConfirm() {
     try { await mark({ data: { token } }); } catch { /* non-blocking */ }
-    navigate({ to: "/application-complete" });
+    setBooked(true);
+  }
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(XCEL_PARTNER_CODE);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* noop */
+    }
   }
 
   const url = ctx.calendly_url;
   const contact = ctx.contact_name;
+  const oneOnOneUrl = bookingQuery.data?.one_on_one_url ?? null;
 
   return (
     <PublicShell>
