@@ -1224,6 +1224,101 @@ export const createApplicantManual = createServerFn({ method: "POST" })
     return { id: created.id as string };
   });
 
+// ---- Add Agent: manual onboarding fast-path ------------------------------
+
+/** The caller must be able to invite an agent (admin/manager, or leader with
+ *  can_invite_agents) — mirrors create_invitation's own guard, checked up front
+ *  so we never create an orphan applicant. */
+async function assertCanInviteAgent(supabase: any, userId: string) {
+  const [{ data: roleRows }, { data: prof }] = await Promise.all([
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+    supabase.from("profiles").select("can_invite_agents").eq("id", userId).maybeSingle(),
+  ]);
+  const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
+  const privileged = roles.some((r: string) => r === "admin" || r === "super_admin" || r === "manager");
+  const leaderCanInvite = roles.includes("leader") && !!prof?.can_invite_agents;
+  if (!privileged && !leaderCanInvite) {
+    throw new Error("You're not permitted to add agents.");
+  }
+}
+
+export const addAgent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        full_name: z.string().trim().min(2).max(160),
+        email: z.string().trim().email().max(200),
+        phone: z.string().trim().min(7).max(40),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertCanInviteAgent(supabase, userId);
+
+    const parts = data.full_name.trim().split(/\s+/);
+    const first_name = parts[0];
+    const last_name = parts.slice(1).join(" ");
+
+    const { data: stage } = await supabase
+      .from("pipeline_stages")
+      .select("id")
+      .eq("slug", "onboarding")
+      .maybeSingle();
+    if (!stage?.id) throw new Error("Onboarding stage is not configured.");
+
+    // Create the applicant directly at Onboarding (trigger seeds onboarding_steps).
+    const { data: created, error } = await supabase
+      .from("applicants")
+      .insert({
+        first_name,
+        last_name,
+        email: data.email.toLowerCase(),
+        phone: data.phone,
+        licensed: true,
+        licensing_status: "licensed",
+        consent_contact: true,
+        assigned_recruiter_id: userId,
+        original_recruiter_id: userId,
+        referred_by_profile_id: userId,
+        referral_source: "manual_add",
+        current_stage_id: stage.id,
+        stage_entered_at: new Date().toISOString(),
+      } as never)
+      .select("id, email, first_name, last_name, portal_profile_id")
+      .single();
+    if (error) throw new Error(error.message);
+
+    await supabase.from("applicant_activities").insert({
+      applicant_id: created.id,
+      event_type: "manual_applicant_created",
+      summary: "Agent added manually — sent to onboarding",
+      actor_id: userId,
+    } as never);
+
+    // Mint the invitation up front so the welcome email carries a real link.
+    try {
+      await supabase.rpc("create_invitation", {
+        payload: {
+          email: created.email,
+          first_name: created.first_name ?? "",
+          last_name: created.last_name ?? "",
+          role: "agent",
+          applicant_id: created.id,
+        },
+      });
+    } catch (e) {
+      // Non-fatal: the applicant exists; the email helper falls back to /login.
+      // eslint-disable-next-line no-console
+      console.warn("[addAgent] create_invitation failed:", e);
+    }
+
+    await enqueueWelcomeOnboarding(supabase, created as OnboardingApplicant);
+
+    return { id: created.id as string };
+  });
+
 // ---- Company-wide leaderboard (Phase 6) ----------------------------------
 
 export const getCompanyLeaderboard = createServerFn({ method: "POST" })

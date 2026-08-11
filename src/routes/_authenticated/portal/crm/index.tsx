@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
-import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
+import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/apex/add-applicant-modal";
 import { AddAgentModal } from "@/components/apex/add-agent-modal";
 import { onboardingProgress } from "@/lib/onboarding";
@@ -48,6 +48,7 @@ function CRMListPage() {
 
   const fn = useServerFn(listApplicants);
   const changeStage = useServerFn(updateApplicantStage);
+  const addAgentFn = useServerFn(addAgent);
   const { data, isLoading } = useQuery({
     queryKey: ["applicants", { q, scope, stage, view }],
     queryFn: () => fn({ data: { q, scope, stage, view, limit: 200 } }),
@@ -327,10 +328,17 @@ function CRMListPage() {
       {addAgentOpen && (
         <AddAgentModal
           onClose={() => setAddAgentOpen(false)}
-          onSubmit={async () => {
-            // Phase 2 wires this to the addAgent server fn.
-            toast.info("Agent invites go live in the next update.");
+          onSubmit={async (fields) => {
+            const res = await addAgentFn({ data: fields });
             setAddAgentOpen(false);
+            qc.invalidateQueries({ queryKey: ["applicants"] });
+            toast.success("Agent added — onboarding invite sent.", {
+              action: {
+                label: "View record",
+                onClick: () =>
+                  navigate({ to: "/portal/crm/$applicantId", params: { applicantId: res.id } }),
+              },
+            });
           }}
         />
       )}

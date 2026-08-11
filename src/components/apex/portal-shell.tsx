@@ -5,7 +5,7 @@ import { ApexLogo } from "@/components/apex/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMe } from "@/lib/portal.functions";
+import { getMe, addAgent } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/apex/add-agent-modal";
 
 const NAV = [
@@ -29,6 +29,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
 
   const fetchMe = useServerFn(getMe);
+  const addAgentFn = useServerFn(addAgent);
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => fetchMe() });
 
   useEffect(() => {
@@ -222,10 +223,17 @@ export function PortalShell({ children }: { children: ReactNode }) {
       {addAgentOpen && (
         <AddAgentModal
           onClose={() => setAddAgentOpen(false)}
-          onSubmit={async () => {
-            // Phase 2 wires this to the addAgent server fn.
-            toast.info("Agent invites go live in the next update.");
+          onSubmit={async (fields) => {
+            const res = await addAgentFn({ data: fields });
             setAddAgentOpen(false);
+            qc.invalidateQueries({ queryKey: ["applicants"] });
+            toast.success("Agent added — onboarding invite sent.", {
+              action: {
+                label: "View record",
+                onClick: () =>
+                  navigate({ to: "/portal/crm/$applicantId", params: { applicantId: res.id } }),
+              },
+            });
           }}
         />
       )}
