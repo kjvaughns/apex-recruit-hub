@@ -39,8 +39,13 @@ function OnboardingPage() {
   });
 
   const mut = useMutation({
-    mutationFn: (step: "agentspace_contracting" | "discord_role_update" | "expectations_reviewed") =>
-      completeStep({ data: { step } }),
+    mutationFn: (
+      step:
+        | "agentspace_contracting"
+        | "discord_role_update"
+        | "expectations_reviewed"
+        | "complete_vantage_closer_course",
+    ) => completeStep({ data: { step } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-onboarding"] });
       qc.invalidateQueries({ queryKey: ["applicants"] });
@@ -65,15 +70,7 @@ function OnboardingPage() {
     return (
       <PortalShell>
         <PageBody>
-          <PageHeader
-            title="Onboarding checklist"
-            description="Welcome to Vantage"
-            actions={
-              <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-onboarding" }}>
-                <Button variant="secondary" size="sm">View in Academy</Button>
-              </Link>
-            }
-          />
+          <PageHeader title="Onboarding checklist" description="Welcome to Vantage" />
           <div className="max-w-[820px] space-y-4">
             <Panel>
               <p className="p-secondary">
@@ -97,15 +94,7 @@ function OnboardingPage() {
   return (
     <PortalShell>
       <PageBody>
-        <PageHeader
-          title="Your onboarding checklist"
-          description="Welcome to Vantage"
-          actions={
-            <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-onboarding" }}>
-              <Button variant="secondary" size="sm">View in Academy</Button>
-            </Link>
-          }
-        />
+        <PageHeader title="Your onboarding checklist" description="Welcome to Vantage" />
 
         <div className="max-w-[820px] space-y-4">
           <Panel>
@@ -149,7 +138,7 @@ function OnboardingPage() {
   );
 }
 
-/** The four onboarding steps. Shared by the live agent checklist and the read-only
+/** The onboarding steps. Shared by the live agent checklist and the read-only
  *  preview shown to accounts without an assigned checklist. */
 function StepList({
   steps,
@@ -159,7 +148,11 @@ function StepList({
 }: {
   steps?: Record<string, OnboardingStepState>;
   onComplete?: (
-    step: "agentspace_contracting" | "discord_role_update" | "expectations_reviewed",
+    step:
+      | "agentspace_contracting"
+      | "discord_role_update"
+      | "expectations_reviewed"
+      | "complete_vantage_closer_course",
   ) => void;
   pending?: boolean;
   preview?: boolean;
@@ -222,6 +215,26 @@ function StepList({
           Review our hours, standing meetings, and team standards so you know how we operate.{" "}
           <span className="p-muted">(Full expectations copy coming soon.)</span>
         </p>
+      </StepCard>
+
+      <StepCard
+        n={5}
+        title="Complete the Vantage Closer Course"
+        state={stepState(steps, "complete_vantage_closer_course")}
+        onComplete={() => onComplete?.("complete_vantage_closer_course")}
+        pending={pending}
+        preview={preview}
+        actionLabel="I've completed this"
+      >
+        <p className="p-secondary">
+          Work through the Vantage Closer Course in the Academy — the initial training every new agent
+          completes. Come back and check this off once you've finished.
+        </p>
+        <div className="mt-3">
+          <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-closer" }}>
+            <Button variant="secondary" size="sm">Go to Vantage Closer Course →</Button>
+          </Link>
+        </div>
       </StepCard>
     </>
   );
