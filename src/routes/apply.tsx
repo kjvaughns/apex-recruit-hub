@@ -46,6 +46,7 @@ type Form = {
   phone: string;
   state: string;
   licensed: boolean | null;
+  overview_slot: string;
   instagram_handle: string;
   why_text: string;
   consent_contact: boolean;
@@ -58,6 +59,7 @@ const initial: Form = {
   phone: "",
   state: "",
   licensed: null,
+  overview_slot: "",
   instagram_handle: "",
   why_text: "",
   consent_contact: false,
@@ -68,6 +70,18 @@ function ApplyPage() {
   const navigate = useNavigate();
   const submit = useServerFn(submitApplication);
   const resolveRecruiter = useServerFn(getRecruiterBySlug);
+  const fetchSlots = useServerFn(getOverviewSlots);
+
+  // Live Monday overview availability from Calendly. If this fails or comes back
+  // empty the field is simply skipped — applications are never blocked on it.
+  const slotsQuery = useQuery({
+    queryKey: ["overview-slots"],
+    queryFn: () => fetchSlots(),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const slots = slotsQuery.data?.slots ?? [];
+
 
   const [form, setForm] = useState<Form>(initial);
   // Final selected recruiter (what gets submitted) + the original referral-link
