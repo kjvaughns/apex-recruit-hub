@@ -147,8 +147,12 @@ function ProfileSection() {
       const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (error) throw error;
-      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      const url = pub.publicUrl;
+      // The avatars bucket is private, so store a long-lived signed URL.
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
+      const url = signed.signedUrl;
       await saveFn({ data: { avatar_url: url } });
       setAvatarUrl(url);
       qc.invalidateQueries({ queryKey: ["me"] });

@@ -434,8 +434,12 @@ function LessonModal({ moduleId, lessonId, lesson, questions, onClose, onSaved }
       const path = `lessons/${crypto.randomUUID()}.${ext}`;
       const { error } = await supabase.storage.from("academy").upload(path, file, { upsert: true });
       if (error) throw error;
-      const { data: pub } = supabase.storage.from("academy").getPublicUrl(path);
-      setF((p) => ({ ...p, video_url: pub.publicUrl }));
+      // The academy bucket is private, so store a long-lived signed URL.
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("academy")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
+      setF((p) => ({ ...p, video_url: signed.signedUrl }));
       toast.success("Uploaded.");
     } catch (e) {
       toast.error((e as Error).message || "Upload failed.");
@@ -661,8 +665,12 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
       const path = `library/${crypto.randomUUID()}.${ext}`;
       const { error } = await supabase.storage.from("academy").upload(path, file, { upsert: true });
       if (error) throw error;
-      const { data: pub } = supabase.storage.from("academy").getPublicUrl(path);
-      setF((p) => ({ ...p, url: pub.publicUrl }));
+      // The academy bucket is private, so store a long-lived signed URL.
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("academy")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
+      setF((p) => ({ ...p, url: signed.signedUrl }));
       toast.success("Uploaded.");
     } catch (e) {
       toast.error((e as Error).message || "Upload failed.");
