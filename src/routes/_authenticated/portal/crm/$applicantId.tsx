@@ -3,7 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
-import { getApplicant, updateApplicantStage, addApplicantNote } from "@/lib/portal.functions";
+import {
+  getApplicant,
+  updateApplicantStage,
+  addApplicantNote,
+  setOverviewStatus,
+} from "@/lib/portal.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/crm/$applicantId")({
@@ -19,6 +24,7 @@ function ApplicantDetailPage() {
   const fetchOne = useServerFn(getApplicant);
   const changeStage = useServerFn(updateApplicantStage);
   const addNote = useServerFn(addApplicantNote);
+  const setOverview = useServerFn(setOverviewStatus);
 
   const { data, isLoading } = useQuery({
     queryKey: ["applicant", applicantId],
@@ -34,6 +40,12 @@ function ApplicantDetailPage() {
     qc.invalidateQueries({ queryKey: ["applicant", applicantId] });
     qc.invalidateQueries({ queryKey: ["applicants"] });
     qc.invalidateQueries({ queryKey: ["dashboard"] });
+  }
+
+  async function onOverview(field: "scheduled" | "completed", value: boolean) {
+    await setOverview({ data: { id: applicantId, field, value } });
+    qc.invalidateQueries({ queryKey: ["applicant", applicantId] });
+    qc.invalidateQueries({ queryKey: ["applicants"] });
   }
 
   async function onAddNote() {
@@ -145,6 +157,31 @@ function ApplicantDetailPage() {
                   );
                 })}
               </div>
+            </div>
+
+            <div className="apx-card p-6">
+              <h2 className="mb-1 font-display text-[20px] leading-none">Overview meeting</h2>
+              <p className="mb-4 text-[12.5px] text-apex-faint">
+                Booking through Calendly updates this automatically. Use these toggles when you book
+                the overview for them manually.
+              </p>
+              <div className="flex flex-wrap gap-2.5">
+                <OverviewToggle
+                  label="Scheduled"
+                  active={!!(a as any).overview_scheduled_at}
+                  onToggle={(v) => onOverview("scheduled", v)}
+                />
+                <OverviewToggle
+                  label="Completed"
+                  active={!!(a as any).overview_completed_at}
+                  onToggle={(v) => onOverview("completed", v)}
+                />
+              </div>
+              {(a as any).overview_completed_at && (
+                <p className="mt-3 text-[12px] text-emerald-300/80">
+                  Overview completed — this applicant is ready for the evaluation form.
+                </p>
+              )}
             </div>
 
             {(data?.evaluations ?? []).length > 0 && (
@@ -425,6 +462,36 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
+function OverviewToggle({
+  label,
+  active,
+  onToggle,
+}: {
+  label: string;
+  active: boolean;
+  onToggle: (v: boolean) => void;
+}) {
+  return (
+    <button
+      onClick={() => onToggle(!active)}
+      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[12.5px] font-semibold transition ${
+        active
+          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+          : "border-white/10 bg-transparent text-apex-dim hover:border-apex-gold/40 hover:text-apex-ivory"
+      }`}
+    >
+      <span
+        className={`flex h-4 w-4 items-center justify-center rounded-full border text-[10px] ${
+          active ? "border-emerald-400 bg-emerald-400 text-black" : "border-white/25"
+        }`}
+      >
+        {active ? "✓" : ""}
+      </span>
+      {label}
+    </button>
+  );
+}
+
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -441,6 +508,7 @@ function eventLabel(t: string) {
     application_submitted: "Application submitted",
     evaluation_submitted: "Evaluation submitted",
     appointment_scheduled: "Appointment scheduled",
+    overview_updated: "Overview updated",
     stage_changed: "Stage changed",
     note: "Note",
   };

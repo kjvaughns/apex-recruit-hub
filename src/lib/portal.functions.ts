@@ -257,6 +257,67 @@ export const updateApplicantStage = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Manually flip the Overview meeting scheduled/completed flags (Phase 1).
+ *  Used when a recruiter books the overview outside Calendly. Setting
+ *  "completed" also stamps "scheduled" if it wasn't already. */
+export const setOverviewStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        field: z.enum(["scheduled", "completed"]),
+        value: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const now = new Date().toISOString();
+    const patch: Record<string, unknown> = { updated_at: now };
+
+    if (data.field === "scheduled") {
+      patch.overview_scheduled_at = data.value ? now : null;
+      // Un-scheduling clears completion too — can't be completed if not scheduled.
+      if (!data.value) patch.overview_completed_at = null;
+    } else {
+      patch.overview_completed_at = data.value ? now : null;
+      // Completing implies it was scheduled.
+      if (data.value) {
+        const { data: cur } = await supabase
+          .from("applicants")
+          .select("overview_scheduled_at")
+          .eq("id", data.id)
+          .maybeSingle();
+        if (!(cur as { overview_scheduled_at?: string } | null)?.overview_scheduled_at) {
+          patch.overview_scheduled_at = now;
+        }
+      }
+    }
+
+    const { error } = await supabase
+      .from("applicants")
+      .update(patch as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    const label =
+      data.field === "scheduled"
+        ? data.value
+          ? "Overview marked scheduled"
+          : "Overview scheduled flag cleared"
+        : data.value
+          ? "Overview marked completed"
+          : "Overview completed flag cleared";
+    await supabase.from("applicant_activities").insert({
+      applicant_id: data.id,
+      event_type: "overview_updated",
+      summary: label,
+      actor_id: userId,
+    } as never);
+    return { ok: true };
+  });
+
 export const addApplicantNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
