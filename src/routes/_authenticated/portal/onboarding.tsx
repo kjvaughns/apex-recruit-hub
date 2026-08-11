@@ -88,7 +88,15 @@ function OnboardingPage() {
   return (
     <PortalShell>
       <PageBody>
-        <PageHeader title="Your onboarding checklist" description="Welcome to Vantage" />
+        <PageHeader
+          title="Your onboarding checklist"
+          description="Welcome to Vantage"
+          actions={
+            <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-onboarding" }}>
+              <Button variant="secondary" size="sm">View in Academy</Button>
+            </Link>
+          }
+        />
 
         <div className="max-w-[820px] space-y-4">
           <Panel>
