@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
 import { getDashboard, getMyOnboarding } from "@/lib/portal.functions";
+import { RecruitingLinkCard } from "@/components/apex/recruiting-link-card";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   head: () => ({ meta: [{ title: "Dashboard — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
@@ -51,6 +52,10 @@ function DashboardPage() {
           <SkeletonGrid />
         ) : (
           <>
+            <div className="mb-6">
+              <RecruitingLinkCard />
+            </div>
+
             <div className="mb-6">
               <div className="apx-kicker mb-3">This month</div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
