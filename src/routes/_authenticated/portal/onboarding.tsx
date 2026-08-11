@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
+import { PageHeader, PageBody, Panel, Button, Badge } from "@/components/portal/ui";
 import { getMyOnboarding, completeOnboardingStep } from "@/lib/portal.functions";
 import {
   ONBOARDING_STEP_ORDER,
@@ -50,8 +51,10 @@ function OnboardingPage() {
   if (isLoading) {
     return (
       <PortalShell>
-        <PortalHeader kicker="Welcome to Vantage" title="Your onboarding checklist" />
-        <div className="p-10 text-[13px] text-apex-faint">Loading…</div>
+        <PageBody>
+          <PageHeader title="Your onboarding checklist" description="Welcome to Vantage" />
+          <div className="p-muted">Loading…</div>
+        </PageBody>
       </PortalShell>
     );
   }
@@ -59,17 +62,19 @@ function OnboardingPage() {
   if (!data?.hasOnboarding) {
     return (
       <PortalShell>
-        <PortalHeader kicker="Welcome to Vantage" title="Onboarding" />
-        <div className="mx-auto max-w-[560px] px-6 py-16 text-center md:px-10">
-          <div className="apx-card p-8">
-            <p className="text-[15px] text-apex-muted">
+        <PageBody>
+          <PageHeader title="Onboarding" description="Welcome to Vantage" />
+          <Panel className="max-w-[560px]">
+            <p className="p-secondary">
               You don't have any onboarding steps assigned. You're all set — head to your dashboard.
             </p>
-            <Link to="/portal" className="apx-btn-primary mt-5 inline-flex px-6 py-3 text-[14px]">
-              Go to dashboard →
+            <Link to="/portal">
+              <Button variant="primary" className="mt-4">
+                Go to dashboard →
+              </Button>
             </Link>
-          </div>
-        </div>
+          </Panel>
+        </PageBody>
       </PortalShell>
     );
   }
@@ -82,43 +87,44 @@ function OnboardingPage() {
 
   return (
     <PortalShell>
-      <PortalHeader kicker="Welcome to Vantage" title="Your onboarding checklist" />
+      <PageBody>
+        <PageHeader title="Your onboarding checklist" description="Welcome to Vantage" />
 
-      <div className="mx-auto max-w-[820px] px-6 py-8 md:px-10">
-        <div className="apx-card p-5 md:p-6">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-apex-muted">
-              {allDone ? "All steps complete" : `${done} of ${total} complete`}
-            </span>
-            <span className="font-display text-[20px] text-apex-gold">{pct}%</span>
-          </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className="h-full rounded-full bg-apex-gold transition-all"
-              style={{ width: `${Math.max(4, pct)}%` }}
-            />
-          </div>
-        </div>
-
-        {allDone && (
-          <div className="apx-card apx-card-gold mt-6 p-6 text-center md:p-8">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-apex-gold text-[26px] text-apex-card">
-              ✓
+        <div className="max-w-[820px] space-y-4">
+          <Panel>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="p-label">{allDone ? "All steps complete" : `${done} of ${total} complete`}</span>
+              <span className="p-metric" style={{ color: "var(--p-gold)" }}>{pct}%</span>
             </div>
-            <h2 className="font-display text-[26px] leading-tight text-apex-ivory">
-              You're fully onboarded.
-            </h2>
-            <p className="mx-auto mt-2 max-w-[420px] text-[14px] text-apex-muted">
-              Every step is done — welcome to the team. Your training path will be available in the
-              portal shortly.
-            </p>
-            <Link to="/portal" className="apx-btn-ghost mt-5 inline-flex px-6 py-3 text-[14px]">
-              Go to your dashboard →
-            </Link>
-          </div>
-        )}
+            <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${Math.max(4, pct)}%`, background: "var(--p-gold)" }}
+              />
+            </div>
+          </Panel>
 
-        <div className="mt-6 flex flex-col gap-4">
+          {allDone && (
+            <Panel className="text-center">
+              <div
+                className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full text-[22px]"
+                style={{ background: "var(--p-gold)", color: "#0B0B0C" }}
+              >
+                ✓
+              </div>
+              <h2 className="p-card-title">You're fully onboarded.</h2>
+              <p className="p-secondary mx-auto mt-2 max-w-[420px]">
+                Every step is done — welcome to the team. Your training path will be available in the
+                portal shortly.
+              </p>
+              <Link to="/portal">
+                <Button variant="secondary" className="mt-4">
+                  Go to your dashboard →
+                </Button>
+              </Link>
+            </Panel>
+          )}
+
           <StepCard
             n={1}
             title="AgentSpace contracting"
@@ -127,18 +133,13 @@ function OnboardingPage() {
             pending={mut.isPending}
             actionLabel="I've completed this"
           >
-            <p className="text-[14px] leading-relaxed text-apex-dim">
-              Click the link below, select <strong className="text-apex-fog">"Join Agency,"</strong>{" "}
+            <p className="p-secondary">
+              Click the link below, select <strong style={{ color: "var(--p-text)" }}>"Join Agency,"</strong>{" "}
               and paste in the agency code.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <a
-                href={AGENTSPACE_URL}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="apx-btn-ghost px-4 py-2.5 text-[13px]"
-              >
-                Open AgentSpace →
+              <a href={AGENTSPACE_URL} target="_blank" rel="noreferrer noopener">
+                <Button variant="secondary" size="sm">Open AgentSpace →</Button>
               </a>
               <CopyCode code={AGENCY_CODE} />
             </div>
@@ -152,14 +153,14 @@ function OnboardingPage() {
             pending={mut.isPending}
             actionLabel="I've completed this"
           >
-            <p className="text-[14px] leading-relaxed text-apex-dim">
+            <p className="p-secondary">
               Follow these steps in our Discord server to get your Licensed Agent role.{" "}
-              <span className="text-apex-faint">(Exact instructions coming soon.)</span>
+              <span className="p-muted">(Exact instructions coming soon.)</span>
             </p>
           </StepCard>
 
           <StepCard n={3} title="Portal account setup" state={stepState(steps, "portal_account_setup")} auto>
-            <p className="text-[14px] leading-relaxed text-apex-dim">
+            <p className="p-secondary">
               Done automatically — you're logged into the portal right now, which is all this step
               needs.
             </p>
@@ -173,13 +174,13 @@ function OnboardingPage() {
             pending={mut.isPending}
             actionLabel="I've reviewed this"
           >
-            <p className="text-[14px] leading-relaxed text-apex-dim">
+            <p className="p-secondary">
               Review our hours, standing meetings, and team standards so you know how we operate.{" "}
-              <span className="text-apex-faint">(Full expectations copy coming soon.)</span>
+              <span className="p-muted">(Full expectations copy coming soon.)</span>
             </p>
           </StepCard>
         </div>
-      </div>
+      </PageBody>
     </PortalShell>
   );
 }
@@ -205,60 +206,40 @@ function StepCard({
 }) {
   const done = state.completed;
   return (
-    <div className={`apx-card p-5 md:p-6 ${done ? "border-emerald-500/25" : ""}`}>
-      <div className="flex items-start gap-4">
+    <Panel>
+      <div className="flex items-start gap-3">
         <div
-          className={`flex h-10 w-10 flex-none items-center justify-center rounded-full border font-display text-[18px] ${
+          className="grid h-8 w-8 flex-none place-items-center rounded-full border text-[14px] font-semibold"
+          style={
             done
-              ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-300"
-              : "border-apex-gold/40 text-apex-gold"
-          }`}
+              ? { borderColor: "var(--p-green)", background: "rgba(63,179,127,0.12)", color: "var(--p-green)" }
+              : { borderColor: "var(--p-gold-line)", color: "var(--p-gold)" }
+          }
         >
           {done ? "✓" : n}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-[20px] leading-tight text-apex-ivory">{title}</h3>
-            <StatusPill done={done} auto={auto} />
+            <h3 className="p-card-title">{title}</h3>
+            <Badge tone={done ? "green" : "neutral"}>{done ? "Done" : auto ? "Automatic" : "Not started"}</Badge>
           </div>
-          <div className="mt-2">{children}</div>
+          <div className="mt-1.5">{children}</div>
 
-          <div className="mt-4">
+          <div className="mt-3">
             {done ? (
-              <div className="text-[12px] text-emerald-300/80">
+              <div className="p-muted text-[12px]" style={{ color: "var(--p-green)" }}>
                 Completed
-                {state.completed_at
-                  ? ` · ${new Date(state.completed_at).toLocaleDateString()}`
-                  : ""}
+                {state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
               </div>
             ) : auto ? null : (
-              <button
-                onClick={onComplete}
-                disabled={pending}
-                className="apx-btn-primary px-4 py-2.5 text-[13px] disabled:opacity-60"
-              >
+              <Button variant="primary" size="sm" onClick={onComplete} disabled={pending}>
                 {actionLabel ?? "Mark complete"}
-              </button>
+              </Button>
             )}
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function StatusPill({ done, auto }: { done: boolean; auto?: boolean }) {
-  if (done) {
-    return (
-      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-emerald-300">
-        Done
-      </span>
-    );
-  }
-  return (
-    <span className="rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-apex-faint">
-      {auto ? "Automatic" : "Not started"}
-    </span>
+    </Panel>
   );
 }
 
@@ -274,15 +255,11 @@ function CopyCode({ code }: { code: string }) {
     }
   }
   return (
-    <button
-      onClick={copy}
-      className="inline-flex items-center gap-2 rounded-[10px] border border-apex-gold/30 bg-apex-gold/[0.06] px-3 py-2.5 font-mono text-[13px] text-apex-ivory transition hover:border-apex-gold/50"
-      title="Copy agency code"
-    >
+    <Button variant="secondary" size="sm" onClick={copy} title="Copy agency code" className="font-mono">
       <span className="tracking-[0.08em]">{code}</span>
-      <span className="text-[11px] font-semibold uppercase text-apex-gold">
+      <span className="text-[11px] font-semibold uppercase" style={{ color: "var(--p-gold)" }}>
         {copied ? "Copied" : "Copy"}
       </span>
-    </button>
+    </Button>
   );
 }

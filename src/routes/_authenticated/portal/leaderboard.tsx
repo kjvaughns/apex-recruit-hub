@@ -2,8 +2,25 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
 import { getCompanyLeaderboard, type CompanyLeaderboardRow } from "@/lib/portal.functions";
+import {
+  PageHeader,
+  PageBody,
+  Toolbar,
+  Select,
+  SegmentedControl,
+  TableWrap,
+  Table,
+  THead,
+  TH,
+  TR,
+  TD,
+  Avatar,
+  Badge,
+  EmptyState,
+  Modal,
+} from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/leaderboard")({
   head: () => ({
@@ -58,125 +75,111 @@ function LeaderboardPage() {
 
   return (
     <PortalShell>
-      <PortalHeader
-        kicker="Performance"
-        title="Company leaderboard"
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              className="apx-input h-9 text-[12.5px]"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as Period)}
-            >
-              {PERIODS.map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-            <select
-              className="apx-input h-9 text-[12.5px]"
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-            >
-              <option value="">All roles</option>
-              <option value="agent">Agent</option>
-              <option value="leader">Leader</option>
-              <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
-            </select>
-            <select
-              className="apx-input h-9 text-[12.5px]"
-              value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
-            >
-              <option value="">All teams</option>
-              {teams.map((t: any) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        }
-      />
-      <div className="px-6 py-8 md:px-10">
-        {/* Metric selector */}
-        <div className="mb-5 flex flex-wrap gap-2">
-          {METRICS.map((m) => (
-            <button
-              key={m.key}
-              onClick={() => setMetric(m.key)}
-              className={`rounded-full border px-3 py-1.5 text-[12px] transition ${
-                metric === m.key
-                  ? "border-apex-gold/40 bg-apex-gold/10 text-apex-gold"
-                  : "border-white/10 text-apex-dim hover:text-apex-ivory"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+      <PageBody>
+        <PageHeader title="Company leaderboard" description="Ranked performance across the company." />
 
-        {q.isLoading ? (
-          <div className="apx-card p-10 text-center text-apex-dim">Loading…</div>
-        ) : ranked.length === 0 ? (
-          <div className="apx-card p-10 text-center text-apex-dim">
-            No results for these filters.
-          </div>
-        ) : (
-          <div className="apx-card divide-y divide-white/[0.05] overflow-hidden">
-            {ranked.map((r) => {
-              const isMe = r.profile_id === meId;
-              const move = r.total - r.prev_total;
-              return (
-                <button
-                  key={r.profile_id}
-                  onClick={() => setSelected(r)}
-                  className={`flex w-full items-center gap-4 px-4 py-3 text-left transition hover:bg-white/[0.02] md:px-5 ${
-                    isMe ? "border-l-2 border-apex-gold bg-apex-gold/[0.04]" : ""
-                  }`}
-                >
-                  <span className="w-6 flex-none text-center font-display text-[18px] text-apex-muted">
-                    {r.rank}
-                  </span>
-                  <span className="flex h-9 w-9 flex-none items-center justify-center overflow-hidden rounded-full bg-white/10 text-[12px] font-semibold text-apex-fog">
-                    {r.avatar_url ? (
-                      <img src={r.avatar_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      initials(r.full_name)
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14px] font-medium text-apex-ivory">
-                      {r.full_name || "Unnamed"}{" "}
-                      {isMe && <span className="text-apex-gold">(you)</span>}
-                    </span>
-                    <span className="block truncate text-[12px] text-apex-faint capitalize">
-                      {r.role ?? "—"}
-                      {r.team_name ? ` · ${r.team_name}` : ""}
-                    </span>
-                  </span>
-                  <span className="hidden text-right text-[12px] text-apex-faint sm:block">
-                    {Math.round(r.conversion * 100)}%
-                    <span className="block text-[10px]">conv.</span>
-                  </span>
-                  <span className="w-14 flex-none text-right">
-                    <span className="font-display text-[22px] text-apex-gold">{r.total}</span>
-                    {move !== 0 && (
-                      <span
-                        className={`block text-[11px] ${move > 0 ? "text-emerald-400" : "text-red-400"}`}
-                      >
-                        {move > 0 ? "▲" : "▼"} {Math.abs(move)}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+        <div className="space-y-3">
+          <Toolbar>
+            <SegmentedControl
+              size="sm"
+              options={METRICS.map((m) => ({ value: m.key, label: m.label }))}
+              value={metric}
+              onChange={setMetric}
+            />
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <Select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="h-9 w-auto text-[12.5px]">
+                {PERIODS.map((p) => (
+                  <option key={p.key} value={p.key}>
+                    {p.label}
+                  </option>
+                ))}
+              </Select>
+              <Select value={role} onChange={(e) => setRole(e.target.value as any)} className="h-9 w-auto text-[12.5px]">
+                <option value="">All roles</option>
+                <option value="agent">Agent</option>
+                <option value="leader">Leader</option>
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </Select>
+              <Select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="h-9 w-auto text-[12.5px]">
+                <option value="">All teams</option>
+                {teams.map((t: any) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </Toolbar>
+
+          {q.isLoading ? (
+            <TableWrap>
+              <div className="p-secondary p-10 text-center">Loading…</div>
+            </TableWrap>
+          ) : ranked.length === 0 ? (
+            <TableWrap>
+              <EmptyState title="No results" description="No results for these filters. Try widening the period or clearing filters." />
+            </TableWrap>
+          ) : (
+            <TableWrap>
+              <Table>
+                <THead>
+                  <TH className="w-10">Rank</TH>
+                  <TH>Agent</TH>
+                  <TH align="right">Conv.</TH>
+                  <TH align="right">Total</TH>
+                  <TH align="right">Change</TH>
+                </THead>
+                <tbody>
+                  {ranked.map((r) => {
+                    const isMe = r.profile_id === meId;
+                    const move = r.total - r.prev_total;
+                    return (
+                      <TR key={r.profile_id} onClick={() => setSelected(r)}>
+                        <TD>
+                          <span className="p-metric text-[15px]" style={isMe ? { color: "var(--p-gold)" } : undefined}>
+                            {r.rank}
+                          </span>
+                        </TD>
+                        <TD>
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <Avatar name={r.full_name} src={r.avatar_url} size={28} />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 truncate text-[13.5px] font-medium">
+                                <span className="truncate">{r.full_name || "Unnamed"}</span>
+                                {isMe && <Badge tone="gold">you</Badge>}
+                              </div>
+                              <div className="p-muted truncate text-[12px] capitalize">
+                                {r.role ?? "—"}
+                                {r.team_name ? ` · ${r.team_name}` : ""}
+                              </div>
+                            </div>
+                          </div>
+                        </TD>
+                        <TD align="right" className="p-muted">
+                          {Math.round(r.conversion * 100)}%
+                        </TD>
+                        <TD align="right">
+                          <span className="p-metric text-[16px]" style={{ color: "var(--p-gold)" }}>
+                            {r.total}
+                          </span>
+                        </TD>
+                        <TD align="right">
+                          {move !== 0 && (
+                            <Badge tone={move > 0 ? "green" : "red"}>
+                              {move > 0 ? "▲" : "▼"} {Math.abs(move)}
+                            </Badge>
+                          )}
+                        </TD>
+                      </TR>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </TableWrap>
+          )}
+        </div>
+      </PageBody>
 
       {selected && <ProfileModal row={selected} onClose={() => setSelected(null)} />}
     </PortalShell>
@@ -200,53 +203,41 @@ function ProfileModal({
     { label: "Conversion rate", value: `${Math.round(row.conversion * 100)}%` },
   ];
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="apx-card w-full max-w-[440px] p-6 md:p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-apex-gold/15 font-display text-apex-gold">
-            {row.avatar_url ? (
-              <img src={row.avatar_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              initials(row.full_name)
-            )}
-          </span>
-          <div>
-            <div className="font-display text-[24px] leading-none">
-              {row.full_name || "Unnamed"}
-            </div>
-            <div className="text-[12.5px] text-apex-faint capitalize">
-              {row.role ?? "—"}
-              {row.team_name ? ` · ${row.team_name}` : ""}
-              {row.manager_name ? ` · Reports to ${row.manager_name}` : ""}
-            </div>
-          </div>
-        </div>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="rounded-[10px] border border-white/[0.06] bg-white/[0.02] p-3"
-            >
-              <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-apex-faint">
-                {s.label}
-              </div>
-              <div className="mt-1 font-display text-[22px] text-apex-ivory">{s.value}</div>
-            </div>
-          ))}
-        </div>
-        <p className="mt-4 text-[11.5px] text-apex-faint">
-          Public performance summary — no private applicant data is shown.
-        </p>
-        <button onClick={onClose} className="apx-btn-ghost mt-4 w-full px-4 py-3 text-[13.5px]">
+    <Modal
+      title={row.full_name || "Unnamed"}
+      description={
+        <span className="capitalize">
+          {row.role ?? "—"}
+          {row.team_name ? ` · ${row.team_name}` : ""}
+          {row.manager_name ? ` · Reports to ${row.manager_name}` : ""}
+        </span>
+      }
+      onClose={onClose}
+      width={440}
+      footer={
+        <button
+          onClick={onClose}
+          className="p-focus h-9 w-full rounded-[10px] border text-[13.5px] font-semibold transition hover:brightness-[1.08]"
+          style={{ background: "var(--p-raised)", borderColor: "var(--p-border)", color: "var(--p-text)" }}
+        >
           Close
         </button>
+      }
+    >
+      <div className="flex items-center gap-3">
+        <Avatar name={row.full_name} src={row.avatar_url} size={48} />
       </div>
-    </div>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {stats.map((s) => (
+          <div key={s.label} className="p-panel px-3 py-2.5">
+            <div className="p-label uppercase tracking-[0.06em]">{s.label}</div>
+            <div className="p-metric mt-1">{s.value}</div>
+          </div>
+        ))}
+      </div>
+      <p className="p-muted mt-4">
+        Public performance summary — no private applicant data is shown.
+      </p>
+    </Modal>
   );
 }

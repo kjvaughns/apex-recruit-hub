@@ -3,7 +3,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
+import {
+  PageHeader,
+  PageBody,
+  Panel,
+  Button,
+  Field,
+  Input,
+  Textarea,
+  Select,
+  FormGrid,
+  SegmentedControl,
+  Badge,
+  Avatar,
+  btnClass,
+} from "@/components/portal/ui";
 import {
   getMe,
   updateMyProfile,
@@ -38,32 +53,53 @@ function PortalSettingsPage() {
 
   return (
     <PortalShell>
-      <PortalHeader kicker="Portal" title="Settings" />
-      <div className="px-6 py-8 md:px-10">
-        <div className="mb-6 flex flex-wrap gap-1.5">
-          {SECTIONS.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setSection(s.key)}
-              className={`rounded-[10px] px-4 py-2 text-[13px] font-semibold transition ${
-                section === s.key
-                  ? "bg-apex-gold text-apex-card"
-                  : "border border-[var(--apx-hairline)] text-apex-dim hover:bg-[var(--apx-hover)]"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
+      <PageBody>
+        <PageHeader title="Settings" description="Manage your profile, security, and preferences." />
+
+        <div className="sm:hidden mb-4">
+          <Select value={section} onChange={(e) => setSection(e.target.value as Section)}>
+            {SECTIONS.map((s) => (
+              <option key={s.key} value={s.key}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
         </div>
 
-        <div className="max-w-2xl">
+        <div className="hidden gap-4 sm:grid sm:grid-cols-[200px_minmax(0,1fr)] sm:items-start">
+          <nav className="p-panel flex flex-col gap-0.5 p-1.5">
+            {SECTIONS.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => setSection(s.key)}
+                className="p-focus rounded-[8px] px-3 py-2 text-left text-[13.5px] font-medium transition"
+                style={
+                  section === s.key
+                    ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+                    : { color: "var(--p-text-2)" }
+                }
+              >
+                {s.label}
+              </button>
+            ))}
+          </nav>
+          <div className="min-w-0 space-y-4">
+            {section === "profile" && <ProfileSection />}
+            {section === "security" && <SecuritySection />}
+            {section === "notifications" && <NotificationsSection />}
+            {section === "appearance" && <AppearanceSection />}
+            {section === "recruiting" && <RecruitingSection />}
+          </div>
+        </div>
+
+        <div className="space-y-4 sm:hidden">
           {section === "profile" && <ProfileSection />}
           {section === "security" && <SecuritySection />}
           {section === "notifications" && <NotificationsSection />}
           {section === "appearance" && <AppearanceSection />}
           {section === "recruiting" && <RecruitingSection />}
         </div>
-      </div>
+      </PageBody>
     </PortalShell>
   );
 }
@@ -124,22 +160,11 @@ function ProfileSection() {
     }
   }
 
-  const initials =
-    ((firstName[0] ?? "") + (lastName[0] ?? "")).toUpperCase() || "A";
-
   return (
-    <div className="apx-card p-6 md:p-8">
-      <h2 className="font-display text-[24px] leading-none">Profile</h2>
-
-      <div className="mt-6 flex items-center gap-4">
-        <div className="flex h-16 w-16 flex-none items-center justify-center overflow-hidden rounded-full bg-apex-gold/15 font-display text-[22px] text-apex-gold">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-          ) : (
-            initials
-          )}
-        </div>
-        <label className="apx-btn-ghost cursor-pointer px-4 py-2.5 text-[13px]">
+    <Panel title="Profile">
+      <div className="flex items-center gap-4">
+        <Avatar name={`${firstName} ${lastName}`.trim()} src={avatarUrl} size={56} />
+        <label className={btnClass("secondary", "sm") + " cursor-pointer"}>
           {uploading ? "Uploading…" : "Change photo"}
           <input
             type="file"
@@ -154,29 +179,25 @@ function ProfileSection() {
         </label>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <FormGrid className="mt-5">
         <Field label="First name">
-          <input className="apx-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
         </Field>
         <Field label="Last name">
-          <input className="apx-input" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </Field>
         <Field label="Phone">
-          <input className="apx-input" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Field>
         <Field label="Email (read-only)">
-          <input className="apx-input opacity-70" readOnly value={profile?.email ?? ""} />
+          <Input readOnly value={profile?.email ?? ""} className="opacity-70" />
         </Field>
-      </div>
+      </FormGrid>
 
-      <button
-        onClick={() => save.mutate()}
-        disabled={save.isPending}
-        className="apx-btn-primary mt-6 px-5 disabled:opacity-60"
-      >
+      <Button variant="primary" className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
         {save.isPending ? "Saving…" : "Save profile"}
-      </button>
-    </div>
+      </Button>
+    </Panel>
   );
 }
 
@@ -213,49 +234,39 @@ function SecuritySection() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="apx-card p-6 md:p-8">
-        <h2 className="font-display text-[24px] leading-none">Change password</h2>
-        <div className="mt-5 grid gap-4">
+    <div className="space-y-4">
+      <Panel title="Change password">
+        <div className="grid gap-4">
           <Field label="New password">
-            <input
+            <Input
               type="password"
-              className="apx-input"
               value={pw}
               onChange={(e) => setPw(e.target.value)}
               placeholder="At least 8 characters"
             />
           </Field>
           <Field label="Confirm new password">
-            <input
-              type="password"
-              className="apx-input"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-            />
+            <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           </Field>
           {confirm && pw !== confirm && (
-            <p className="text-[13px] text-red-300">Passwords don't match.</p>
+            <p className="text-[13px]" style={{ color: "var(--p-red)" }}>
+              Passwords don't match.
+            </p>
           )}
-          <button
-            onClick={changePassword}
-            disabled={!valid || busy}
-            className="apx-btn-primary w-fit px-5 disabled:opacity-60"
-          >
+          <Button variant="primary" className="w-fit" onClick={changePassword} disabled={!valid || busy}>
             {busy ? "Updating…" : "Update password"}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Panel>
 
-      <div className="apx-card p-6 md:p-8">
-        <h2 className="font-display text-[24px] leading-none">Session</h2>
-        <p className="mt-3 text-[13.5px] text-apex-muted">
+      <Panel title="Session">
+        <p className="p-secondary">
           Last sign-in:{" "}
-          <span className="text-apex-ivory">
+          <span style={{ color: "var(--p-text)" }}>
             {lastSignIn ? new Date(lastSignIn).toLocaleString() : "—"}
           </span>
         </p>
-      </div>
+      </Panel>
     </div>
   );
 }
@@ -294,31 +305,22 @@ function NotificationsSection() {
   });
 
   return (
-    <div className="apx-card p-6 md:p-8">
-      <h2 className="font-display text-[24px] leading-none">Notifications</h2>
-      <p className="mt-2 text-[13.5px] text-apex-muted">
-        Choose which events email you. These are saved to your profile — we'll wire them into the
-        exact send events as the list is finalized.
-      </p>
-      <div className="mt-5 flex flex-col divide-y divide-[var(--apx-hairline)]">
+    <Panel
+      title="Notifications"
+      description="Choose which events email you. These are saved to your profile — we'll wire them into the exact send events as the list is finalized."
+    >
+      <div className="flex flex-col divide-y" style={{ borderColor: "var(--p-border)" }}>
         {NOTIF_EVENTS.map((e) => (
-          <div key={e.key} className="flex items-center justify-between gap-4 py-3.5">
-            <span className="text-[14px] text-apex-fog">{e.label}</span>
-            <Toggle
-              on={!!prefs[e.key]}
-              onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))}
-            />
+          <div key={e.key} className="flex items-center justify-between gap-4 py-3" style={{ borderColor: "var(--p-border)" }}>
+            <span className="p-body">{e.label}</span>
+            <Toggle on={!!prefs[e.key]} onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))} />
           </div>
         ))}
       </div>
-      <button
-        onClick={() => save.mutate()}
-        disabled={save.isPending}
-        className="apx-btn-primary mt-6 px-5 disabled:opacity-60"
-      >
+      <Button variant="primary" className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
         {save.isPending ? "Saving…" : "Save preferences"}
-      </button>
-    </div>
+      </Button>
+    </Panel>
   );
 }
 
@@ -326,14 +328,15 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
   return (
     <button
       onClick={() => onChange(!on)}
-      className={`relative h-6 w-11 flex-none rounded-full transition-colors ${
-        on ? "bg-apex-gold" : "bg-[var(--apx-hover)] border border-[var(--apx-hairline)]"
-      }`}
+      className="p-focus relative h-6 w-11 flex-none rounded-full border transition-colors"
+      style={{
+        background: on ? "var(--p-gold)" : "var(--p-raised)",
+        borderColor: on ? "var(--p-gold)" : "var(--p-border)",
+      }}
     >
       <span
-        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-          on ? "translate-x-[22px]" : "translate-x-0.5"
-        }`}
+        className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
+        style={{ transform: on ? "translateX(22px)" : "translateX(2px)" }}
       />
     </button>
   );
@@ -344,27 +347,16 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 function AppearanceSection() {
   const { theme, setTheme } = useTheme();
   return (
-    <div className="apx-card p-6 md:p-8">
-      <h2 className="font-display text-[24px] leading-none">Appearance</h2>
-      <p className="mt-2 text-[13.5px] text-apex-muted">
-        Choose how the portal looks. This preference is saved on this device.
-      </p>
-      <div className="mt-5 inline-flex overflow-hidden rounded-[10px] border border-[var(--apx-hairline)]">
-        {(["dark", "light"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTheme(t)}
-            className={`px-5 py-2.5 text-[13px] font-semibold capitalize transition ${
-              theme === t
-                ? "bg-apex-gold text-apex-card"
-                : "bg-transparent text-apex-dim hover:bg-[var(--apx-hover)]"
-            }`}
-          >
-            {t === "dark" ? "☾ Dark" : "☀ Light"}
-          </button>
-        ))}
-      </div>
-    </div>
+    <Panel title="Appearance" description="Choose how the portal looks. This preference is saved on this device.">
+      <SegmentedControl
+        options={[
+          { value: "dark", label: "☾ Dark" },
+          { value: "light", label: "☀ Light" },
+        ]}
+        value={theme}
+        onChange={(v) => setTheme(v as "dark" | "light")}
+      />
+    </Panel>
   );
 }
 
@@ -393,66 +385,66 @@ function RecruitingSection() {
   const canEdit = q.data?.can_edit ?? false;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="space-y-4">
       <RecruitingLinkCard />
       <TeamRecruitingLinksCard />
 
-      <div className="apx-card p-6 md:p-8">
-        <h2 className="mb-4 font-display text-[24px] leading-none">Licensed scheduling</h2>
+      <Panel title="Licensed scheduling">
         {q.isLoading ? (
-          <div className="text-apex-dim">Loading…</div>
+          <div className="p-muted">Loading…</div>
         ) : !canEdit ? (
-          <p className="text-apex-muted">
+          <p className="p-secondary">
             Your account isn't permitted to schedule licensed applicants. Ask an administrator to
             enable this for you.
           </p>
         ) : (
           <>
-            <label className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-faint">
-              Licensed applicant Calendly link
-            </label>
-            <div className="flex flex-col gap-3 md:flex-row">
-              <input
-                className="apx-input flex-1"
-                placeholder="https://calendly.com/your-name/interview"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <button
-                onClick={() => save.mutate({ licensed_calendly_url: url })}
-                disabled={!isValid || save.isPending}
-                className="apx-btn-primary px-5 disabled:opacity-60"
-              >
-                {save.isPending ? "Saving…" : "Save"}
-              </button>
-            </div>
+            <Field label="Licensed applicant Calendly link">
+              <div className="flex flex-col gap-3 md:flex-row">
+                <Input
+                  className="flex-1"
+                  placeholder="https://calendly.com/your-name/interview"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <Button
+                  variant="primary"
+                  onClick={() => save.mutate({ licensed_calendly_url: url })}
+                  disabled={!isValid || save.isPending}
+                >
+                  {save.isPending ? "Saving…" : "Save"}
+                </Button>
+              </div>
+            </Field>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px]">
-              <span className="rounded-full border border-[var(--apx-hairline)] px-2.5 py-1 text-apex-fog">
+              <Badge tone={status === "Set" ? "green" : status === "Invalid" ? "red" : "neutral"}>
                 Status: {status}
-              </span>
+              </Badge>
               {q.data?.licensed_calendly_updated_at && (
-                <span className="text-apex-faint">
+                <span className="p-muted">
                   Updated {new Date(q.data.licensed_calendly_updated_at).toLocaleString()}
                 </span>
               )}
               {url && isValid && (
                 <>
-                  <a href={url} target="_blank" rel="noreferrer noopener" className="text-apex-gold hover:underline">
+                  <a href={url} target="_blank" rel="noreferrer noopener" style={{ color: "var(--p-gold)" }} className="hover:underline">
                     Test link →
                   </a>
-                  <button onClick={() => setPreview((v) => !v)} className="text-apex-gold hover:underline">
+                  <button onClick={() => setPreview((v) => !v)} style={{ color: "var(--p-gold)" }} className="hover:underline">
                     {preview ? "Hide preview" : "Preview embed"}
                   </button>
                 </>
               )}
             </div>
             {!isValid && url !== "" && (
-              <p className="mt-3 text-[13px] text-red-300">Must be a valid https://calendly.com/... URL.</p>
+              <p className="mt-3 text-[13px]" style={{ color: "var(--p-red)" }}>
+                Must be a valid https://calendly.com/... URL.
+              </p>
             )}
             {preview && url && isValid && <CalendlyInline url={url} height={640} />}
           </>
         )}
-      </div>
+      </Panel>
     </div>
   );
 }
@@ -483,43 +475,23 @@ function TeamRecruitingLinksCard() {
   }
 
   return (
-    <div className="apx-card p-6 md:p-8">
-      <div className="mb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-apex-faint">Team</div>
-      <h2 className="font-display text-[24px] leading-none">Team recruiting links</h2>
-      <p className="mt-2 text-[14px] leading-relaxed text-apex-muted">
-        Referral links for active agents on your team.
-      </p>
-      <div className="mt-5 divide-y divide-[var(--apx-hairline)]">
+    <Panel title="Team recruiting links" description="Referral links for active agents on your team.">
+      <div className="divide-y" style={{ borderColor: "var(--p-border)" }}>
         {agents.map((a) => {
           const link = a.recruiting_slug && origin ? `${origin}/?ref=${a.recruiting_slug}` : "";
           return (
-            <div key={a.id} className="flex items-center justify-between gap-3 py-3">
+            <div key={a.id} className="flex items-center justify-between gap-3 py-3" style={{ borderColor: "var(--p-border)" }}>
               <div className="min-w-0">
-                <div className="truncate text-[14px] text-apex-ivory">{a.full_name || "Unnamed agent"}</div>
-                <div className="truncate text-[12.5px] text-apex-faint">{link || "No link"}</div>
+                <div className="truncate p-body">{a.full_name || "Unnamed agent"}</div>
+                <div className="truncate p-muted">{link || "No link"}</div>
               </div>
-              <button
-                onClick={() => copy(a.id, link)}
-                disabled={!link}
-                className="apx-btn-ghost shrink-0 px-4 py-2 text-[13px] disabled:opacity-50"
-              >
+              <Button variant="ghost" size="sm" onClick={() => copy(a.id, link)} disabled={!link}>
                 {copiedId === a.id ? "Copied!" : "Copy"}
-              </button>
+              </Button>
             </div>
           );
         })}
       </div>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-apex-muted">
-        {label}
-      </span>
-      {children}
-    </label>
+    </Panel>
   );
 }

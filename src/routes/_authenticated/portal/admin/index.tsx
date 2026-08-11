@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
+import { PageHeader, PageBody, TableWrap, Table, THead, TH, TR, TD } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/")({
   head: () => ({ meta: [{ title: "Admin — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
@@ -15,21 +16,45 @@ const CARDS: { to: "/portal/admin/users" | "/portal/admin/stages" | "/portal/adm
 function AdminHome() {
   return (
     <PortalShell>
-      <PortalHeader kicker="Admin" title="Platform controls" />
-      <div className="px-6 py-8 md:px-10">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {CARDS.map((c) => (
-            <Link key={c.to} to={c.to} className="apx-card group p-6 transition hover:border-apex-gold/40">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-apex-gold/10 text-apex-gold">{c.icon}</div>
-                <div className="font-display text-[22px] text-apex-ivory">{c.label}</div>
-              </div>
-              <p className="mt-3 text-[14px] leading-relaxed text-apex-dim">{c.desc}</p>
-              <div className="mt-4 text-[13px] font-semibold text-apex-gold group-hover:translate-x-0.5 transition">Manage →</div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <PageBody>
+        <PageHeader title="Admin" description="Platform controls" />
+        <TableWrap>
+          <Table>
+            <THead>
+              <TH>Area</TH>
+              <TH>Description</TH>
+              <TH align="right" />
+            </THead>
+            <tbody>
+              {CARDS.map((c) => (
+                <TR key={c.to}>
+                  <TD>
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] text-[14px]"
+                        style={{ background: "var(--p-gold-soft)", color: "var(--p-gold)" }}
+                      >
+                        {c.icon}
+                      </span>
+                      <span className="p-card-title truncate">{c.label}</span>
+                    </div>
+                  </TD>
+                  <TD className="p-secondary">{c.desc}</TD>
+                  <TD align="right">
+                    <Link
+                      to={c.to}
+                      className="p-focus text-[13px] font-semibold"
+                      style={{ color: "var(--p-gold)" }}
+                    >
+                      Manage →
+                    </Link>
+                  </TD>
+                </TR>
+              ))}
+            </tbody>
+          </Table>
+        </TableWrap>
+      </PageBody>
     </PortalShell>
   );
 }

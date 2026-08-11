@@ -1,9 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
 import { adminListUsers, adminSetUserRole, adminUpdateProfile } from "@/lib/portal.functions";
 import { useState } from "react";
+import {
+  PageHeader, PageBody, Toolbar, SearchField, TableWrap, Table, THead, TH, TR, TD,
+  Badge, Select, Input,
+} from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
   head: () => ({ meta: [{ title: "Users — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
@@ -43,48 +47,39 @@ function UsersPage() {
 
   return (
     <PortalShell>
-      <PortalHeader kicker="Admin" title="Users & Roles" />
-      <div className="px-6 py-8 md:px-10">
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <input
-            className="apx-input max-w-sm"
-            placeholder="Search name or email…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <div className="ml-auto text-[13px] text-apex-faint">{users.length} user(s)</div>
-        </div>
+      <PageBody>
+        <PageHeader title="Users & roles" description="Grant admin, manager, or agent access; toggle activation and teams." />
+        <Toolbar className="mb-4">
+          <SearchField value={q} onChange={setQ} placeholder="Search name or email…" />
+          <div className="ml-auto p-muted">{users.length} user(s)</div>
+        </Toolbar>
 
         {isLoading ? (
-          <div className="apx-card p-10 text-center text-apex-dim">Loading…</div>
+          <div className="p-panel p-secondary p-8 text-center">Loading…</div>
         ) : (
-          <div className="apx-card overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-[14px]">
-              <thead className="bg-white/[0.02] text-[11px] uppercase tracking-[0.12em] text-apex-faint">
-                <tr>
-                  <th className="px-5 py-3">Name</th>
-                  <th className="px-5 py-3">Role</th>
-                  <th className="px-5 py-3">Reports to</th>
-                  <th className="px-5 py-3">Permissions</th>
-                  <th className="px-5 py-3">Recruiting link</th>
-                  <th className="px-5 py-3">Status</th>
-                </tr>
-              </thead>
+          <TableWrap>
+            <Table className="min-w-[900px]">
+              <THead>
+                <TH>Name</TH>
+                <TH>Role</TH>
+                <TH>Reports to</TH>
+                <TH>Permissions</TH>
+                <TH>Recruiting link</TH>
+                <TH>Status</TH>
+              </THead>
               <tbody>
                 {users.map((u: any) => (
-                  <tr key={u.id} className="border-t border-white/[0.05] align-top">
-                    <td className="px-5 py-4">
-                      <div className="font-medium text-apex-ivory">
+                  <TR key={u.id} className="align-top">
+                    <TD>
+                      <div className="p-card-title">
                         {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
                       </div>
-                      <div className="text-[12px] text-apex-faint">{u.email}</div>
+                      <div className="p-muted">{u.email}</div>
                       {u.roles.includes("super_admin") && (
-                        <span className="mt-1 inline-block rounded-full border border-apex-gold/40 bg-apex-gold/10 px-2 py-0.5 text-[10.5px] font-semibold text-apex-gold">
-                          Owner
-                        </span>
+                        <Badge tone="gold" className="mt-1">Owner</Badge>
                       )}
-                    </td>
-                    <td className="px-5 py-4">
+                    </TD>
+                    <TD>
                       <div className="flex flex-wrap gap-1.5">
                         {ROLES.map((r) => {
                           const on = u.roles.includes(r);
@@ -93,21 +88,22 @@ function UsersPage() {
                               key={r}
                               disabled={roleMut.isPending}
                               onClick={() => roleMut.mutate({ user_id: u.id, role: r, grant: !on })}
-                              className={`rounded-full border px-2.5 py-1 text-[11.5px] font-medium capitalize transition ${
+                              className="p-focus rounded-full border px-2.5 py-1 text-[11.5px] font-medium capitalize transition"
+                              style={
                                 on
-                                  ? "border-apex-gold/40 bg-apex-gold/10 text-apex-gold"
-                                  : "border-white/10 text-apex-faint hover:border-white/25 hover:text-apex-ivory"
-                              }`}
+                                  ? { borderColor: "var(--p-gold-line)", background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+                                  : { borderColor: "var(--p-border)", color: "var(--p-text-3)" }
+                              }
                             >
                               {r}
                             </button>
                           );
                         })}
                       </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <select
-                        className="apx-input h-9 w-44 text-[13px]"
+                    </TD>
+                    <TD>
+                      <Select
+                        className="h-9 w-44 text-[13px]"
                         value={u.parent_user_id ?? ""}
                         onChange={(e) =>
                           profileMut.mutate({ id: u.id, parent_user_id: e.target.value || null })
@@ -121,10 +117,10 @@ function UsersPage() {
                               {[p.first_name, p.last_name].filter(Boolean).join(" ") || p.email}
                             </option>
                           ))}
-                      </select>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col gap-1.5 text-[12px] text-apex-dim">
+                      </Select>
+                    </TD>
+                    <TD>
+                      <div className="flex flex-col gap-1.5">
                         <PermToggle
                           label="Invite agents"
                           checked={!!u.can_invite_agents}
@@ -141,8 +137,8 @@ function UsersPage() {
                           onChange={(v) => profileMut.mutate({ id: u.id, can_manage_resources: v })}
                         />
                       </div>
-                    </td>
-                    <td className="px-5 py-4">
+                    </TD>
+                    <TD>
                       <SlugCell
                         slug={u.recruiting_slug ?? ""}
                         disabled={profileMut.isPending}
@@ -153,9 +149,9 @@ function UsersPage() {
                         checked={u.can_receive_applicants !== false}
                         onChange={(v) => profileMut.mutate({ id: u.id, can_receive_applicants: v })}
                       />
-                    </td>
-                    <td className="px-5 py-4">
-                      <label className="inline-flex items-center gap-2 text-[13px] text-apex-dim">
+                    </TD>
+                    <TD>
+                      <label className="p-secondary inline-flex items-center gap-2 text-[13px]">
                         <input
                           type="checkbox"
                           checked={u.is_active !== false}
@@ -165,21 +161,21 @@ function UsersPage() {
                         />
                         {u.is_active !== false ? "Active" : "Inactive"}
                       </label>
-                    </td>
-                  </tr>
+                    </TD>
+                  </TR>
                 ))}
                 {users.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-apex-dim">
+                  <TR>
+                    <TD colSpan={6} className="p-secondary text-center">
                       No users match.
-                    </td>
-                  </tr>
+                    </TD>
+                  </TR>
                 )}
               </tbody>
-            </table>
-          </div>
+            </Table>
+          </TableWrap>
         )}
-      </div>
+      </PageBody>
     </PortalShell>
   );
 }
@@ -194,7 +190,7 @@ function PermToggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="inline-flex items-center gap-2 text-[12px] text-apex-dim">
+    <label className="p-secondary inline-flex items-center gap-2 text-[12px]">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {label}
     </label>
@@ -214,8 +210,8 @@ function SlugCell({
   const dirty = value.trim() !== slug;
   return (
     <div className="flex items-center gap-2">
-      <input
-        className="apx-input h-9 w-40 text-[13px]"
+      <Input
+        className="h-9 w-40 text-[13px]"
         value={value}
         placeholder="recruiting-slug"
         disabled={disabled}
@@ -225,7 +221,8 @@ function SlugCell({
         <button
           onClick={() => onSave(value.trim().toLowerCase())}
           disabled={disabled}
-          className="text-[12px] text-apex-gold hover:underline disabled:opacity-50"
+          className="p-focus text-[12px] font-semibold disabled:opacity-50"
+          style={{ color: "var(--p-gold)" }}
         >
           Save
         </button>

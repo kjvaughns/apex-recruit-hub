@@ -2,8 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { PortalShell, PortalHeader } from "@/components/apex/portal-shell";
+import { PortalShell } from "@/components/apex/portal-shell";
 import { getOrganizationTree, type OrgNode } from "@/lib/portal.functions";
+import { PageHeader, PageBody, Panel, Avatar, Badge, EmptyState, type BadgeTone } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/organization")({
   head: () => ({
@@ -12,11 +13,11 @@ export const Route = createFileRoute("/_authenticated/portal/organization")({
   component: OrganizationPage,
 });
 
-const ROLE_COLOR: Record<string, string> = {
-  admin: "text-apex-gold",
-  manager: "text-emerald-300",
-  leader: "text-sky-300",
-  agent: "text-apex-fog",
+const ROLE_TONE: Record<string, BadgeTone> = {
+  admin: "gold",
+  manager: "green",
+  leader: "blue",
+  agent: "neutral",
 };
 
 function OrganizationPage() {
@@ -45,25 +46,30 @@ function OrganizationPage() {
 
   return (
     <PortalShell>
-      <PortalHeader kicker="Hierarchy" title="Organization" />
-      <div className="px-6 py-8 md:px-10">
+      <PageBody>
+        <PageHeader title="Organization" description="Your reporting hierarchy and downline." />
         {q.isLoading ? (
-          <div className="apx-card p-10 text-center text-apex-dim">Loading…</div>
+          <Panel bodyClassName="py-10">
+            <div className="p-secondary text-center">Loading…</div>
+          </Panel>
         ) : nodes.length === 0 ? (
-          <div className="apx-card p-10 text-center text-apex-dim">No downline yet.</div>
+          <Panel>
+            <EmptyState title="No downline yet" description="Agents you recruit or manage will appear here." />
+          </Panel>
         ) : (
-          <div className="apx-card p-4 md:p-6">
-            <div className="mb-3 text-[12px] text-apex-faint">
-              {nodes.length} {nodes.length === 1 ? "person" : "people"} in view
-            </div>
-            <div className="flex flex-col gap-1">
+          <Panel
+            title="Hierarchy"
+            description={`${nodes.length} ${nodes.length === 1 ? "person" : "people"} in view`}
+            bodyClassName="p-2"
+          >
+            <div className="flex flex-col gap-0.5">
               {roots.map((r) => (
                 <TreeNode key={r.id} node={r} childrenOf={childrenOf} depth={0} />
               ))}
             </div>
-          </div>
+          </Panel>
         )}
-      </div>
+      </PageBody>
     </PortalShell>
   );
 }
@@ -82,31 +88,35 @@ function TreeNode({
   return (
     <div>
       <div
-        className="flex items-center gap-2 rounded-[10px] px-2 py-2 hover:bg-white/[0.03]"
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-[8px] px-2 py-2 hover:bg-[var(--p-hover)] sm:flex"
         style={{ paddingLeft: `${depth * 18 + 8}px` }}
       >
-        {kids.length > 0 ? (
-          <button
-            onClick={() => setOpen((v) => !v)}
-            className="flex h-5 w-5 flex-none items-center justify-center rounded text-apex-muted hover:text-apex-gold"
-          >
-            {open ? "▾" : "▸"}
-          </button>
-        ) : (
-          <span className="w-5 flex-none text-center text-apex-faint">·</span>
-        )}
-        <span className="flex h-7 w-7 flex-none items-center justify-center rounded-full bg-white/10 text-[11px] font-semibold text-apex-fog">
-          {(node.name?.[0] ?? "?").toUpperCase()}
-        </span>
-        <span className="truncate text-[14px] text-apex-ivory">{node.name}</span>
-        <span
-          className={`text-[11.5px] capitalize ${ROLE_COLOR[node.role ?? ""] ?? "text-apex-faint"}`}
-        >
-          {node.role ?? "—"}
-        </span>
-        {node.team_name && <span className="text-[11px] text-apex-faint">· {node.team_name}</span>}
+        <div className="flex min-w-0 items-center gap-2">
+          {kids.length > 0 ? (
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="p-focus grid h-5 w-5 flex-none place-items-center rounded text-[12px]"
+              style={{ color: "var(--p-text-3)" }}
+              aria-label={open ? "Collapse" : "Expand"}
+            >
+              {open ? "▾" : "▸"}
+            </button>
+          ) : (
+            <span className="w-5 flex-none text-center" style={{ color: "var(--p-text-3)" }}>
+              ·
+            </span>
+          )}
+          <Avatar name={node.name} size={26} />
+          <span className="truncate text-[13.5px]">{node.name}</span>
+          <Badge tone={ROLE_TONE[node.role ?? ""] ?? "neutral"} className="capitalize shrink-0">
+            {node.role ?? "—"}
+          </Badge>
+          {node.team_name && (
+            <span className="p-muted hidden truncate sm:inline">· {node.team_name}</span>
+          )}
+        </div>
         {kids.length > 0 && (
-          <span className="ml-auto text-[11px] text-apex-faint">{kids.length} direct</span>
+          <span className="p-muted shrink-0 text-[11px]">{kids.length} direct</span>
         )}
       </div>
       {open &&

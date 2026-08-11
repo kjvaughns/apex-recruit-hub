@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
+import { Badge as UiBadge, type BadgeTone } from "@/components/portal/ui";
 
-export const TYPE_META: Record<string, { label: string; color: string; icon: string }> = {
-  video:    { label: "Video",    color: "#E5484D", icon: "▶" },
-  pdf:      { label: "PDF",      color: "#4C7DF0", icon: "▤" },
-  training: { label: "Training", color: "#C9A84C", icon: "★" },
-  guide:    { label: "Guide",    color: "#46A758", icon: "▦" },
-  course:   { label: "Course",   color: "#C9A84C", icon: "◈" },
+export const TYPE_META: Record<string, { label: string; color: string; icon: string; tone: BadgeTone }> = {
+  video:    { label: "Video",    color: "#E5484D", icon: "▶", tone: "red" },
+  pdf:      { label: "PDF",      color: "#4C7DF0", icon: "▤", tone: "blue" },
+  training: { label: "Training", color: "#C9A84C", icon: "★", tone: "gold" },
+  guide:    { label: "Guide",    color: "#46A758", icon: "▦", tone: "green" },
+  course:   { label: "Course",   color: "#C9A84C", icon: "◈", tone: "gold" },
 };
 
 export function formatDisplayDate(d?: string | null) {
@@ -17,24 +18,15 @@ export function formatDisplayDate(d?: string | null) {
 
 export function Badge({ type, size = "sm" }: { type: string; size?: "sm" | "md" }) {
   const m = TYPE_META[type] ?? TYPE_META.guide;
-  const pad = size === "md" ? "px-3 py-1.5 text-[11.5px]" : "px-2.5 py-1 text-[10.5px]";
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border font-semibold uppercase tracking-[0.14em] ${pad}`}
-      style={{ borderColor: `${m.color}55`, background: `${m.color}12`, color: m.color }}
-    >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: m.color }} />
+    <UiBadge tone={m.tone} dot className={size === "md" ? "text-[12px]" : undefined}>
       {m.label}
-    </span>
+    </UiBadge>
   );
 }
 
 export function SectionKicker({ children }: { children: ReactNode }) {
-  return (
-    <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-apex-gold">
-      {children}
-    </p>
-  );
+  return <p className="p-label mb-2">{children}</p>;
 }
 
 /** Overlay + centered modal shell. */
@@ -42,9 +34,9 @@ export function Overlay({ onClose, children }: { onClose: () => void; children: 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/72 px-4 py-10 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-10 backdrop-blur-[2px]"
     >
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[720px]">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[640px]">
         {children}
       </div>
     </div>

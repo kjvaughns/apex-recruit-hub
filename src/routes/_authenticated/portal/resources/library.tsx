@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/apex/portal-shell";
 import { listLibrary } from "@/lib/resources.functions";
 import { LibraryView, type LibraryItem } from "@/components/apex/resources/library";
+import { PageHeader, PageBody, Button } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/resources/library")({
   head: () => ({ meta: [{ title: "Resource Library — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
@@ -17,21 +18,22 @@ function LibraryPage() {
 
   return (
     <PortalShell>
-      <div className="mx-auto max-w-[1240px] px-6 pb-20 md:px-8">
-        <div className="flex items-center gap-4 pt-6">
-          <Link
-            to="/portal/resources"
-            className="rounded-lg border border-white/[0.09] px-3 py-1.5 text-[13px] font-semibold text-apex-dim transition hover:border-apex-gold hover:text-apex-gold"
-          >
-            ← Hub
-          </Link>
-        </div>
+      <PageBody>
+        <PageHeader
+          title="Resource Library"
+          description="Scripts, guides & trainings."
+          actions={
+            <Link to="/portal/resources">
+              <Button variant="secondary" size="sm">← Hub</Button>
+            </Link>
+          }
+        />
         {q.isLoading ? (
-          <div className="py-24 text-center text-apex-dim">Loading library…</div>
+          <div className="p-secondary py-16 text-center">Loading library…</div>
         ) : (
           <LibraryView items={items} />
         )}
-      </div>
+      </PageBody>
     </PortalShell>
   );
 }

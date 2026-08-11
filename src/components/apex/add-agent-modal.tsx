@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Modal, Field, Input, Button } from "@/components/portal/ui";
 
 export type AddAgentFields = { full_name: string; email: string; phone: string };
 
@@ -41,77 +42,42 @@ export function AddAgentModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-black/70 p-4"
-      onClick={onClose}
+    <Modal
+      title="Add agent"
+      description="Send a new licensed agent straight into onboarding. They'll get a portal invite and their 4-step checklist."
+      onClose={onClose}
+      width={460}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={submit} disabled={!valid || submitting}>
+            {submitting ? "Sending invite…" : "Add agent & send invite"}
+          </Button>
+        </>
+      }
     >
-      <div
-        className="apx-card my-16 w-full max-w-[460px] p-6 md:p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="font-display text-[26px] leading-none">Add agent</h2>
-        <p className="mt-2 text-[13px] text-apex-muted">
-          Send a new licensed agent straight into onboarding. They'll get a portal invite and their
-          4-step checklist.
-        </p>
+      <div className="grid gap-4">
+        <Field label="Full name" required>
+          <Input value={f.full_name} onChange={(e) => set("full_name", e.target.value)} autoFocus />
+        </Field>
+        <Field label="Email" required>
+          <Input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} />
+        </Field>
+        <Field label="Phone" required>
+          <Input type="tel" value={f.phone} onChange={(e) => set("phone", e.target.value)} />
+        </Field>
 
-        <div className="mt-5 grid gap-4">
-          <R label="Full name *">
-            <input
-              className="apx-input"
-              value={f.full_name}
-              onChange={(e) => set("full_name", e.target.value)}
-              autoFocus
-            />
-          </R>
-          <R label="Email *">
-            <input
-              type="email"
-              className="apx-input"
-              value={f.email}
-              onChange={(e) => set("email", e.target.value)}
-            />
-          </R>
-          <R label="Phone *">
-            <input
-              type="tel"
-              className="apx-input"
-              value={f.phone}
-              onChange={(e) => set("phone", e.target.value)}
-            />
-          </R>
-
-          {error && (
-            <div className="rounded-[10px] border border-red-500/30 bg-red-500/10 p-3 text-[13px] text-red-200">
-              {error}
-            </div>
-          )}
-
-          <div className="mt-1 flex gap-3">
-            <button onClick={onClose} className="apx-btn-ghost flex-1 px-4 py-3 text-[13.5px]">
-              Cancel
-            </button>
-            <button
-              onClick={submit}
-              disabled={!valid || submitting}
-              className="apx-btn-primary flex-1 px-4 py-3 text-[13.5px] disabled:opacity-60"
-            >
-              {submitting ? "Sending invite…" : "Add agent & send invite"}
-            </button>
+        {error && (
+          <div
+            className="rounded-[10px] border px-3 py-2 text-[13px]"
+            style={{ borderColor: "var(--p-red)", background: "rgba(220,106,98,0.1)", color: "var(--p-red)" }}
+          >
+            {error}
           </div>
-        </div>
+        )}
       </div>
-    </div>
-  );
-}
-
-function R({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.1em] text-apex-muted">
-        {label}
-      </span>
-      {children}
-    </label>
+    </Modal>
   );
 }
