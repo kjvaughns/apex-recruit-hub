@@ -36,6 +36,8 @@ import { Route as AuthenticatedPortalResourcesIndexRouteImport } from './routes/
 import { Route as AuthenticatedPortalCrmIndexRouteImport } from './routes/_authenticated/portal/crm/index'
 import { Route as AuthenticatedPortalAdminIndexRouteImport } from './routes/_authenticated/portal/admin/index'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
 import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
 import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
@@ -199,6 +201,16 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksCalendlyRoute =
   ApiPublicWebhooksCalendlyRouteImport.update({
     id: '/api/public/webhooks/calendly',
@@ -286,6 +298,8 @@ export interface FileRoutesByFullPath {
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
@@ -318,6 +332,8 @@ export interface FileRoutesByTo {
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/portal/admin': typeof AuthenticatedPortalAdminIndexRoute
   '/portal/crm': typeof AuthenticatedPortalCrmIndexRoute
@@ -357,6 +373,8 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/_authenticated/portal/admin/': typeof AuthenticatedPortalAdminIndexRoute
   '/_authenticated/portal/crm/': typeof AuthenticatedPortalCrmIndexRoute
@@ -396,6 +414,8 @@ export interface FileRouteTypes {
     | '/portal/resources/library'
     | '/portal/resources/presentations'
     | '/api/public/webhooks/calendly'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/portal/admin/'
     | '/portal/crm/'
@@ -428,6 +448,8 @@ export interface FileRouteTypes {
     | '/portal/resources/library'
     | '/portal/resources/presentations'
     | '/api/public/webhooks/calendly'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/portal/admin'
     | '/portal/crm'
@@ -466,6 +488,8 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/library'
     | '/_authenticated/portal/resources/presentations'
     | '/api/public/webhooks/calendly'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
     | '/_authenticated/portal/admin/'
     | '/_authenticated/portal/crm/'
@@ -482,6 +506,8 @@ export interface RootRouteChildren {
   ScheduleRoute: typeof ScheduleRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -674,6 +700,20 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/transactional/preview'
       fullPath: '/lovable/email/transactional/preview'
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/webhooks/calendly': {
@@ -880,18 +920,10 @@ const rootRouteChildren: RootRouteChildren = {
   ScheduleRoute: ScheduleRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
