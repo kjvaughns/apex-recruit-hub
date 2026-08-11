@@ -1,7 +1,7 @@
-// Phase 3 — stub "send". No transactional provider is wired yet: we render the
-// template and enqueue it into email_outbox (status='pending') via the
-// enqueue_email RPC, and log a line so the trigger is observable. When a
-// provider is added later, it drains pending rows — nothing here needs to move.
+// Email delivery. Sends through Lovable's managed email API and records the
+// outcome in the email_outbox log (status = sent | failed | skipped) so
+// managers can inspect what went out. Best-effort: a delivery failure never
+// breaks an application submission or an auto-hire.
 
 import { render, resolveLinks, type TemplateKey, type TemplateParams } from "./templates";
 
@@ -17,19 +17,50 @@ export type QueueEmailArgs = {
   params?: Omit<TemplateParams, "links">;
 };
 
+/** Internal template key -> registered React Email template name. */
+const TEMPLATE_NAMES: Record<TemplateKey, string> = {
+  application_licensed: "application-licensed",
+  application_unlicensed: "application-unlicensed",
+  welcome_hired: "welcome-hired",
+  followup_checkin: "followup-checkin",
+};
+
 /**
- * Render a template and enqueue it as a pending outbox row. Best-effort:
- * never throws into the caller's flow — a queue failure must not break an
- * application submission or an auto-hire.
+ * Send a branded Vantage email and log the outcome. Never throws into the
+ * caller's flow.
  */
 export async function queueEmail(
   supabase: MinimalClient,
   { to, toName, applicantId, template, params }: QueueEmailArgs,
 ): Promise<void> {
+  const email = to?.trim();
+  if (!email) return;
+
+  const links = resolveLinks();
+  const rendered = render(template, { ...params, links });
+
+  let status: "sent" | "failed" | "skipped" = "failed";
+  let errorText: string | null = null;
+
   try {
-    const email = to?.trim();
-    if (!email) return;
-    const rendered = render(template, { ...params, links: resolveLinks() });
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const result = await sendTemplateEmail(TEMPLATE_NAMES[template], email, {
+      templateData: {
+        firstName: params?.firstName,
+        licensed: params?.licensed,
+        ...links,
+      },
+      idempotencyKey: `${template}-${applicantId ?? email}`,
+    });
+    status = result.sent ? "sent" : "skipped";
+    if (!result.sent) errorText = result.reason;
+  } catch (e) {
+    errorText = e instanceof Error ? e.message : String(e);
+    // eslint-disable-next-line no-console
+    console.warn(`[email] send failed for ${template} -> ${email}:`, errorText);
+  }
+
+  try {
     const { error } = await supabase.rpc("enqueue_email", {
       payload: {
         to_email: email,
@@ -38,18 +69,17 @@ export async function queueEmail(
         html: rendered.html,
         template_key: template,
         applicant_id: applicantId ?? null,
+        status,
+        error: errorText,
       },
     });
     if (error) {
       // eslint-disable-next-line no-console
-      console.warn(`[email:stub] enqueue failed for ${template} -> ${email}:`, error);
-      return;
+      console.warn(`[email] outbox log failed for ${template} -> ${email}:`, error);
     }
-    // eslint-disable-next-line no-console
-    console.log(`[email:stub] queued ${template} -> ${email} (no provider; pending in outbox)`);
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.warn(`[email:stub] unexpected error queuing ${template}:`, e);
+    console.warn(`[email] unexpected error logging ${template}:`, e);
   }
 }
 
