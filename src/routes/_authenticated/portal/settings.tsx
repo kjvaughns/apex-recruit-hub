@@ -449,7 +449,85 @@ function RecruitingSection() {
           </>
         )}
       </Panel>
+
+      <OneOnOneLinkPanel />
     </div>
+  );
+}
+
+/* 1:1 call link — leaders own this; applicants who can't attend an overview
+   book with the nearest leader above their recruiter. */
+function OneOnOneLinkPanel() {
+  const getFn = useServerFn(getMySchedulingSettings);
+  const saveFn = useServerFn(updateMySchedulingSettings);
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ["me", "scheduling"], queryFn: () => getFn() });
+  const save = useMutation({
+    mutationFn: (v: { one_on_one_calendly_url: string }) => saveFn({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["me", "scheduling"] }),
+  });
+
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    if (q.data) setUrl(q.data.one_on_one_calendly_url ?? "");
+  }, [q.data]);
+
+  if (q.isLoading || !q.data?.can_edit_one_on_one) return null;
+
+  const isValid = url === "" || CALENDLY_RE.test(url);
+  const status = url === "" ? "Not set" : !isValid ? "Invalid" : "Set";
+
+  return (
+    <Panel title="1:1 call link">
+      <p className="p-secondary mb-3">
+        When an applicant in your downline can't attend a Monday overview, they'll be sent here to
+        book a 1:1 call with you. If you leave this blank, they'll book with the next leader above
+        you.
+      </p>
+      <Field label="Your 1:1 Calendly link">
+        <div className="flex flex-col gap-3 md:flex-row">
+          <Input
+            className="flex-1"
+            placeholder="https://calendly.com/your-name/30min"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <Button
+            variant="primary"
+            onClick={() => save.mutate({ one_on_one_calendly_url: url })}
+            disabled={!isValid || save.isPending}
+          >
+            {save.isPending ? "Saving…" : "Save"}
+          </Button>
+        </div>
+      </Field>
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-[13px]">
+        <Badge tone={status === "Set" ? "green" : status === "Invalid" ? "red" : "neutral"}>
+          Status: {status}
+        </Badge>
+        {q.data?.one_on_one_calendly_updated_at && (
+          <span className="p-muted">
+            Updated {new Date(q.data.one_on_one_calendly_updated_at).toLocaleString()}
+          </span>
+        )}
+        {url && isValid && (
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer noopener"
+            style={{ color: "var(--p-gold)" }}
+            className="hover:underline"
+          >
+            Test link →
+          </a>
+        )}
+      </div>
+      {!isValid && url !== "" && (
+        <p className="mt-3 text-[13px]" style={{ color: "var(--p-red)" }}>
+          Must be a valid https://calendly.com/... URL.
+        </p>
+      )}
+    </Panel>
   );
 }
 
