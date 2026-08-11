@@ -185,7 +185,8 @@ function ApplyPage() {
             Build your empire in insurance sales
           </h1>
           <p className="mx-auto mt-4 max-w-[540px] text-[16px] leading-relaxed text-apex-muted">
-            Uncapped commissions paid weekly, warm inbound leads, and free licensing and training.
+            Uncapped commissions with daily pay, unlimited leads, and discounted licensing and
+            training.
             Three minutes to apply — no résumé required.
           </p>
 
