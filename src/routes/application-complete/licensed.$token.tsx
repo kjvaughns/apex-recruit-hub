@@ -118,11 +118,13 @@ function LicensedComplete() {
                 Open Calendly in a new tab →
               </a>
               <button onClick={onConfirm} className="vantage-btn-primary px-6 py-3.5 text-[15px]">
-                I've booked — continue →
+                {booked ? "Booked ✓" : "I've booked — continue →"}
               </button>
             </div>
             <p className="mt-4 text-[13px] text-vantage-faint">
-              Your application isn't complete until an interview time is selected.
+              {booked
+                ? "Nice — check your email for the invite. Your resources are below."
+                : "Your application isn't complete until an interview time is selected."}
             </p>
           </>
         ) : (
@@ -134,11 +136,81 @@ function LicensedComplete() {
             <p className="mt-2 text-[14px] text-vantage-faint">
               You don't need to do anything else right now — watch your inbox and phone for outreach within one business day.
             </p>
-            <div className="mt-6">
-              <Link to="/" className="vantage-btn-ghost px-6 py-3.5 text-[15px]">Back to Vantage →</Link>
-            </div>
           </div>
         )}
+
+        {/* Resources — a 1:1 call, the licensing course and the team Discord */}
+        <div className="mt-6 grid gap-4 text-left md:grid-cols-2">
+          {oneOnOneUrl && (
+            <div className="vantage-card flex flex-col gap-3 p-6">
+              <div className="font-display text-[20px] leading-tight text-vantage-ivory">
+                Prefer a 1:1 call?
+              </div>
+              <p className="text-[13.5px] leading-relaxed text-vantage-dim">
+                Grab a time directly with a Vantage team leader — your details are already filled in.
+              </p>
+              <a
+                href={oneOnOneUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
+              >
+                Book a 1:1 call →
+              </a>
+            </div>
+          )}
+
+          <div className="vantage-card flex flex-col gap-3 p-6">
+            <div className="font-display text-[20px] leading-tight text-vantage-ivory">
+              Continuing education & licensing
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-vantage-dim">
+              Adding lines or a new state? Use Xcel Solutions with our partner code for the
+              discounted rate.
+            </p>
+            <button
+              onClick={copyCode}
+              className="flex items-center justify-between gap-3 rounded-[10px] border border-vantage-gold/40 bg-vantage-gold/[0.08] px-4 py-2.5 text-left transition hover:border-vantage-gold"
+            >
+              <span className="text-[12px] uppercase tracking-[0.08em] text-vantage-muted">
+                Partner code
+              </span>
+              <span className="font-display text-[18px] tracking-wide text-vantage-gold">
+                {XCEL_PARTNER_CODE}
+              </span>
+              <span className="text-[12px] text-vantage-faint">{copied ? "Copied" : "Copy"}</span>
+            </button>
+            <a
+              href={XCEL_COURSE_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
+            >
+              Open the course →
+            </a>
+          </div>
+
+          <div className="vantage-card flex flex-col gap-3 p-6">
+            <div className="font-display text-[20px] leading-tight text-vantage-ivory">
+              Join the Vantage Discord
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-vantage-dim">
+              Training, announcements, and the people who'll help you get producing fast.
+            </p>
+            <a
+              href={DISCORD_INVITE_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
+            >
+              Join the Discord →
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <Link to="/" className="vantage-btn-ghost px-6 py-3.5 text-[15px]">Back to Vantage →</Link>
+        </div>
       </div>
     </PublicShell>
   );
