@@ -88,7 +88,8 @@ export const getDashboard = createServerFn({ method: "GET" })
     const since30 = new Date(Date.now() - 30 * 86400_000).toISOString();
     const since7 = new Date(Date.now() - 7 * 86400_000).toISOString();
 
-    const [mineRes, mine7Res, scheduledRes, evalDoneRes, feedRes, stagesRes] = await Promise.all([
+    const [mineRes, mine7Res, scheduledRes, evalDoneRes, feedRes, stagesRes, followUpRes] =
+      await Promise.all([
       supabase
         .from("applicants")
         .select("id, current_stage_id, status", { count: "exact" })
@@ -123,6 +124,19 @@ export const getDashboard = createServerFn({ method: "GET" })
         .select("id, name, slug, color, position")
         .eq("is_archived", false)
         .order("position"),
+      // Pre-licensing hires overdue for a weekly follow-up (>7d since last, or
+      // never). Scoped to the signed-in user's own applicants. Cast: generated
+      // types lag the hired_at / last_follow_up_at columns.
+      (supabase as any)
+        .from("applicants")
+        .select("id, first_name, last_name, hired_at, last_follow_up_at")
+        .eq("assigned_recruiter_id", userId)
+        .eq("licensed", false)
+        .not("hired_at", "is", null)
+        .is("archived_at", null)
+        .or(`last_follow_up_at.is.null,last_follow_up_at.lt.${since7}`)
+        .order("last_follow_up_at", { ascending: true, nullsFirst: true })
+        .limit(50),
     ]);
 
     const stages = stagesRes.data ?? [];
@@ -141,6 +155,13 @@ export const getDashboard = createServerFn({ method: "GET" })
       },
       stages,
       stageCounts,
+      needsFollowUp: (followUpRes.data ?? []) as {
+        id: string;
+        first_name: string;
+        last_name: string;
+        hired_at: string | null;
+        last_follow_up_at: string | null;
+      }[],
       feed: (feedRes.data ?? []).filter((f) => {
         // Show items for own applicants; managers/admins see all via RLS
         const rec = (f.applicants as { assigned_recruiter_id: string | null } | null)
