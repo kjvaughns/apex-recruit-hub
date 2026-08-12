@@ -211,49 +211,111 @@ function CoursePlayer() {
   );
 }
 
-function LessonView({ lesson, completed, onComplete }: { lesson: any; completed: boolean; onComplete: () => void }) {
+function LessonView({
+  lesson,
+  transcript,
+  completed,
+  onComplete,
+}: {
+  lesson: any;
+  transcript: any;
+  completed: boolean;
+  onComplete: () => void;
+}) {
   const markFn = useServerFn(markLessonComplete);
   const mut = useMutation({
     mutationFn: () => markFn({ data: { lesson_id: lesson.id } }),
     onSuccess: () => { notify.success("Lesson complete."); onComplete(); },
     onError: () => notify.error("Couldn't mark this lesson complete. Please try again."),
   });
+  const kind = lesson.kind === "lesson" ? (lesson.media_type ?? "video") : lesson.kind;
+  const media = resolveMedia(lesson.video_url);
 
   return (
     <>
-      {lesson.media_type === "audio" ? (
+      {kind === "audio" && (
         <Panel>
-          {lesson.video_url ? <audio controls src={lesson.video_url} className="w-full" /> : <div className="p-muted">No media attached.</div>}
+          {lesson.video_url ? <audio controls src={lesson.video_url} className="w-full" /> : <div className="p-muted">No audio attached.</div>}
         </Panel>
-      ) : (
+      )}
+
+      {kind === "video" && (
         <div className="p-panel overflow-hidden">
-          {lesson.video_url ? (
+          {!lesson.video_url ? (
+            <div className="grid aspect-video w-full place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>
+              No media attached
+            </div>
+          ) : media.kind === "direct" ? (
             <video controls src={lesson.video_url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} />
           ) : (
-            <div className="grid aspect-video w-full place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>No media attached</div>
+            <iframe
+              src={media.embedUrl ?? lesson.video_url}
+              title={lesson.title}
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              className="aspect-video w-full"
+              style={{ border: 0, background: "var(--p-raised)" }}
+            />
           )}
         </div>
       )}
-      <Panel title={lesson.title}>
-        {lesson.blurb && <p className="p-secondary leading-relaxed whitespace-pre-wrap">{lesson.blurb}</p>}
+
+      <Panel title={lesson.title} description={lesson.duration || undefined}>
+        {kind === "text" && lesson.body && (
+          <p className="p-secondary whitespace-pre-wrap leading-relaxed">{lesson.body}</p>
+        )}
+        {lesson.blurb && <p className="p-secondary mt-2 whitespace-pre-wrap leading-relaxed">{lesson.blurb}</p>}
+        {(kind === "resource" || kind === "link") && lesson.resource_url && (
+          <a href={lesson.resource_url} target="_blank" rel="noreferrer" className="mt-3 inline-block">
+            <Button variant="secondary" size="sm">
+              {lesson.resource_label || (kind === "link" ? "Open link" : "Open resource")} →
+            </Button>
+          </a>
+        )}
         <div className="mt-4">
           <Button variant="primary" size="sm" onClick={() => mut.mutate()} disabled={completed} loading={mut.isPending}>
             {completed ? "✓ Completed" : "Mark complete"}
           </Button>
         </div>
       </Panel>
+
+      {(transcript?.notes || transcript?.transcript_text) && (
+        <Panel title="Training notes" description="Generated from this lesson's recording.">
+          {transcript?.notes && <NotesPreview notes={transcript.notes} />}
+          {transcript?.transcript_text && (
+            <details className="mt-3">
+              <summary className="p-focus cursor-pointer text-[13px]" style={{ color: "var(--p-text-2)" }}>
+                Read the full transcript
+              </summary>
+              <div
+                className="p-secondary mt-2 max-h-[320px] overflow-y-auto whitespace-pre-wrap rounded-[10px] p-3 leading-relaxed"
+                style={{ background: "var(--p-hover)" }}
+              >
+                {transcript.transcript_text}
+              </div>
+            </details>
+          )}
+        </Panel>
+      )}
     </>
   );
 }
 
+type QuizResult = {
+  passed: boolean;
+  score: number;
+  threshold: number;
+  results?: { id: string; correct: boolean; correct_index: number; explanation: string | null }[];
+};
+
 function QuizView({ lesson, questions, onDone }: { lesson: any; questions: any[]; onDone: () => void }) {
   const submitFn = useServerFn(submitQuiz);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [result, setResult] = useState<null | { passed: boolean; score: number; threshold: number }>(null);
+  const [result, setResult] = useState<QuizResult | null>(null);
   const mut = useMutation({
     mutationFn: () => submitFn({ data: { lesson_id: lesson.id, answers: questions.map((_, i) => answers[i] ?? -1) } }),
     onSuccess: (res) => {
-      setResult(res);
+      setResult(res as QuizResult);
       onDone();
       if (res.passed) notify.success("Passed! Next lesson unlocked.");
     },
@@ -261,6 +323,8 @@ function QuizView({ lesson, questions, onDone }: { lesson: any; questions: any[]
   });
 
   const allAnswered = questions.length > 0 && questions.every((_, i) => answers[i] != null);
+  const byId: Record<string, NonNullable<QuizResult["results"]>[number]> = {};
+  for (const r of result?.results ?? []) byId[r.id] = r;
 
   return (
     <Panel title={lesson.title} description={`Pass at ${Math.round((lesson.quiz_pass_threshold ?? 0.75) * 100)}%`}>
@@ -268,26 +332,63 @@ function QuizView({ lesson, questions, onDone }: { lesson: any; questions: any[]
         <p className="p-muted">This quiz has no questions yet.</p>
       ) : (
         <div className="space-y-5">
-          {questions.map((qq, i) => (
-            <Field key={qq.id} label={`${i + 1}. ${qq.question_text}`}>
-              <div className="space-y-1.5">
-                {(qq.options ?? []).map((o: string, oi: number) => (
-                  <div
-                    key={oi}
-                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[8px] px-2.5 py-2 text-[13.5px]"
-                    style={{ background: answers[i] === oi ? "var(--p-gold-soft)" : "var(--p-hover)", color: answers[i] === oi ? "var(--p-gold)" : "var(--p-text)" }}
-                  >
-                    <Radio name={`q-${qq.id}`} checked={answers[i] === oi} onChange={() => setAnswers((p) => ({ ...p, [i]: oi }))} label={o} className="w-full" />
-                  </div>
-                ))}
-              </div>
-            </Field>
-          ))}
+          {questions.map((qq, i) => {
+            const graded = byId[qq.id];
+            return (
+              <Field key={qq.id} label={`${i + 1}. ${qq.question_text}`}>
+                <div className="space-y-1.5">
+                  {(qq.options ?? []).map((o: string, oi: number) => {
+                    const isChosen = answers[i] === oi;
+                    const isRight = graded && oi === graded.correct_index;
+                    const isWrongChoice = graded && isChosen && !graded.correct;
+                    return (
+                      <div
+                        key={oi}
+                        className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[8px] px-2.5 py-2 text-[13.5px]"
+                        style={{
+                          background: isRight
+                            ? "rgba(63,179,127,0.12)"
+                            : isWrongChoice
+                              ? "rgba(220,106,98,0.12)"
+                              : isChosen
+                                ? "var(--p-gold-soft)"
+                                : "var(--p-hover)",
+                          color: isRight
+                            ? "var(--p-green)"
+                            : isWrongChoice
+                              ? "var(--p-red)"
+                              : isChosen
+                                ? "var(--p-gold)"
+                                : "var(--p-text)",
+                        }}
+                      >
+                        <Radio
+                          name={`q-${qq.id}`}
+                          checked={isChosen}
+                          onChange={() => setAnswers((p) => ({ ...p, [i]: oi }))}
+                          label={o}
+                          className="w-full"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                {graded?.explanation && <p className="p-muted mt-1.5 leading-snug">Why: {graded.explanation}</p>}
+              </Field>
+            );
+          })}
 
           {result && (
-            <div className="rounded-[10px] border px-3 py-2.5 text-[13.5px]" style={{ borderColor: result.passed ? "var(--p-green)" : "var(--p-red)", color: result.passed ? "var(--p-green)" : "var(--p-red)", background: result.passed ? "rgba(63,179,127,0.10)" : "rgba(220,106,98,0.10)" }}>
+            <div
+              className="rounded-[10px] border px-3 py-2.5 text-[13.5px]"
+              style={{
+                borderColor: result.passed ? "var(--p-green)" : "var(--p-red)",
+                color: result.passed ? "var(--p-green)" : "var(--p-red)",
+                background: result.passed ? "rgba(63,179,127,0.10)" : "rgba(220,106,98,0.10)",
+              }}
+            >
               {result.passed ? "Passed" : "Not passed"} — you scored {Math.round(result.score * 100)}% (need {Math.round(result.threshold * 100)}%).
-              {!result.passed && " Adjust your answers and try again."}
+              {!result.passed && " Review the answers above and try again."}
             </div>
           )}
 
@@ -299,3 +400,4 @@ function QuizView({ lesson, questions, onDone }: { lesson: any; questions: any[]
     </Panel>
   );
 }
+
