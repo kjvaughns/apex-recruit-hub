@@ -15,8 +15,9 @@ import {
 import { getRecordingLearner } from "@/lib/academy-content.functions";
 import { resolveMedia } from "@/lib/academy/media";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
+import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/presentations/$slug")({
   head: () => ({
