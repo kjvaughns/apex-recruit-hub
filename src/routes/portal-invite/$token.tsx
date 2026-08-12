@@ -65,7 +65,7 @@ function InviteAcceptPage() {
     if (password.length < 8) errs.push("a password of at least 8 characters");
     if (password !== confirm) errs.push("matching passwords");
     if (!state) errs.push("your state");
-    if (licensed && !npn.trim()) errs.push("your NPN");
+    if (!npn.trim()) errs.push("your NPN");
     if (!terms) errs.push("acceptance of the portal terms");
     if (errs.length) {
       setErrors(errs);
@@ -73,6 +73,7 @@ function InviteAcceptPage() {
     }
     setErrors([]);
     setBusy(true);
+
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
     try {
       const res = await accept({
