@@ -111,42 +111,22 @@ const APPLICANT_COLS =
  * single-use invitation link instead of a login wall. Existing accounts keep
  * going to the portal. Never throws.
  */
-async function onboardingAccountLink(a: ApplicantRow): Promise<string> {
-  if (a.portal_profile_id) return `${SITE_URL}/login`;
-  if (!a.email) return `${SITE_URL}/login`;
+export async function onboardingAccountLink(a: ApplicantRow): Promise<string> {
+  if (a.portal_profile_id || !a.email) return `${SITE_URL}/login`;
   try {
     const supabase = await db();
-    const { data: inv } = await supabase
-      .from("invitations")
-      .select("token")
-      .eq("applicant_id", a.id)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    let token: string | undefined = inv?.token;
-    if (!token) {
-      const { data: res } = await supabase.rpc("create_invitation", {
-        payload: {
-          email: a.email,
-          first_name: a.first_name ?? "",
-          last_name: a.last_name ?? "",
-          phone: a.phone ?? "",
-          state: a.resident_state ?? a.state ?? "",
-          licensed: true,
-          npn: a.npn ?? "",
-          role: "agent",
-          applicant_id: a.id,
-        },
-      });
-      token = res?.token;
-    }
-    if (token) return `${SITE_URL}/portal-invite/${token}`;
+    const { data: res, error } = await supabase.rpc("ensure_onboarding_invitation", {
+      _applicant_id: a.id,
+    });
+    if (error) throw new Error(error.message);
+    const token: string | undefined = res?.token;
+    if (res?.ok && token) return `${SITE_URL}/portal-invite/${token}`;
   } catch (e) {
     console.warn("[recruiting] onboarding invite link failed:", (e as Error).message);
   }
   return `${SITE_URL}/login`;
 }
+
 
 
 
