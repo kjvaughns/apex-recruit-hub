@@ -6,7 +6,19 @@ import { z } from "zod";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getMe } from "@/lib/portal.functions";
 import { getAcademyHome } from "@/lib/academy.functions";
-import { PageHeader, PageBody, Panel, Badge, Button, SearchField, EmptyState, Select } from "@/components/portal/ui";
+import {
+  PageHeader,
+  PageBody,
+  Panel,
+  Badge,
+  Button,
+  Toolbar,
+  SearchField,
+  EmptyState,
+  ErrorState,
+  Select,
+  CardSkeleton,
+} from "@/components/portal/ui";
 import { Video, Headphones, FileText, Link2, GraduationCap, PlayCircle, ChevronLeft } from "lucide-react";
 
 const searchSchema = z.object({
@@ -51,8 +63,29 @@ function AcademyHome() {
     </Link>
   );
 
+  if (q.isError) {
+    return (
+      <PortalShell>
+        <PageBody>
+          <ErrorState description="We couldn't load the Academy right now. Please try again." onRetry={() => q.refetch()} />
+        </PageBody>
+      </PortalShell>
+    );
+  }
+
   if (q.isLoading) {
-    return <PortalShell><PageBody><div className="p-secondary">Loading…</div></PageBody></PortalShell>;
+    return (
+      <PortalShell>
+        <PageBody>
+          <PageHeader title="Vantage Academy" description="Everything you need to learn, sell, and grow at Vantage." />
+          <div className="grid gap-4 md:grid-cols-3">
+            <CardSkeleton lines={2} />
+            <CardSkeleton lines={2} />
+            <CardSkeleton lines={2} />
+          </div>
+        </PageBody>
+      </PortalShell>
+    );
   }
 
   if (section === "presentations") {
@@ -62,7 +95,12 @@ function AcademyHome() {
           {back}
           <PageHeader title="Recorded Presentations" description="Trainings, call breakdowns, and past live sessions." actions={manageBtn} />
           {presentations.length === 0 ? (
-            <Panel><EmptyState title="No recordings yet" description="Recorded trainings will appear here." /></Panel>
+            <Panel>
+              <EmptyState
+                title="No recordings yet"
+                description="Recorded trainings and call breakdowns will show up here once they're published."
+              />
+            </Panel>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {presentations.map((r) => <PresentationCard key={r.id} r={r} />)}
@@ -80,7 +118,12 @@ function AcademyHome() {
           {back}
           <PageHeader title="Courses" description="Structured Vantage training programs." actions={manageBtn} />
           {courses.length === 0 ? (
-            <Panel><EmptyState title="No courses yet" description="Courses will appear here once published." /></Panel>
+            <Panel>
+              <EmptyState
+                title="No courses yet"
+                description="Structured training programs will appear here once they're published."
+              />
+            </Panel>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {courses.map((c) => <CourseCard key={c.id} c={c} />)}
@@ -115,21 +158,21 @@ function AcademyHome() {
         <div className="grid gap-4 md:grid-cols-3">
           <HubCard
             to="presentations"
-            icon={<PlayCircle size={22} />}
+            icon={<PlayCircle size={18} />}
             title="Recorded Presentations"
             desc="Watch previous trainings and call breakdowns."
             count={presentations.length}
           />
           <HubCard
             to="courses"
-            icon={<GraduationCap size={22} />}
+            icon={<GraduationCap size={18} />}
             title="Courses"
             desc="Complete structured Vantage training programs."
             count={courses.length}
           />
           <HubCard
             to="library"
-            icon={<FileText size={22} />}
+            icon={<FileText size={18} />}
             title="Library"
             desc="Access scripts, PDFs, guides, videos, and resources."
             count={library.length}
@@ -142,8 +185,8 @@ function AcademyHome() {
 
 function HubCard({ to, icon, title, desc, count }: { to: "presentations" | "courses" | "library"; icon: React.ReactNode; title: string; desc: string; count: number }) {
   return (
-    <Link to="/portal/academy" search={{ section: to }} className="p-panel flex flex-col gap-2 p-6 transition hover:[border-color:var(--p-border-strong)]">
-      <span className="grid h-11 w-11 place-items-center rounded-[12px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>{icon}</span>
+    <Link to="/portal/academy" search={{ section: to }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
+      <span className="grid h-9 w-9 place-items-center rounded-[10px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>{icon}</span>
       <h2 className="p-card-title mt-1">{title}</h2>
       <p className="p-secondary leading-snug">{desc}</p>
       <div className="mt-auto pt-2"><span className="p-muted">{count} {count === 1 ? "item" : "items"}</span></div>
@@ -167,7 +210,10 @@ function CourseCard({ c }: { c: any }) {
           <Badge tone="green">Completed</Badge>
         ) : (
           <>
-            <div className="mb-1"><span className="p-muted">{c.progress}% complete</span></div>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="p-muted">Progress</span>
+              <span className="p-muted">{c.progress}%</span>
+            </div>
             <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
               <div className="h-full rounded-full" style={{ width: `${Math.max(3, c.progress)}%`, background: "var(--p-gold)" }} />
             </div>
@@ -208,17 +254,27 @@ function LibrarySection({ resources }: { resources: any[] }) {
 
   return (
     <>
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row">
+      <Toolbar className="mb-3">
         <SearchField value={search} onChange={setSearch} placeholder="Search the library…" />
         {categories.length > 0 && (
-          <Select value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 w-full text-[13px] sm:w-auto">
+          <Select
+            aria-label="Filter by category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="h-9 w-full text-[13px] sm:w-auto"
+          >
             <option value="">All categories</option>
             {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </Select>
         )}
-      </div>
+      </Toolbar>
       {filtered.length === 0 ? (
-        <Panel><p className="p-secondary">No resources match those filters.</p></Panel>
+        <Panel>
+          <EmptyState
+            title="No resources match those filters"
+            description="Try a different search term or clear the category filter."
+          />
+        </Panel>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((r) => (
