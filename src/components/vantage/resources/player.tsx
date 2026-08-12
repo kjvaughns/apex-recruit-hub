@@ -101,6 +101,7 @@ function MediaPlayer({ rec }: { rec: Recording }) {
           <div className="flex h-full min-h-[140px] items-center justify-center">
             <button
               onClick={() => setPlaying((p) => !p)}
+              aria-label={playing ? "Pause" : "Play"}
               className="p-focus grid h-12 w-12 place-items-center rounded-full text-[#0B0B0C]"
               style={{ background: "var(--p-gold)" }}
             >
@@ -120,6 +121,7 @@ function MediaPlayer({ rec }: { rec: Recording }) {
         <div className="p-panel flex items-center gap-3 p-3">
           <button
             onClick={() => { if (cur >= total) setCur(0); setPlaying((p) => !p); }}
+            aria-label={playing ? "Pause" : "Play"}
             className="p-focus grid h-9 w-9 shrink-0 place-items-center rounded-full text-[#0B0B0C]"
             style={{ background: "var(--p-gold)" }}
           >
@@ -127,12 +129,22 @@ function MediaPlayer({ rec }: { rec: Recording }) {
           </button>
           <div className="min-w-0 flex-1">
             <div
+              role="slider"
+              aria-label="Seek"
+              aria-valuemin={0}
+              aria-valuemax={total}
+              aria-valuenow={cur}
+              tabIndex={0}
               className="relative h-1.5 cursor-pointer rounded-full"
               style={{ background: "var(--p-hover)" }}
               onClick={(e) => {
                 const r = e.currentTarget.getBoundingClientRect();
                 const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
                 setCur(Math.round(x * total));
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight") setCur((c) => Math.min(total, c + 5));
+                if (e.key === "ArrowLeft") setCur((c) => Math.max(0, c - 5));
               }}
             >
               <div className="h-full rounded-full" style={{ width: `${pct}%`, background: "var(--p-gold)" }}>

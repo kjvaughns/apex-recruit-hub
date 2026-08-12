@@ -263,9 +263,9 @@ function SecuritySection() {
       setCurrent("");
       setPw("");
       setConfirm("");
-      toast.success("Password updated.");
-    } catch (e) {
-      toast.error((e as Error).message || "Could not update password.");
+      notify.success("Password updated.");
+    } catch {
+      notify.error("Could not update your password.", "Check your current password and try again.");
     } finally {
       setBusy(false);
     }
@@ -273,12 +273,12 @@ function SecuritySection() {
 
   return (
     <div className="space-y-4">
-      <Panel title="Change password">
+      <Panel title="Change password" description="You'll need your current password to set a new one.">
         <div className="grid gap-4">
-          <Field label="Current password">
+          <Field label="Current password" hint="Confirms it's really you before we change anything.">
             <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="Your current password" />
           </Field>
-          <Field label="New password">
+          <Field label="New password" hint="At least 8 characters.">
             <Input
               type="password"
               value={pw}
@@ -286,27 +286,25 @@ function SecuritySection() {
               placeholder="At least 8 characters"
             />
           </Field>
-          <Field label="Confirm new password">
+          <Field
+            label="Confirm new password"
+            error={confirm && pw !== confirm ? "Passwords don't match." : undefined}
+          >
             <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           </Field>
-          {confirm && pw !== confirm && (
-            <p className="text-[13px]" style={{ color: "var(--p-red)" }}>
-              Passwords don't match.
-            </p>
-          )}
-          <Button variant="primary" className="w-fit" onClick={changePassword} disabled={!valid || busy}>
-            {busy ? "Updating…" : "Update password"}
+          <Button variant="primary" className="w-fit" loading={busy} disabled={!valid} onClick={changePassword}>
+            Update password
           </Button>
         </div>
       </Panel>
 
-      <Panel title="Session">
-        <p className="p-secondary">
-          Last sign-in:{" "}
-          <span style={{ color: "var(--p-text)" }}>
+      <Panel title="Session" description="Where you're currently signed in.">
+        <div className="flex items-center justify-between gap-4 py-1">
+          <span className="p-body">Last sign-in</span>
+          <span className="p-secondary" style={{ color: "var(--p-text)" }}>
             {lastSignIn ? new Date(lastSignIn).toLocaleString() : "—"}
           </span>
-        </p>
+        </div>
       </Panel>
     </div>
   );

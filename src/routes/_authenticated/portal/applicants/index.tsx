@@ -97,7 +97,7 @@ function ApplicantsPage() {
   const addAgentFn = useServerFn(addAgent);
 
   // Shared query drives both tabs. The List tab additionally applies q/stage/view.
-  const { data, isLoading } = useQuery({
+  const applicantsQ = useQuery({
     queryKey: ["applicants", { q, scope, stage, view, tab: activeTab }],
     queryFn: () =>
       fn({
@@ -107,6 +107,7 @@ function ApplicantsPage() {
             : { q, scope, stage, view, limit: 200 },
       }),
   });
+  const { data, isLoading } = applicantsQ;
 
   const stages = data?.stages ?? [];
   const stageMap = useMemo(() => {
