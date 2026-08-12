@@ -17,6 +17,7 @@ import {
 } from "@/lib/portal.functions";
 import { fillTemplate } from "@/lib/emails/catalog";
 import { composerTemplates } from "@/lib/email/catalog";
+import { listEmailHistory } from "@/lib/email.functions";
 import { sendApplicantEmail as sendBrandedApplicantEmail } from "@/lib/email.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
 import {
@@ -184,7 +185,7 @@ export function ApplicantRecord({
   }
 
   const Wrapper = variant === "drawer" ? DrawerShell : PageShell;
-  const [tab, setTab] = useState<"overview" | "activity" | "evaluation">("overview");
+  const [tab, setTab] = useState<"overview" | "activity" | "emails" | "evaluation">("overview");
 
   if (recordQ.isError) {
     return (
@@ -276,6 +277,7 @@ export function ApplicantRecord({
           tabs={[
             { value: "overview", label: "Overview" },
             { value: "activity", label: "Activity", count: (data?.activities ?? []).length },
+            { value: "emails", label: "Emails" },
             { value: "evaluation", label: "Evaluation", count: (data?.evaluations ?? []).length },
           ]}
         />
@@ -383,6 +385,8 @@ export function ApplicantRecord({
         )}
 
         {/* Evaluation results (View Evaluation) */}
+        {tab === "emails" && <ApplicantEmailHistory applicantId={applicant.id} />}
+
         {tab === "evaluation" && (
         <div className="space-y-4">
         {(data?.evaluations ?? []).length === 0 && (
@@ -1149,5 +1153,61 @@ function OverviewToggle({ label, active, onToggle }: { label: string; active: bo
       </span>
       {label}
     </Button>
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* Email history                                                              */
+/* -------------------------------------------------------------------------- */
+
+function ApplicantEmailHistory({ applicantId }: { applicantId: string }) {
+  const listFn = useServerFn(listEmailHistory);
+  const q = useQuery({
+    queryKey: ["applicant", applicantId, "emails"],
+    queryFn: () => listFn({ data: { applicantId, limit: 50 } }),
+  });
+
+  if (q.isLoading) return <ListSkeleton rows={5} />;
+  if (q.isError) {
+    return <EmptyState title="Couldn't load email history" description="Please try again." />;
+  }
+  const rows = (q.data ?? []) as any[];
+  if (!rows.length) {
+    return (
+      <EmptyState
+        title="No emails yet"
+        description="Automated and manual emails to this applicant will appear here."
+      />
+    );
+  }
+
+  return (
+    <Panel title="Emails" description="Everything sent to this applicant.">
+      <div className="flex flex-col divide-y" style={{ borderColor: "var(--p-border)" }}>
+        {rows.map((r) => (
+          <div key={r.id} className="flex flex-wrap items-center gap-2 py-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="p-secondary truncate font-medium">{r.subject || r.template_name}</div>
+              <div className="p-muted">
+                {new Date(r.created_at).toLocaleString()} · {r.template_name || r.template_key}
+                {r.automated === false ? " · manual" : ""}
+              </div>
+            </div>
+            <Badge
+              tone={
+                r.status === "sent" || r.status === "delivered"
+                  ? "green"
+                  : r.status === "failed" || r.status === "bounced"
+                    ? "red"
+                    : "amber"
+              }
+            >
+              {r.status}
+            </Badge>
+          </div>
+        ))}
+      </div>
+    </Panel>
   );
 }
