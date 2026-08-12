@@ -15,7 +15,9 @@ import {
   listAssignableUsers,
   sendApplicantEmail,
 } from "@/lib/portal.functions";
-import { APPLICANT_EMAIL_TEMPLATES, fillTemplate } from "@/lib/emails/catalog";
+import { fillTemplate } from "@/lib/emails/catalog";
+import { composerTemplates } from "@/lib/email/catalog";
+import { sendApplicantEmail as sendBrandedApplicantEmail } from "@/lib/email.functions";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
 import {
   onboardingProgress,
@@ -44,6 +46,7 @@ import {
   ErrorState,
   EmptyState,
   notify,
+  SegmentedControl,
 } from "@/components/portal/ui";
 
 /* -------------------------------------------------------------------------- */
