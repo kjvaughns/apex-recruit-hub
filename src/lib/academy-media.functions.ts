@@ -149,17 +149,22 @@ async function buildNotes(
   s: any,
   row: any,
   text: string,
-  segments: { start: number; end: number; text: string }[] | null,
+  segments: { start: number; end: number; text: string; speaker?: string | null }[] | null,
 ) {
   const { generateTrainingNotes } = await import("@/lib/academy/transcribe.server");
   const { formatTimestamp } = await import("@/lib/academy/media");
   await s.from("media_transcripts").update({ notes_status: "processing", notes_error: null }).eq("id", row.id);
   try {
+    const names = (row?.speaker_names ?? {}) as Record<string, string>;
     const timed = (segments ?? [])
-      .map((sg) => `[${formatTimestamp(sg.start)}] ${sg.text}`)
+      .map((sg) => {
+        const who = sg.speaker ? `${names[sg.speaker] || sg.speaker}: ` : "";
+        return `[${formatTimestamp(sg.start)}] ${who}${sg.text}`;
+      })
       .join("\n")
       .slice(0, 90000);
     const notes = await generateTrainingNotes(row.title ?? "Vantage training", text, timed);
+
     if (!notes) {
       await s
         .from("media_transcripts")
