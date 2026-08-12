@@ -48,6 +48,7 @@ import {
   EmptyState,
   notify,
   SegmentedControl,
+  ListSkeleton,
 } from "@/components/portal/ui";
 
 /* -------------------------------------------------------------------------- */
@@ -385,7 +386,7 @@ export function ApplicantRecord({
         )}
 
         {/* Evaluation results (View Evaluation) */}
-        {tab === "emails" && <ApplicantEmailHistory applicantId={applicant.id} />}
+        {tab === "emails" && <ApplicantEmailHistory applicantId={applicantId} />}
 
         {tab === "evaluation" && (
         <div className="space-y-4">
