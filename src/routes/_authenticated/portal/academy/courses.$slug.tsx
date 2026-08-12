@@ -232,12 +232,27 @@ function LessonView({
   });
   const kind = lesson.kind === "lesson" ? (lesson.media_type ?? "video") : lesson.kind;
   const media = resolveMedia(lesson.video_url);
+  const nativeRef = useRef<HTMLMediaElement | null>(null);
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const isNative = kind === "audio" || (kind === "video" && media.kind === "direct");
+  const target = isNative
+    ? ({ kind: "element", ref: nativeRef } as const)
+    : kind === "video" && media.kind === "youtube"
+      ? ({ kind: "youtube", ref: frameRef } as const)
+      : kind === "video" && media.kind === "vimeo"
+        ? ({ kind: "vimeo", ref: frameRef } as const)
+        : ({ kind: "none" } as const);
+  const { seek, canSeek, currentMs } = useMediaSeek(target);
 
   return (
     <>
       {kind === "audio" && (
         <Panel>
-          {lesson.video_url ? <audio controls src={lesson.video_url} className="w-full" /> : <div className="p-muted">No audio attached.</div>}
+          {lesson.video_url ? (
+            <audio ref={nativeRef as React.RefObject<HTMLAudioElement>} controls src={lesson.video_url} className="w-full" />
+          ) : (
+            <div className="p-muted">No audio attached.</div>
+          )}
         </Panel>
       )}
 
@@ -248,9 +263,16 @@ function LessonView({
               No media attached
             </div>
           ) : media.kind === "direct" ? (
-            <video controls src={lesson.video_url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} />
+            <video
+              ref={nativeRef as React.RefObject<HTMLVideoElement>}
+              controls
+              src={lesson.video_url}
+              className="aspect-video w-full"
+              style={{ background: "var(--p-raised)" }}
+            />
           ) : (
             <iframe
+              ref={frameRef}
               src={media.embedUrl ?? lesson.video_url}
               title={lesson.title}
               allow="autoplay; fullscreen; picture-in-picture"
@@ -283,20 +305,27 @@ function LessonView({
 
       {(transcript?.notes || transcript?.transcript_text) && (
         <Panel title="Training notes" description="Generated from this lesson's recording.">
-          {transcript?.notes && <NotesPreview notes={transcript.notes} />}
-          {transcript?.transcript_text && (
+          {transcript?.notes && <NotesPreview notes={transcript.notes} onSeek={canSeek ? seek : undefined} />}
+          {(transcript?.transcript_text || transcript?.transcript_segments) && (
             <details className="mt-3">
               <summary className="p-focus cursor-pointer text-[13px]" style={{ color: "var(--p-text-2)" }}>
                 Read the full transcript
               </summary>
-              <div
-                className="p-secondary mt-2 max-h-[320px] overflow-y-auto whitespace-pre-wrap rounded-[10px] p-3 leading-relaxed"
-                style={{ background: "var(--p-hover)" }}
-              >
-                {transcript.transcript_text}
+              <div className="mt-2">
+                <TranscriptViewer
+                  segments={transcript?.transcript_segments}
+                  fallbackText={transcript?.transcript_text}
+                  speakerNames={transcript?.speaker_names}
+                  onSeek={seek}
+                  canSeek={canSeek}
+                  currentMs={currentMs}
+                  maxHeight={320}
+                />
               </div>
             </details>
           )}
+        </Panel>
+
         </Panel>
       )}
     </>
