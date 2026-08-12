@@ -14,6 +14,7 @@ import {
 } from "@/components/portal/ui";
 import { getRecordingLearner } from "@/lib/academy-content.functions";
 import { resolveMedia } from "@/lib/academy/media";
+import { AudioBlock } from "@/components/vantage/academy/audio-block";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft } from "lucide-react";
@@ -44,7 +45,8 @@ function RecordingPage() {
   const mediaPre = resolveMedia(recPre?.video_url);
   const isAudioPre = recPre?.format === "audio";
   const isNativePre =
-    isAudioPre || mediaPre.kind === "direct" || (!!recPre?.video_url && !mediaPre.embedUrl);
+    (isAudioPre && !mediaPre.embedUrl) || mediaPre.kind === "direct" || (!!recPre?.video_url && !mediaPre.embedUrl);
+
   const target = isNativePre
     ? ({ kind: "element", ref: nativeRef } as const)
     : mediaPre.kind === "youtube"
@@ -111,18 +113,15 @@ function RecordingPage() {
           <div className="min-w-0 space-y-4">
             {isAudio ? (
               <Panel>
-                {rec.video_url ? (
-                  <audio
-                    ref={nativeRef as React.RefObject<HTMLAudioElement>}
-                    controls
-                    src={media.embedUrl ?? rec.video_url}
-                    className="w-full"
-                  />
-                ) : (
-                  <div className="p-muted">No audio attached yet.</div>
-                )}
+                <AudioBlock
+                  url={rec.video_url}
+                  title={rec.title}
+                  nativeRef={nativeRef as React.Ref<HTMLAudioElement>}
+                  frameRef={frameRef}
+                />
               </Panel>
             ) : (
+
               <div className="p-panel overflow-hidden">
                 {!rec.video_url ? (
                   <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>
