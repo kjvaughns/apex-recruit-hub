@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { adminGetSettings, adminSetSetting, adminTestDiscordWebhook } from "@/lib/portal.functions";
 import { useState, useEffect } from "react";
-import { PageHeader, PageBody, Panel, Field, Input, Button, Stack } from "@/components/portal/ui";
+import { PageHeader, PageBody, Panel, Field, Input, Button, Stack, TextSkeleton, ErrorState, notify } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/settings")({
   head: () => ({ meta: [{ title: "System Settings — Vantage Admin" }, { name: "robots", content: "noindex" }] }),
@@ -27,10 +27,15 @@ function SettingsPage() {
   const setFn = useServerFn(adminSetSetting);
   const testFn = useServerFn(adminTestDiscordWebhook);
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "settings"], queryFn: () => getFn() });
+  const settingsQ = useQuery({ queryKey: ["admin", "settings"], queryFn: () => getFn() });
+  const { data, isLoading } = settingsQ;
   const save = useMutation({
     mutationFn: (v: { key: string; value: any }) => setFn({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "settings"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "settings"] });
+      notify.success("Setting saved.");
+    },
+    onError: () => notify.error("Could not save that setting.", "Please try again."),
   });
   const [testResult, setTestResult] = useState<string | null>(null);
   const test = useMutation({
@@ -58,9 +63,11 @@ function SettingsPage() {
     <PortalShell>
       <PageBody>
         <PageHeader title="System settings" description="Global platform configuration and defaults." />
-        <Panel padded>
+        <Panel title="Recruiting links" description="Default scheduling links used across the recruiting flow." padded>
           {isLoading ? (
-            <div className="p-secondary">Loading…</div>
+            <TextSkeleton lines={6} />
+          ) : settingsQ.isError ? (
+            <ErrorState description="We couldn't load system settings." onRetry={() => settingsQ.refetch()} />
           ) : (
             <Stack className="space-y-4">
               {KEYS.map((k) => (
@@ -73,8 +80,8 @@ function SettingsPage() {
                     />
                     <Button
                       variant="primary"
+                      loading={save.isPending}
                       onClick={() => save.mutate({ key: k.key, value: vals[k.key] ?? "" })}
-                      disabled={save.isPending}
                     >
                       Save
                     </Button>
@@ -106,8 +113,8 @@ function SettingsPage() {
                 />
                 <Button
                   variant="primary"
+                  loading={save.isPending}
                   onClick={() => save.mutate({ key: DISCORD_KEY, value: webhook.trim() })}
-                  disabled={save.isPending}
                 >
                   Save
                 </Button>

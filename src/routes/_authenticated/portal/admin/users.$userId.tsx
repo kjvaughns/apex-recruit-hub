@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { PageBody, Panel, Badge, Avatar, Button } from "@/components/portal/ui";
+import { PageBody, Panel, Badge, Avatar, Button, CardSkeleton, ErrorState } from "@/components/portal/ui";
 import { adminGetAgentProfile } from "@/lib/portal.functions";
 import { onboardingProgress, ONBOARDING_STEP_ORDER, ONBOARDING_STEP_LABELS } from "@/lib/onboarding";
 import { recruitingStatusLabel, recruitingStatusTone } from "@/lib/recruiting";
@@ -21,7 +21,24 @@ function AgentProfilePage() {
     return (
       <PortalShell>
         <PageBody>
-          <div className="p-secondary">Loading…</div>
+          <div className="mx-auto max-w-[820px] space-y-4">
+            <CardSkeleton lines={4} />
+            <CardSkeleton lines={5} />
+          </div>
+        </PageBody>
+      </PortalShell>
+    );
+  }
+
+  if (q.isError) {
+    return (
+      <PortalShell>
+        <PageBody>
+          <div className="mx-auto max-w-[820px]">
+            <Panel>
+              <ErrorState description="We couldn't load this agent's profile." onRetry={() => q.refetch()} />
+            </Panel>
+          </div>
         </PageBody>
       </PortalShell>
     );

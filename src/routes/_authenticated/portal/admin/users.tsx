@@ -6,7 +6,7 @@ import { adminListUsers, adminSetUserRole, adminUpdateProfile } from "@/lib/port
 import { useState } from "react";
 import {
   PageHeader, PageBody, Toolbar, SearchField, TableWrap, Table, THead, TH, TR, TD,
-  Badge, Select, Input,
+  Badge, Select, Input, TableSkeleton, ErrorState, EmptyState, notify,
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
@@ -25,7 +25,8 @@ function UsersPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
 
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "users"], queryFn: () => list() });
+  const usersQ = useQuery({ queryKey: ["admin", "users"], queryFn: () => list() });
+  const { data, isLoading } = usersQ;
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "users"] });
 
   const roleMut = useMutation({
@@ -35,7 +36,7 @@ function UsersPage() {
   const profileMut = useMutation({
     mutationFn: (v: Record<string, unknown> & { id: string }) => updateProfile({ data: v }),
     onSuccess: invalidate,
-    onError: (e: unknown) => alert((e as Error).message || "Update failed."),
+    onError: () => notify.error("Could not update that user.", "Please try again."),
   });
 
   const allUsers = data?.users ?? [];
@@ -55,7 +56,11 @@ function UsersPage() {
         </Toolbar>
 
         {isLoading ? (
-          <div className="p-panel p-secondary p-8 text-center">Loading…</div>
+          <TableSkeleton rows={6} cols={6} />
+        ) : usersQ.isError ? (
+          <TableWrap>
+            <ErrorState description="We couldn't load users." onRetry={() => usersQ.refetch()} />
+          </TableWrap>
         ) : (
           <TableWrap>
             <Table className="min-w-[900px]">
@@ -170,8 +175,8 @@ function UsersPage() {
                 ))}
                 {users.length === 0 && (
                   <TR>
-                    <TD colSpan={6} className="p-secondary text-center">
-                      No users match.
+                    <TD colSpan={6}>
+                      <EmptyState title="No users match" description="Try a different name or email." />
                     </TD>
                   </TR>
                 )}
