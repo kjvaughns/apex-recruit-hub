@@ -6,6 +6,7 @@ import { z } from "zod";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getMe } from "@/lib/portal.functions";
 import { getAcademyHome } from "@/lib/academy.functions";
+import { listRecordingsLearner } from "@/lib/academy-content.functions";
 import {
   PageHeader,
   PageBody,
