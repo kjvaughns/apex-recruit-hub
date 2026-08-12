@@ -19,6 +19,7 @@ import {
   ErrorState,
   Select,
   CardSkeleton,
+  Avatar,
 } from "@/components/portal/ui";
 import { Video, Headphones, FileText, Link2, GraduationCap, PlayCircle, ChevronLeft } from "lucide-react";
 
@@ -42,7 +43,7 @@ function typeIcon(type: string, size: number) {
 }
 
 function AcademyHome() {
-  const { section } = Route.useSearch();
+  const { section, speaker } = Route.useSearch();
   const homeFn = useServerFn(getAcademyHome);
   const recFn = useServerFn(listRecordingsLearner);
   const meFn = useServerFn(getMe);
@@ -365,5 +366,26 @@ function LibrarySection({ resources }: { resources: any[] }) {
         </div>
       )}
     </>
+  );
+}
+
+function SpeakerCard({ s }: { s: { slug: string; name: string; role: string | null; photo_url: string | null; count: number } }) {
+  return (
+    <Link
+      to="/portal/academy"
+      search={{ section: "presentations", speaker: s.slug }}
+      className="p-panel flex items-center gap-3 p-4 transition hover:[border-color:var(--p-border-strong)]"
+    >
+      {s.photo_url ? (
+        <img src={s.photo_url} alt={`${s.name} headshot`} loading="lazy" className="h-12 w-12 shrink-0 rounded-full object-cover" />
+      ) : (
+        <Avatar name={s.name} size={48} />
+      )}
+      <div className="min-w-0">
+        <div className="p-card-title truncate">{s.name}</div>
+        {s.role && <div className="p-muted truncate">{s.role}</div>}
+        <div className="p-muted mt-0.5">{s.count} {s.count === 1 ? "recording" : "recordings"}</div>
+      </div>
+    </Link>
   );
 }
