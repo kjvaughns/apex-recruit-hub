@@ -193,8 +193,6 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const profile = meQ.data?.profile;
   const roles = meQ.data?.roles ?? [];
   const isAdmin = roles.some((r) => r === "admin" || r === "super_admin");
-  const isManager = roles.includes("manager");
-  const isLeader = roles.includes("leader");
   // Every portal user can invite agents.
   const canInvite = true;
   const displayName =
