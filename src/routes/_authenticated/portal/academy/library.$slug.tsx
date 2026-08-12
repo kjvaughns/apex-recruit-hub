@@ -74,12 +74,19 @@ function ResourceDetail() {
 
           {r.type === "video" && (
             <div className="p-panel overflow-hidden">
-              {r.url ? <video controls src={r.url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} /> : <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>No media</div>}
+              {!r.url ? (
+                <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>No media</div>
+              ) : resolveMedia(r.url).embedUrl ? (
+                <iframe src={resolveMedia(r.url).embedUrl!} title={r.title} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="aspect-video w-full" style={{ border: 0, background: "var(--p-raised)" }} />
+              ) : (
+                <video controls src={r.url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} />
+              )}
             </div>
           )}
           {r.type === "audio" && (
-            <Panel>{r.url ? <audio controls src={r.url} className="w-full" /> : <span className="p-muted">No media.</span>}</Panel>
+            <Panel><AudioBlock url={r.url} title={r.title} /></Panel>
           )}
+
           {r.type === "file" && (
             <Panel
               title="File"
