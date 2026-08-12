@@ -369,33 +369,61 @@ function StepChecklist({
   pending?: boolean;
   preview?: boolean;
 }) {
+  const allKeys = STEP_DEFS.map((d) => d.key);
+  const [open, setOpen] = useState<string[]>(() =>
+    preview ? allKeys : [STEP_DEFS[Math.min(currentIndex < 0 ? 0 : currentIndex, STEP_DEFS.length - 1)].key],
+  );
+  const allOpen = open.length === allKeys.length;
+
   return (
-    <div className="divide-y" style={{ borderColor: "var(--p-border)" }}>
-      {STEP_DEFS.map((def, i) => {
-        const state = stepState(steps, def.key);
-        const done = state.completed;
-        const isCurrent = !preview && !done && i === currentIndex;
-        const status: "done" | "current" | "upcoming" = done ? "done" : isCurrent ? "current" : "upcoming";
-        return (
-          <StepRow
-            key={def.key}
-            n={i + 1}
-            def={def}
-            status={preview ? "upcoming" : status}
-            state={state}
-            pending={pending}
-            preview={preview}
-            onComplete={() =>
-              def.key === "agentspace_contracting" && onCompleteContracting
-                ? onCompleteContracting()
-                : onComplete?.(def.key)
-            }
-          />
-        );
-      })}
+    <div>
+      <div
+        className="flex items-center justify-between px-4 py-2.5"
+        style={{ borderBottom: "1px solid var(--p-border)" }}
+      >
+        <span className="p-label">Onboarding steps ({allKeys.length})</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setOpen(allOpen ? [] : allKeys)}
+        >
+          {allOpen ? "Collapse all" : "Expand all"}
+        </Button>
+      </div>
+      <div className="divide-y" style={{ borderColor: "var(--p-border)" }}>
+        {STEP_DEFS.map((def, i) => {
+          const state = stepState(steps, def.key);
+          const done = state.completed;
+          const isCurrent = !preview && !done && i === currentIndex;
+          const status: "done" | "current" | "upcoming" = done ? "done" : isCurrent ? "current" : "upcoming";
+          return (
+            <StepRow
+              key={def.key}
+              n={i + 1}
+              def={def}
+              status={preview ? "upcoming" : status}
+              state={state}
+              pending={pending}
+              preview={preview}
+              expanded={open.includes(def.key)}
+              onToggle={() =>
+                setOpen((prev) =>
+                  prev.includes(def.key) ? prev.filter((k) => k !== def.key) : [...prev, def.key],
+                )
+              }
+              onComplete={() =>
+                def.key === "agentspace_contracting" && onCompleteContracting
+                  ? onCompleteContracting()
+                  : onComplete?.(def.key)
+              }
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
+
 
 function StepRow({
   n,
@@ -404,6 +432,8 @@ function StepRow({
   state,
   pending,
   preview,
+  expanded,
+  onToggle,
   onComplete,
 }: {
   n: number;
@@ -412,10 +442,12 @@ function StepRow({
   state: OnboardingStepState;
   pending?: boolean;
   preview?: boolean;
+  expanded: boolean;
+  onToggle: () => void;
   onComplete: () => void;
 }) {
   const [agreed, setAgreed] = useState(false);
-  const expanded = status === "current" || (preview && n === 1);
+
 
   const indicator =
     status === "done" ? (
@@ -449,19 +481,35 @@ function StepRow({
       <div className="flex items-start gap-3">
         {indicator}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={expanded}
+            className="flex w-full flex-wrap items-center gap-2 text-left"
+          >
             <h3 className="p-card-title" style={status === "upcoming" ? { color: "var(--p-text-3)" } : undefined}>
               {def.title}
             </h3>
             {status === "done" && <Badge tone="green">Done</Badge>}
             {status === "current" && <Badge tone="gold">Current step</Badge>}
-          </div>
+            <span
+              className="ml-auto text-[12px] transition-transform"
+              style={{
+                color: "var(--p-text-3)",
+                transform: expanded ? "rotate(180deg)" : "none",
+              }}
+              aria-hidden
+            >
+              ▾
+            </span>
+          </button>
 
           {!expanded ? (
             <p className="p-secondary mt-1">{def.summary}</p>
           ) : (
             <div className="mt-1.5">{def.render()}</div>
           )}
+
 
           {status === "current" && def.requireAgree && (
             <div className="mt-3">
