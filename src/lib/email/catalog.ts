@@ -43,6 +43,8 @@ export interface EmailBody {
   details?: EmailDetail[];
   ctaLabel?: string;
   ctaUrl?: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaUrl?: string;
   note?: string;
 }
 
