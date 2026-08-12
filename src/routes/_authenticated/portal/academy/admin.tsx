@@ -81,7 +81,11 @@ function AcademyAdmin() {
 
   if (meQ.isLoading)
     return (
-      <PortalShell><PageBody><div className="p-secondary">Loading…</div></PageBody></PortalShell>
+      <PortalShell>
+        <PageBody>
+          <CardSkeleton lines={4} />
+        </PageBody>
+      </PortalShell>
     );
   if (!canManage)
     return (
@@ -176,10 +180,14 @@ function CoursesBuilder() {
 
   async function del(id: string) {
     if (!confirm("Delete this course and all its content?")) return;
-    await delFn({ data: { id } });
-    if (selected === id) setSelected(null);
-    qc.invalidateQueries({ queryKey: ["academy", "courses"] });
-    notify.success("Course deleted.");
+    try {
+      await delFn({ data: { id } });
+      if (selected === id) setSelected(null);
+      qc.invalidateQueries({ queryKey: ["academy", "courses"] });
+      notify.success("Course deleted.");
+    } catch {
+      notify.error("Couldn't delete this course. Please try again.");
+    }
   }
 
   return (
@@ -189,7 +197,11 @@ function CoursesBuilder() {
         actions={<Button variant="primary" size="sm" onClick={() => setMetaOpen({})}><Plus size={14} /> New</Button>}
         padded={false}
       >
-        {courses.length === 0 ? (
+        {coursesQ.isError ? (
+          <ErrorState description="Couldn't load courses. Please try again." onRetry={() => coursesQ.refetch()} />
+        ) : coursesQ.isLoading ? (
+          <TableSkeleton rows={4} cols={3} />
+        ) : courses.length === 0 ? (
           <EmptyState title="No courses yet" description="Create your first course to get started." />
         ) : (
           <TableWrap className="border-0">
