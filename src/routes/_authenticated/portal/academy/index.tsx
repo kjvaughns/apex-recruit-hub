@@ -2,14 +2,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getMe } from "@/lib/portal.functions";
 import { getAcademyHome } from "@/lib/academy.functions";
-import { PageHeader, PageBody, Panel, Badge, Button, SearchField, EmptyState } from "@/components/portal/ui";
-import { Video, Headphones, FileText, Link2, GraduationCap, Clock } from "lucide-react";
+import { PageHeader, PageBody, Panel, Badge, Button, SearchField, EmptyState, Select } from "@/components/portal/ui";
+import { Video, Headphones, FileText, Link2, GraduationCap, PlayCircle, ChevronLeft } from "lucide-react";
+
+const searchSchema = z.object({
+  section: z.enum(["presentations", "courses", "library"]).optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/portal/academy/")({
   head: () => ({ meta: [{ title: "Academy — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
+  validateSearch: (s) => searchSchema.parse(s),
   component: AcademyHome,
 });
 
@@ -21,6 +27,7 @@ function typeIcon(type: string, size: number) {
 }
 
 function AcademyHome() {
+  const { section } = Route.useSearch();
   const homeFn = useServerFn(getAcademyHome);
   const meFn = useServerFn(getMe);
   const q = useQuery({ queryKey: ["academy", "home"], queryFn: () => homeFn() });
@@ -29,156 +36,207 @@ function AcademyHome() {
     (meQ.data?.roles ?? []).some((r) => r === "admin" || r === "super_admin") ||
     !!(meQ.data?.profile as any)?.can_manage_resources;
 
-  const [search, setSearch] = useState("");
-  const [activeTags, setActiveTags] = useState<string[]>([]);
-
   const courses = (q.data?.courses ?? []) as any[];
   const resources = (q.data?.resources ?? []) as any[];
-  const allTags = (q.data?.tags ?? []) as string[];
+  const presentations = resources.filter((r) => r.section === "presentation");
+  const library = resources.filter((r) => r.section !== "presentation");
 
-  const filtered = resources.filter((r) => {
-    const matchesQ = !search.trim() || r.title.toLowerCase().includes(search.trim().toLowerCase());
-    const matchesTags = activeTags.every((t) => (r.tags ?? []).includes(t)); // AND
-    return matchesQ && matchesTags;
-  });
+  const manageBtn = canManage ? (
+    <Link to="/portal/academy/admin"><Button variant="secondary" size="sm">Manage Academy</Button></Link>
+  ) : undefined;
 
-  const recent = useMemo(() => {
-    const c = courses.map((x) => ({ created: x.created_at, node: <RecentCard key={`c-${x.id}`} to={`/portal/academy/courses/${x.slug}`} icon={<GraduationCap size={14} />} title={x.title} sub="Course" required={x.is_required} /> }));
-    const r = resources.map((x) => ({ created: x.created_at, node: <RecentCard key={`r-${x.id}`} to={`/portal/academy/library/${x.slug}`} icon={typeIcon(x.type, 14)} title={x.title} sub={cap(x.type)} required={x.is_required} /> }));
-    return [...c, ...r].sort((a, b) => (a.created < b.created ? 1 : -1)).slice(0, 6);
-  }, [courses, resources]);
+  const back = (
+    <Link to="/portal/academy" className="p-focus mb-4 inline-flex items-center gap-1 text-[13px]" style={{ color: "var(--p-text-2)" }}>
+      <ChevronLeft size={15} /> Academy
+    </Link>
+  );
 
-  function toggleTag(t: string) {
-    setActiveTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
+  if (q.isLoading) {
+    return <PortalShell><PageBody><div className="p-secondary">Loading…</div></PageBody></PortalShell>;
   }
 
+  if (section === "presentations") {
+    return (
+      <PortalShell>
+        <PageBody>
+          {back}
+          <PageHeader title="Recorded Presentations" description="Trainings, call breakdowns, and past live sessions." actions={manageBtn} />
+          {presentations.length === 0 ? (
+            <Panel><EmptyState title="No recordings yet" description="Recorded trainings will appear here." /></Panel>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {presentations.map((r) => <PresentationCard key={r.id} r={r} />)}
+            </div>
+          )}
+        </PageBody>
+      </PortalShell>
+    );
+  }
+
+  if (section === "courses") {
+    return (
+      <PortalShell>
+        <PageBody>
+          {back}
+          <PageHeader title="Courses" description="Structured Vantage training programs." actions={manageBtn} />
+          {courses.length === 0 ? (
+            <Panel><EmptyState title="No courses yet" description="Courses will appear here once published." /></Panel>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {courses.map((c) => <CourseCard key={c.id} c={c} />)}
+            </div>
+          )}
+        </PageBody>
+      </PortalShell>
+    );
+  }
+
+  if (section === "library") {
+    return (
+      <PortalShell>
+        <PageBody>
+          {back}
+          <PageHeader title="Library" description="Scripts, PDFs, guides, videos, and resources." actions={manageBtn} />
+          <LibrarySection resources={library} />
+        </PageBody>
+      </PortalShell>
+    );
+  }
+
+  // Hub
   return (
     <PortalShell>
       <PageBody>
         <PageHeader
           title="Vantage Academy"
-          description="Courses, recorded trainings, scripts, and tools — built for Vantage agents."
-          actions={canManage && <Link to="/portal/academy/admin"><Button variant="secondary" size="sm">Manage Academy</Button></Link>}
+          description="Everything you need to learn, sell, and grow at Vantage."
+          actions={manageBtn}
         />
-
-        {q.isLoading ? (
-          <div className="p-secondary">Loading…</div>
-        ) : (
-          <>
-            {recent.length > 0 && (
-              <div className="mb-6">
-                <SectionLabel icon={<Clock size={14} />}>Recently added</SectionLabel>
-                <div className="flex gap-3 overflow-x-auto pb-1">{recent.map((r) => r.node)}</div>
-              </div>
-            )}
-
-            <div className="mb-8">
-              <SectionLabel icon={<GraduationCap size={15} />}>Courses</SectionLabel>
-              {courses.length === 0 ? (
-                <Panel><EmptyState title="No courses yet" description="Courses will appear here once published." /></Panel>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {courses.map((c) => (
-                    <Link key={c.id} to="/portal/academy/courses/$slug" params={{ slug: c.slug }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="p-card-title">{c.title}</span>
-                        {c.is_required && <Badge tone="gold">Required</Badge>}
-                      </div>
-                      {c.instructor_name && <span className="p-muted">{c.instructor_name}</span>}
-                      {c.description && <p className="p-secondary leading-snug">{c.description}</p>}
-                      <div className="mt-auto pt-2">
-                        {c.progress === null ? (
-                          <span className="p-muted">Not started</span>
-                        ) : c.completed ? (
-                          <Badge tone="green">Completed</Badge>
-                        ) : (
-                          <>
-                            <div className="mb-1"><span className="p-muted">{c.progress}% complete</span></div>
-                            <ProgressBar pct={c.progress} />
-                          </>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <SectionLabel icon={<FileText size={15} />}>Library</SectionLabel>
-              <div className="mb-3 flex flex-col gap-3">
-                <SearchField value={search} onChange={setSearch} placeholder="Search the library…" />
-                {allTags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {allTags.map((t) => {
-                      const active = activeTags.includes(t);
-                      return (
-                        <button key={t} onClick={() => toggleTag(t)} className="p-focus rounded-full border px-3 py-1 text-[12.5px] font-medium transition"
-                          style={active ? { background: "var(--p-gold-soft)", color: "var(--p-gold)", borderColor: "transparent" } : { color: "var(--p-text-2)", borderColor: "var(--p-border)" }}>
-                          {t}
-                        </button>
-                      );
-                    })}
-                    {activeTags.length > 0 && (
-                      <button onClick={() => setActiveTags([])} className="p-focus px-2 text-[12.5px]" style={{ color: "var(--p-text-3)" }}>Clear</button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {filtered.length === 0 ? (
-                <Panel><p className="p-secondary">No resources match those filters.</p></Panel>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {filtered.map((r) => (
-                    <Link key={r.id} to="/portal/academy/library/$slug" params={{ slug: r.slug }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="grid h-8 w-8 place-items-center rounded-[8px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>{typeIcon(r.type, 15)}</span>
-                        {r.is_required && <Badge tone="gold">Required</Badge>}
-                      </div>
-                      <span className="p-card-title">{r.title}</span>
-                      {r.description && <p className="p-secondary leading-snug">{r.description}</p>}
-                      <div className="mt-auto flex flex-wrap gap-1 pt-1">
-                        {(r.tags ?? []).map((t: string) => <Badge key={t} tone="neutral">{t}</Badge>)}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
+        <div className="grid gap-4 md:grid-cols-3">
+          <HubCard
+            to="presentations"
+            icon={<PlayCircle size={22} />}
+            title="Recorded Presentations"
+            desc="Watch previous trainings and call breakdowns."
+            count={presentations.length}
+          />
+          <HubCard
+            to="courses"
+            icon={<GraduationCap size={22} />}
+            title="Courses"
+            desc="Complete structured Vantage training programs."
+            count={courses.length}
+          />
+          <HubCard
+            to="library"
+            icon={<FileText size={22} />}
+            title="Library"
+            desc="Access scripts, PDFs, guides, videos, and resources."
+            count={library.length}
+          />
+        </div>
       </PageBody>
     </PortalShell>
   );
 }
 
-function SectionLabel({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function HubCard({ to, icon, title, desc, count }: { to: "presentations" | "courses" | "library"; icon: React.ReactNode; title: string; desc: string; count: number }) {
   return (
-    <div className="mb-3 flex items-center gap-2">
-      <span style={{ color: "var(--p-gold)" }}>{icon}</span>
-      <h2 className="p-section-title">{children}</h2>
-    </div>
-  );
-}
-function RecentCard({ to, icon, title, sub, required }: { to: string; icon: React.ReactNode; title: string; sub: string; required: boolean }) {
-  return (
-    <Link to={to} className="p-panel flex min-w-[210px] max-w-[210px] flex-col gap-1.5 p-3 transition hover:[border-color:var(--p-border-strong)]">
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-[11.5px] font-semibold uppercase tracking-[0.06em]" style={{ color: "var(--p-text-3)" }}>
-          <span style={{ color: "var(--p-gold)" }}>{icon}</span>{sub}
-        </span>
-        {required && <Badge tone="gold">Req</Badge>}
-      </div>
-      <span className="p-card-title truncate">{title}</span>
+    <Link to="/portal/academy" search={{ section: to }} className="p-panel flex flex-col gap-2 p-6 transition hover:[border-color:var(--p-border-strong)]">
+      <span className="grid h-11 w-11 place-items-center rounded-[12px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>{icon}</span>
+      <h2 className="p-card-title mt-1">{title}</h2>
+      <p className="p-secondary leading-snug">{desc}</p>
+      <div className="mt-auto pt-2"><span className="p-muted">{count} {count === 1 ? "item" : "items"}</span></div>
     </Link>
   );
 }
-function ProgressBar({ pct }: { pct: number }) {
+
+function CourseCard({ c }: { c: any }) {
   return (
-    <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
-      <div className="h-full rounded-full" style={{ width: `${Math.max(3, pct)}%`, background: "var(--p-gold)" }} />
-    </div>
+    <Link to="/portal/academy/courses/$slug" params={{ slug: c.slug }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
+      <div className="flex items-start justify-between gap-2">
+        <span className="p-card-title">{c.title}</span>
+        {c.is_required && <Badge tone="gold">Required</Badge>}
+      </div>
+      {c.instructor_name && <span className="p-muted">{c.instructor_name}</span>}
+      {c.description && <p className="p-secondary leading-snug">{c.description}</p>}
+      <div className="mt-auto pt-2">
+        {c.progress === null ? (
+          <span className="p-muted">Not started</span>
+        ) : c.completed ? (
+          <Badge tone="green">Completed</Badge>
+        ) : (
+          <>
+            <div className="mb-1"><span className="p-muted">{c.progress}% complete</span></div>
+            <div className="h-1.5 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
+              <div className="h-full rounded-full" style={{ width: `${Math.max(3, c.progress)}%`, background: "var(--p-gold)" }} />
+            </div>
+          </>
+        )}
+      </div>
+    </Link>
   );
 }
-function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function PresentationCard({ r }: { r: any }) {
+  return (
+    <Link to="/portal/academy/library/$slug" params={{ slug: r.slug }} className="p-panel overflow-hidden transition hover:[border-color:var(--p-border-strong)]">
+      <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>
+        <PlayCircle size={34} />
+      </div>
+      <div className="p-3">
+        <div className="p-card-title truncate">{r.title}</div>
+        {r.category && <div className="p-muted mt-0.5">{r.category}</div>}
+        {r.description && <p className="p-secondary mt-1 line-clamp-2 leading-snug">{r.description}</p>}
+      </div>
+    </Link>
+  );
+}
+
+function LibrarySection({ resources }: { resources: any[] }) {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const categories = useMemo(
+    () => Array.from(new Set(resources.map((r) => r.category).filter(Boolean))).sort() as string[],
+    [resources],
+  );
+  const filtered = resources.filter((r) => {
+    const matchesQ = !search.trim() || r.title.toLowerCase().includes(search.trim().toLowerCase());
+    const matchesCat = !category || r.category === category;
+    return matchesQ && matchesCat;
+  });
+
+  return (
+    <>
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row">
+        <SearchField value={search} onChange={setSearch} placeholder="Search the library…" />
+        {categories.length > 0 && (
+          <Select value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 w-full text-[13px] sm:w-auto">
+            <option value="">All categories</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </Select>
+        )}
+      </div>
+      {filtered.length === 0 ? (
+        <Panel><p className="p-secondary">No resources match those filters.</p></Panel>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((r) => (
+            <Link key={r.id} to="/portal/academy/library/$slug" params={{ slug: r.slug }} className="p-panel flex flex-col gap-2 p-4 transition hover:[border-color:var(--p-border-strong)]">
+              <div className="flex items-start justify-between gap-2">
+                <span className="grid h-8 w-8 place-items-center rounded-[8px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>{typeIcon(r.type, 15)}</span>
+                {r.is_required && <Badge tone="gold">Required</Badge>}
+              </div>
+              <span className="p-card-title">{r.title}</span>
+              {r.description && <p className="p-secondary leading-snug">{r.description}</p>}
+              <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+                <span className="p-muted capitalize">{r.type}</span>
+                {r.category && <span className="p-muted truncate">{r.category}</span>}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}

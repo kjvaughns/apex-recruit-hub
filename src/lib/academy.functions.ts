@@ -329,6 +329,8 @@ export const adminUpsertResource = createServerFn({ method: "POST" })
         type: z.enum(["file", "video", "audio", "link"]),
         url: z.string().trim().max(1000).optional().or(z.literal("")),
         is_required: z.boolean().optional(),
+        section: z.enum(["library", "presentation"]).optional(),
+        category: z.string().trim().max(80).optional().or(z.literal("")),
         tags: z.array(z.string().trim().max(60)).max(20).optional().default([]),
       })
       .parse(d),
@@ -343,6 +345,8 @@ export const adminUpsertResource = createServerFn({ method: "POST" })
       type: data.type,
       url: data.url || null,
       is_required: data.is_required ?? false,
+      section: data.section ?? "library",
+      category: data.category || null,
     };
     if (data.slug) patch.slug = data.slug;
 
