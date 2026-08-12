@@ -14,7 +14,7 @@ import {
   PageHeader,
   Panel,
   SearchField,
-  SectionNav,
+  Tabs,
   Stack,
   TD,
   TH,
@@ -85,10 +85,10 @@ function EmailAdminPage() {
         description="Every automated and manual email the platform sends, in one place."
       />
       <PageBody>
-        <SectionNav
+        <Tabs
           value={tab}
           onChange={setTab}
-          items={[
+          tabs={[
             { value: "templates", label: "Templates" },
             { value: "campaigns", label: "Campaigns" },
             { value: "history", label: "History" },
