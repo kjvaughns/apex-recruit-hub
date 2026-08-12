@@ -78,7 +78,12 @@ export function resolveMedia(rawUrl?: string | null): ResolvedMedia {
   }
   const vim = vimeoId(url);
   if (vim) {
-    return { kind: "vimeo", embedUrl: `https://player.vimeo.com/video/${vim}`, playbackUrl: null, fetchUrl: null };
+    return {
+      kind: "vimeo",
+      embedUrl: `https://player.vimeo.com/video/${vim}?api=1&player_id=vantage-vimeo`,
+      playbackUrl: null,
+      fetchUrl: null,
+    };
   }
   const loom = loomId(url);
   if (loom) {
