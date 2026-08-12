@@ -525,6 +525,12 @@ export async function applyStage(args: ApplyStageArgs): Promise<ApplyStageResult
   if (status && applicant.recruiting_status !== "terminated") patch.recruiting_status = status;
   const stamp = STAGE_STAMP[args.stage];
   if (stamp && changed) patch[stamp] = now;
+  // Reaching onboarding (or beyond) means they're licensed.
+  if (["onboarding", "training", "active-agent"].includes(args.stage) && !applicant.licensed) {
+    patch.licensed = true;
+    if (!("licensing_status" in patch)) patch.licensing_status = "licensed";
+  }
+
 
   if (Object.keys(patch).length > 0) {
     const { error } = await supabase.from("applicants").update(patch).eq("id", args.applicantId);
