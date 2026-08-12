@@ -24,7 +24,9 @@ import {
   syncTranscription,
   regenerateNotes,
   saveTranscriptEdits,
+  saveSpeakerNames,
 } from "@/lib/academy-media.functions";
+import { TranscriptViewer, parseTimestampLabel } from "@/components/vantage/academy/transcript-viewer";
 import { Sparkles, RefreshCw, Upload, Info } from "lucide-react";
 
 export type OwnerType = "recording" | "library" | "lesson";
