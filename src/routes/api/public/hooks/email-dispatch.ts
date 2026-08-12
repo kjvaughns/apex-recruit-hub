@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { emailLinks, SITE_URL } from "@/lib/email/links";
-import { formatDate, formatTime } from "@/lib/email/vars";
 import {
   ONBOARDING_STEP_LABELS,
   ONBOARDING_STEP_ORDER,
