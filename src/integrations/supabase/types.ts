@@ -466,37 +466,55 @@ export type Database = {
       course_lessons: {
         Row: {
           blurb: string | null
+          body: string | null
           duration: string | null
+          file_path: string | null
           id: string
+          is_published: boolean
           kind: string
           media_type: string | null
           module_id: string
           position: number
           quiz_pass_threshold: number
+          resource_label: string | null
+          resource_path: string | null
+          resource_url: string | null
           title: string
           video_url: string | null
         }
         Insert: {
           blurb?: string | null
+          body?: string | null
           duration?: string | null
+          file_path?: string | null
           id?: string
+          is_published?: boolean
           kind?: string
           media_type?: string | null
           module_id: string
           position?: number
           quiz_pass_threshold?: number
+          resource_label?: string | null
+          resource_path?: string | null
+          resource_url?: string | null
           title: string
           video_url?: string | null
         }
         Update: {
           blurb?: string | null
+          body?: string | null
           duration?: string | null
+          file_path?: string | null
           id?: string
+          is_published?: boolean
           kind?: string
           media_type?: string | null
           module_id?: string
           position?: number
           quiz_pass_threshold?: number
+          resource_label?: string | null
+          resource_path?: string | null
+          resource_url?: string | null
           title?: string
           video_url?: string | null
         }
@@ -548,8 +566,10 @@ export type Database = {
           instructor_role: string | null
           is_required: boolean
           long_description: string | null
+          outcomes: string[]
           slug: string | null
           status: string
+          thumbnail_url: string | null
           title: string
           updated_at: string
         }
@@ -561,8 +581,10 @@ export type Database = {
           instructor_role?: string | null
           is_required?: boolean
           long_description?: string | null
+          outcomes?: string[]
           slug?: string | null
           status?: string
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
         }
@@ -574,8 +596,10 @@ export type Database = {
           instructor_role?: string | null
           is_required?: boolean
           long_description?: string | null
+          outcomes?: string[]
           slug?: string | null
           status?: string
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
         }
@@ -1119,33 +1143,63 @@ export type Database = {
       }
       library_resources: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
+          duration: string | null
+          featured: boolean
+          file_path: string | null
           id: string
+          is_new: boolean
           is_required: boolean
+          media_type: string | null
+          position: number
           slug: string | null
+          status: string
+          thumbnail_url: string | null
           title: string
           type: string
+          updated_at: string
           url: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
+          duration?: string | null
+          featured?: boolean
+          file_path?: string | null
           id?: string
+          is_new?: boolean
           is_required?: boolean
+          media_type?: string | null
+          position?: number
           slug?: string | null
+          status?: string
+          thumbnail_url?: string | null
           title: string
           type: string
+          updated_at?: string
           url?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
+          duration?: string | null
+          featured?: boolean
+          file_path?: string | null
           id?: string
+          is_new?: boolean
           is_required?: boolean
+          media_type?: string | null
+          position?: number
           slug?: string | null
+          status?: string
+          thumbnail_url?: string | null
           title?: string
           type?: string
+          updated_at?: string
           url?: string | null
         }
         Relationships: []
@@ -1162,6 +1216,66 @@ export type Database = {
         Update: {
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      media_transcripts: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          id: string
+          notes: Json | null
+          notes_error: string | null
+          notes_status: string
+          owner_id: string
+          owner_type: string
+          provider_job_id: string | null
+          requested_at: string | null
+          resolved_url: string | null
+          source_url: string | null
+          status: string
+          transcript_segments: Json | null
+          transcript_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          notes?: Json | null
+          notes_error?: string | null
+          notes_status?: string
+          owner_id: string
+          owner_type: string
+          provider_job_id?: string | null
+          requested_at?: string | null
+          resolved_url?: string | null
+          source_url?: string | null
+          status?: string
+          transcript_segments?: Json | null
+          transcript_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          notes?: Json | null
+          notes_error?: string | null
+          notes_status?: string
+          owner_id?: string
+          owner_type?: string
+          provider_job_id?: string | null
+          requested_at?: string | null
+          resolved_url?: string | null
+          source_url?: string | null
+          status?: string
+          transcript_segments?: Json | null
+          transcript_text?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1207,7 +1321,10 @@ export type Database = {
           id: string
           initials: string
           is_active: boolean
+          is_external: boolean
           name: string
+          photo_url: string | null
+          profile_id: string | null
           role: string | null
           slug: string
           sort_order: number
@@ -1218,7 +1335,10 @@ export type Database = {
           id?: string
           initials: string
           is_active?: boolean
+          is_external?: boolean
           name: string
+          photo_url?: string | null
+          profile_id?: string | null
           role?: string | null
           slug: string
           sort_order?: number
@@ -1229,13 +1349,24 @@ export type Database = {
           id?: string
           initials?: string
           is_active?: boolean
+          is_external?: boolean
           name?: string
+          photo_url?: string | null
+          profile_id?: string | null
           role?: string | null
           slug?: string
           sort_order?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "presenters_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1400,6 +1531,7 @@ export type Database = {
       quiz_questions: {
         Row: {
           correct_index: number
+          explanation: string | null
           id: string
           lesson_id: string
           options: string[]
@@ -1408,6 +1540,7 @@ export type Database = {
         }
         Insert: {
           correct_index?: number
+          explanation?: string | null
           id?: string
           lesson_id: string
           options?: string[]
@@ -1416,6 +1549,7 @@ export type Database = {
         }
         Update: {
           correct_index?: number
+          explanation?: string | null
           id?: string
           lesson_id?: string
           options?: string[]
@@ -1438,11 +1572,19 @@ export type Database = {
           created_at: string
           description: string | null
           duration: string | null
+          featured: boolean
+          file_path: string | null
+          format: string
           id: string
+          is_new: boolean
           is_published: boolean
           position: number
           presenter_id: string
+          presenter_role: string | null
           recorded_on: string | null
+          slug: string | null
+          status: string
+          thumbnail_url: string | null
           title: string
           topic: string | null
           updated_at: string
@@ -1453,11 +1595,19 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: string | null
+          featured?: boolean
+          file_path?: string | null
+          format?: string
           id?: string
+          is_new?: boolean
           is_published?: boolean
           position?: number
           presenter_id: string
+          presenter_role?: string | null
           recorded_on?: string | null
+          slug?: string | null
+          status?: string
+          thumbnail_url?: string | null
           title: string
           topic?: string | null
           updated_at?: string
@@ -1468,11 +1618,19 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: string | null
+          featured?: boolean
+          file_path?: string | null
+          format?: string
           id?: string
+          is_new?: boolean
           is_published?: boolean
           position?: number
           presenter_id?: string
+          presenter_role?: string | null
           recorded_on?: string | null
+          slug?: string | null
+          status?: string
+          thumbnail_url?: string | null
           title?: string
           topic?: string | null
           updated_at?: string
