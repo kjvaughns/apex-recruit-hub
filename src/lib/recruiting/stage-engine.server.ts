@@ -112,7 +112,8 @@ const APPLICANT_COLS =
  * going to the portal. Never throws.
  */
 export async function onboardingAccountLink(a: ApplicantRow): Promise<string> {
-  if (a.portal_profile_id || !a.email) return `${SITE_URL}/login`;
+  if (a.portal_profile_id) return `${SITE_URL}/portal/onboarding`;
+  if (!a.email) return `${SITE_URL}/login`;
   try {
     const supabase = await db();
     const { data: res, error } = await supabase.rpc("ensure_onboarding_invitation", {
@@ -460,7 +461,17 @@ export async function sendApplicantEmail(
 ): Promise<void> {
   if (!a.email) return;
   const { sendEmail } = await import("@/lib/email/dispatch.server");
-  const context = await applicantContext(a, opts.context ?? {});
+  let sendContext = opts.context ?? {};
+  if (template === "welcome-onboarding") {
+    const accountLink = await onboardingAccountLink(a);
+    sendContext = {
+      ...sendContext,
+      onboarding_link: accountLink,
+      invitation_link: accountLink,
+      portal_link: accountLink,
+    };
+  }
+  const context = await applicantContext(a, sendContext);
   await sendEmail({
     template,
     to: a.email,
