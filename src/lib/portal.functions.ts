@@ -17,41 +17,22 @@ type OnboardingApplicant = {
   portal_profile_id?: string | null;
 };
 
-/** Resolve the best portal link for an onboarding welcome email:
- *  existing account → /login; otherwise reuse a pending invite token, or mint a
- *  new agent invitation tied to the applicant. Never throws. */
+/** Resolve the account destination for an onboarding welcome email. Existing
+ *  agents go to onboarding; new agents always receive a one-time registration
+ *  link with their applicant details prefilled. */
 async function resolveOnboardingPortalLink(
   supabase: any,
   a: OnboardingApplicant,
 ): Promise<string> {
-  if (a.portal_profile_id) return `${APP_URL()}/login`;
-  try {
-    const { data: inv } = await supabase
-      .from("invitations")
-      .select("token")
-      .eq("applicant_id", a.id)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    let token: string | undefined = inv?.token;
-    if (!token && a.email) {
-      const { data: res } = await supabase.rpc("create_invitation", {
-        payload: {
-          email: a.email,
-          first_name: a.first_name ?? "",
-          last_name: a.last_name ?? "",
-          role: "agent",
-          applicant_id: a.id,
-        },
-      });
-      token = res?.token;
-    }
-    if (token) return `${APP_URL()}/portal-invite/${token}`;
-  } catch {
-    /* fall through to a safe default */
-  }
-  return `${APP_URL()}/login`;
+  if (a.portal_profile_id) return `${APP_URL()}/portal/onboarding`;
+  if (!a.email) throw new Error("Applicant has no email address.");
+  const { data: res, error } = await supabase.rpc("ensure_onboarding_invitation", {
+    _applicant_id: a.id,
+  });
+  if (error) throw new Error(error.message);
+  const token = res?.token as string | undefined;
+  if (!res?.ok || !token) throw new Error("Could not create an onboarding registration link.");
+  return `${APP_URL()}/portal-invite/${token}`;
 }
 
 /** Resolve the recruiting agent who should be copied on an applicant's email.

@@ -193,12 +193,13 @@ export const sendApplicantEmail = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const { data: a } = await supabase
-      .from("applicants")
-      .select("id, first_name, last_name, email, state, phone, licensed")
-      .eq("id", data.applicantId)
-      .maybeSingle();
-    if (!a?.email) throw new Error("This applicant has no email on file.");
+    const { loadApplicant, sendApplicantEmail: sendRecruitingEmail, applicantContext } = await import(
+      "@/lib/recruiting/stage-engine.server"
+    );
+    
+    const applicant = await loadApplicant(data.applicantId);
+    if (!applicant) throw new Error("Applicant not found.");
+    if (!applicant.email) throw new Error("This applicant has no email on file.");
 
     const { data: me } = await supabase
       .from("profiles")
@@ -206,49 +207,37 @@ export const sendApplicantEmail = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
-    const fullName = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
-    const baseContext = {
-      first_name: a.first_name ?? undefined,
-      last_name: a.last_name ?? undefined,
-      full_name: fullName || undefined,
-      email: a.email,
-      phone: a.phone ?? undefined,
-      state: a.state ?? undefined,
-      applicant_name: fullName || undefined,
-      recruiter_name: me?.full_name ?? undefined,
-      sender_name: me?.full_name ?? undefined,
-    };
-
     const stamp = new Date().toISOString();
+    
+    // If a named catalog template is used, use the recruiting engine's send path
+    // which handles the complex link resolution (invite vs login).
     if (data.template) {
-      const { sendEmail } = await import("@/lib/email/dispatch.server");
-      const result = await sendEmail({
-        template: data.template,
-        to: a.email,
-        toName: fullName || null,
-        applicantId: a.id,
-        sentBy: userId,
-        automated: false,
-        ignorePrefs: true,
-        replyTo: me?.email ?? undefined,
-        sendKey: `manual-${data.template}-${a.id}-${stamp}`,
-        context: baseContext,
+      const result = await sendRecruitingEmail(applicant, data.template, {
+        actorId: userId,
+        sendKey: `manual-${data.template}-${applicant.id}-${stamp}`,
       });
-      if (result.status === "failed") throw new Error(result.error);
       return result;
     }
 
+    // Composed free-form message
     if (!data.subject || !data.message) throw new Error("Subject and message are required.");
+    
+    // Construct rich context (including the tokenized onboarding link if applicable)
+    const ctx = await applicantContext(applicant, {
+      recruiter_name: me?.full_name ?? undefined,
+      sender_name: me?.full_name ?? undefined,
+    });
+
     const { sendComposed } = await import("@/lib/email/dispatch.server");
     const result = await sendComposed({
-      to: a.email,
-      toName: fullName || null,
+      to: applicant.email,
+      toName: ctx.full_name || null,
       subject: data.subject,
       message: data.message,
-      applicantId: a.id,
+      applicantId: applicant.id,
       sentBy: userId,
       replyTo: me?.email ?? undefined,
-      context: baseContext,
+      context: ctx,
     });
     if (result.status === "failed") throw new Error(result.error);
     return result;

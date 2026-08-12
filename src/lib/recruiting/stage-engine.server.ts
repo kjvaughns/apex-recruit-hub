@@ -128,9 +128,6 @@ export async function onboardingAccountLink(a: ApplicantRow): Promise<string> {
   return `${SITE_URL}/login`;
 }
 
-
-
-
 export async function loadApplicant(applicantId: string): Promise<ApplicantRow | null> {
   const supabase = await db();
   const { data } = await supabase
@@ -214,17 +211,12 @@ export async function logActivity(
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Secure applicant action links                                       */
-/* ------------------------------------------------------------------ */
-
 export async function createActionToken(
   applicantId: string,
   action: string,
   days = 120,
 ): Promise<string> {
   const supabase = await db();
-  // Reuse an unused, unexpired token so repeated emails carry one link.
   const { data: existing } = await supabase
     .from("applicant_action_tokens")
     .select("token, expires_at, used_at")
@@ -251,7 +243,6 @@ export type ClaimResult =
   | { ok: true; applicantId: string; firstClaim: boolean }
   | { ok: false; reason: "invalid" | "expired" };
 
-/** Single-use claim. A second click reports `firstClaim: false`, not an error. */
 export async function claimActionToken(token: string, action: string): Promise<ClaimResult> {
   const supabase = await db();
   const { data: row } = await supabase
@@ -274,15 +265,8 @@ export async function claimActionToken(token: string, action: string): Promise<C
   return { ok: true, applicantId: row.applicant_id, firstClaim: !!claimed };
 }
 
-/* ------------------------------------------------------------------ */
-/* Sequences                                                           */
-/* ------------------------------------------------------------------ */
-
-/** Hours before the appointment for each interview reminder touch. */
 export const INTERVIEW_TOUCH_HOURS = [144, 96, 48, 24];
-/** Hours before the exam for each exam reminder touch. */
 export const EXAM_TOUCH_HOURS = [72, 24, 6];
-/** Hours after the miss for each no-show follow-up touch. */
 export const NO_SHOW_TOUCH_HOURS = [0, 48, 96];
 
 function nextInterviewSend(anchorIso: string, touch: number): string | null {
@@ -303,7 +287,6 @@ function nextExamSend(anchorIso: string, touch: number): string | null {
   return null;
 }
 
-/** Next due time for a sequence, or null when it has nothing left to send. */
 export function sequenceNextSend(
   kind: SequenceKind,
   anchorIso: string,
@@ -358,10 +341,6 @@ export async function stopAllSequences(applicantId: string, reason: string): Pro
     .eq("applicant_id", applicantId)
     .eq("status", "active");
 }
-
-/* ------------------------------------------------------------------ */
-/* Email context                                                       */
-/* ------------------------------------------------------------------ */
 
 export interface RecruiterInfo {
   id: string;
@@ -421,6 +400,10 @@ export async function applicantContext(
     `${SITE_URL}/schedule`;
   const cheatSheet = await settingValue("licensing_cheat_sheet_url");
   const courseToken = await createActionToken(a.id, "course_purchased");
+  
+  // If they are in onboarding and have no portal account, we must use the invite link
+  // across all variables that point to the portal/onboarding.
+  const onboardingLink = a.portal_profile_id ? undefined : await onboardingAccountLink(a);
 
   return {
     ...emailLinks(),
@@ -449,6 +432,12 @@ export async function applicantContext(
     course_confirm_link: `${SITE_URL}/course-purchased/${courseToken}`,
     cheat_sheet_link: cheatSheet ?? undefined,
     instagram_link: "https://instagram.com/vantage.financial",
+    // Override links if a tokenized onboarding link is available
+    ...(onboardingLink ? {
+      onboarding_link: onboardingLink,
+      invitation_link: onboardingLink,
+      portal_link: onboardingLink,
+    } : {}),
     ...extra,
   } as EmailContext;
 }
@@ -461,17 +450,7 @@ export async function sendApplicantEmail(
 ): Promise<void> {
   if (!a.email) return;
   const { sendEmail } = await import("@/lib/email/dispatch.server");
-  let sendContext = opts.context ?? {};
-  if (template === "welcome-onboarding") {
-    const accountLink = await onboardingAccountLink(a);
-    sendContext = {
-      ...sendContext,
-      onboarding_link: accountLink,
-      invitation_link: accountLink,
-      portal_link: accountLink,
-    };
-  }
-  const context = await applicantContext(a, sendContext);
+  const context = await applicantContext(a, opts.context ?? {});
   await sendEmail({
     template,
     to: a.email,
@@ -499,139 +478,91 @@ export async function notifyRecruiterStage(
 
   const { sendEmail } = await import("@/lib/email/dispatch.server");
   const applicantName = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || a.email || "Your applicant";
+  
   await sendEmail({
-    template: "agent-applicant-stage",
+    template: "agent-stage-notification",
     to: recruiter.email,
-    toName: recruiter.name,
+    toName: recruiter.name || null,
     profileId: recruiter.id,
-    applicantId: a.id,
-    sendKey: `stage-alert:${a.id}:${to}`,
     context: {
       ...emailLinks({ portal_link: `${SITE_URL}/portal/crm/${a.id}` }),
-      first_name: (recruiter.name ?? "").trim().split(/\s+/)[0] || "there",
       applicant_name: applicantName,
       stage_name: STAGE_LABELS[to],
-      previous_stage: from ? STAGE_LABELS[from] : "their previous stage",
+      previous_stage: from ? STAGE_LABELS[from] : "New Applicant",
     },
+    sendKey: `recruiter-stage-${a.id}-${to}`,
+    automated: true,
   });
 }
 
-/* ------------------------------------------------------------------ */
-/* applyStage                                                          */
-/* ------------------------------------------------------------------ */
-
-export interface ApplyStageArgs {
+/** The master entry point for moving an applicant through the funnel. */
+export async function applyStage(args: {
   applicantId: string;
   stage: StageSlug;
+  reason?: string;
+  sendKey?: string;
   actorId?: string | null;
-  reason?: string | null;
-  /** Extra applicant columns to write in the same update. */
-  patch?: Record<string, unknown>;
   /** Skip the stage email (e.g. the caller sends a richer one itself). */
   skipEmail?: boolean;
   /** Extra email variables for the stage email. */
   context?: EmailContext;
   /** Dedupe suffix for the stage email. */
-  sendKey?: string | null;
-}
-
-export interface ApplyStageResult {
-  ok: boolean;
-  changed: boolean;
-  from: StageSlug | null;
-  to: StageSlug;
-}
-
-export async function applyStage(args: ApplyStageArgs): Promise<ApplyStageResult> {
-  const supabase = await db();
+  dedupeKey?: string;
+}): Promise<void> {
   const applicant = await loadApplicant(args.applicantId);
-  if (!applicant) return { ok: false, changed: false, from: null, to: args.stage };
+  if (!applicant) throw new Error("Applicant not found");
+  
+  const fromStage = await stageSlugById(applicant.current_stage_id);
+  if (fromStage === args.stage) return; // already here
 
-  const fromSlug = await stageSlugById(applicant.current_stage_id);
   const stageId = await stageIdBySlug(args.stage);
-  const changed = fromSlug !== args.stage;
-  const now = new Date().toISOString();
+  if (!stageId) throw new Error(`Invalid stage: ${args.stage}`);
 
-  const patch: Record<string, unknown> = { ...(args.patch ?? {}) };
-  if (stageId && changed) {
-    patch.current_stage_id = stageId;
-    patch.stage_entered_at = now;
-  }
-  const status = STAGE_STATUS[args.stage];
-  if (status && applicant.recruiting_status !== "terminated") patch.recruiting_status = status;
+  const supabase = await db();
   const stamp = STAGE_STAMP[args.stage];
-  if (stamp && changed) patch[stamp] = now;
-  // Reaching onboarding (or beyond) means they're licensed.
-  if (["onboarding", "training", "active-agent"].includes(args.stage) && !applicant.licensed) {
-    patch.licensed = true;
-    if (!("licensing_status" in patch)) patch.licensing_status = "licensed";
-  }
+  const status = STAGE_STATUS[args.stage];
+  
+  const patch: Record<string, any> = {
+    current_stage_id: stageId,
+    stage_entered_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  if (stamp) patch[stamp] = patch.stage_entered_at;
+  if (status) patch.recruiting_status = status;
 
+  const { error } = await supabase
+    .from("applicants")
+    .update(patch)
+    .eq("id", args.applicantId);
+  if (error) throw new Error(error.message);
 
-  if (Object.keys(patch).length > 0) {
-    const { error } = await supabase.from("applicants").update(patch).eq("id", args.applicantId);
-    if (error) {
-      console.warn("[recruiting] stage update failed:", error.message);
-      return { ok: false, changed: false, from: fromSlug, to: args.stage };
-    }
-  }
+  const fresh = await loadApplicant(args.applicantId);
+  if (!fresh) return;
 
-  if (changed) {
-    await logActivity(
-      args.applicantId,
-      "stage_changed",
-      `Stage → ${STAGE_LABELS[args.stage]}`,
-      { from: fromSlug, to: args.stage, reason: args.reason ?? null },
-      args.actorId,
-    );
-  }
+  await logActivity(
+    args.applicantId,
+    "stage_changed",
+    `Moved to ${STAGE_LABELS[args.stage]}`,
+    { from: fromStage, to: args.stage, reason: args.reason },
+    args.actorId
+  );
 
-  // Sequences that must stop when the journey moves on.
-  if (["interview-completed", "pre-licensing", "state-exam", "licensing", "onboarding", "training", "active-agent"].includes(args.stage)) {
-    await stopSequence(args.applicantId, "interview_reminders", `stage:${args.stage}`);
-    await stopSequence(args.applicantId, "no_show_followup", `stage:${args.stage}`);
-  }
-  if (args.stage === "not-moving-forward") {
-    await stopAllSequences(args.applicantId, "terminated");
-  }
-  if (["licensing", "onboarding", "training", "active-agent"].includes(args.stage)) {
-    await stopSequence(args.applicantId, "exam_reminders", `stage:${args.stage}`);
-  }
-
-  const fresh = (await loadApplicant(args.applicantId)) ?? applicant;
-
-  // Sequences that start on arrival.
-  if (args.stage === "interview-scheduled") {
-    const anchor = fresh.scheduled_event_start ?? fresh.calendly_scheduled_at ?? fresh.requested_overview_at;
-    if (anchor) await startSequence(args.applicantId, "interview_reminders", anchor);
-  }
-  if (args.stage === "state-exam" && fresh.exam_date) {
-    await startSequence(args.applicantId, "exam_reminders", fresh.exam_date);
-  }
+  await notifyRecruiterStage(fresh, args.stage, fromStage);
 
   const template = STAGE_EMAIL[args.stage];
-  if (changed && template && !args.skipEmail) {
-    // Onboarding is the portal handoff: point every CTA at account setup.
-    let stageContext: EmailContext = { ...(args.context ?? {}) };
-    if (args.stage === "onboarding") {
-      const link = await onboardingAccountLink(fresh);
-      stageContext = {
-        onboarding_link: link,
-        invitation_link: link,
-        portal_link: link,
-        ...stageContext,
-      };
-    }
+  if (template && !args.skipEmail) {
     await sendApplicantEmail(fresh, template, {
-      context: stageContext,
-      sendKey: args.sendKey ?? `stage:${args.stage}:${args.applicantId}`,
-      actorId: args.actorId ?? null,
+      context: args.context,
+      sendKey: args.sendKey || args.dedupeKey,
+      actorId: args.actorId,
     });
   }
 
-
-  // The recruiting agent gets their own notification on every real move.
-  if (changed) await notifyRecruiterStage(fresh, args.stage, fromSlug);
-
-  return { ok: true, changed, from: fromSlug, to: args.stage };
+  // Manage sequences
+  if (args.stage !== "interview-scheduled") {
+    await stopSequence(args.applicantId, "interview_reminders", `Moved to ${args.stage}`);
+  }
+  if (args.stage !== "state-exam") {
+    await stopSequence(args.applicantId, "exam_reminders", `Moved to ${args.stage}`);
+  }
 }

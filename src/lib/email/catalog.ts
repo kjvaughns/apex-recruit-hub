@@ -464,7 +464,8 @@ const applicantTemplates: EmailTemplateDef[] = [
       title: "Welcome to the team",
       intro: GREET,
       lines: [
-        "You're licensed and officially a Vantage agent. Five steps and you're fully set up — most people knock them out in one sitting.",
+        "You're licensed and officially a Vantage agent. First, create your portal account and password using the secure registration button below. Your name, email, phone, and state will already be filled in; you'll only need to confirm your NPN and choose a password.",
+        "After registration, complete these five onboarding steps — most people knock them out in one sitting.",
         "1) AgentSpace contracting — log in with your NPN, verify your info, refresh your profile, complete the SureLC steps, then request contracts until each one shows Pending. Message Vantage when they're all requested.",
         "2) Discord role update — head to Start Here, open New App, and select Licensed Agent so you get the right channels.",
         "3) Read the Agent Playbook in the Academy Library.",
@@ -475,8 +476,9 @@ const applicantTemplates: EmailTemplateDef[] = [
         { label: "Discord", value: "{{discord_link}}" },
         { label: "Academy", value: "{{academy_link}}" },
       ],
-      ctaLabel: "Start onboarding",
+      ctaLabel: "Create my agent account",
       ctaUrl: "{{onboarding_link}}",
+      note: "This secure registration link is unique to you. If you already created your account, it opens your onboarding checklist instead.",
     },
   }),
   def({
