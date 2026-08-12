@@ -1,10 +1,15 @@
 import { useState } from "react";
 import { Modal, Field, Input, Button } from "@/components/portal/ui";
 
-export type AddAgentFields = { full_name: string; email: string; phone: string };
+export type AddAgentFields = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+};
 
 /**
- * Fast 3-field "Add Agent" modal. The parent owns what happens on submit
+ * Fast 4-field "Add Agent" modal. The parent owns what happens on submit
  * (Phase 2 wires it to the addAgent server fn); this component only collects
  * the fields and manages its own submitting/error state.
  */
@@ -15,13 +20,19 @@ export function AddAgentModal({
   onClose: () => void;
   onSubmit: (fields: AddAgentFields) => Promise<void>;
 }) {
-  const [f, setF] = useState<AddAgentFields>({ full_name: "", email: "", phone: "" });
+  const [f, setF] = useState<AddAgentFields>({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const set = (k: keyof AddAgentFields, v: string) => setF((p) => ({ ...p, [k]: v }));
 
   const valid =
-    f.full_name.trim().length > 1 &&
+    f.first_name.trim().length > 0 &&
+    f.last_name.trim().length > 0 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()) &&
     f.phone.replace(/\D/g, "").length >= 7;
 
@@ -31,7 +42,8 @@ export function AddAgentModal({
     setError("");
     try {
       await onSubmit({
-        full_name: f.full_name.trim(),
+        first_name: f.first_name.trim(),
+        last_name: f.last_name.trim(),
         email: f.email.trim(),
         phone: f.phone.trim(),
       });
@@ -59,9 +71,21 @@ export function AddAgentModal({
       }
     >
       <div className="grid gap-4">
-        <Field label="Full name" required>
-          <Input value={f.full_name} onChange={(e) => set("full_name", e.target.value)} autoFocus />
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="First name" required>
+            <Input
+              value={f.first_name}
+              onChange={(e) => set("first_name", e.target.value)}
+              autoFocus
+            />
+          </Field>
+          <Field label="Last name" required>
+            <Input
+              value={f.last_name}
+              onChange={(e) => set("last_name", e.target.value)}
+            />
+          </Field>
+        </div>
         <Field label="Email" required>
           <Input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} />
         </Field>
@@ -81,3 +105,4 @@ export function AddAgentModal({
     </Modal>
   );
 }
+
