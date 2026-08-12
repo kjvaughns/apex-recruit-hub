@@ -65,7 +65,7 @@ function InviteAcceptPage() {
     if (password.length < 8) errs.push("a password of at least 8 characters");
     if (password !== confirm) errs.push("matching passwords");
     if (!state) errs.push("your state");
-    if (licensed && !npn.trim()) errs.push("your NPN");
+    if (!npn.trim()) errs.push("your NPN");
     if (!terms) errs.push("acceptance of the portal terms");
     if (errs.length) {
       setErrors(errs);
@@ -73,6 +73,7 @@ function InviteAcceptPage() {
     }
     setErrors([]);
     setBusy(true);
+
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
     try {
       const res = await accept({
@@ -119,6 +120,10 @@ function InviteAcceptPage() {
         </div>
 
         <div className="vantage-card mt-10 grid gap-4 p-6 md:p-10">
+          <div className="grid gap-3 rounded-[12px] border border-white/8 bg-white/[0.02] p-4 md:grid-cols-2">
+            <ReadOnly label="Name" value={fullName || "—"} />
+            <ReadOnly label="Email" value={invitation.email ?? "—"} />
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Password *">
               <input
@@ -148,33 +153,18 @@ function InviteAcceptPage() {
           <Field label="State *">
             <StateCombobox value={state} onChange={setState} />
           </Field>
-          <Field label="Are you currently licensed?">
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setLicensed(true)}
-                className={`vantage-input flex items-center justify-center font-medium ${
-                  licensed ? "border-vantage-gold text-vantage-ivory" : "text-vantage-muted"
-                }`}
-              >
-                Yes, licensed
-              </button>
-              <button
-                type="button"
-                onClick={() => setLicensed(false)}
-                className={`vantage-input flex items-center justify-center font-medium ${
-                  !licensed ? "border-vantage-gold text-vantage-ivory" : "text-vantage-muted"
-                }`}
-              >
-                Not yet
-              </button>
-            </div>
+          <Field label="NPN *">
+            <input
+              className="vantage-input"
+              placeholder="Your National Producer Number"
+              value={npn}
+              onChange={(e) => {
+                setNpn(e.target.value);
+                if (!licensed) setLicensed(true);
+              }}
+            />
           </Field>
-          {licensed && (
-            <Field label="NPN *">
-              <input className="vantage-input" value={npn} onChange={(e) => setNpn(e.target.value)} />
-            </Field>
-          )}
+
           <Field label="Instagram handle">
             <input
               className="vantage-input"
@@ -222,3 +212,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function ReadOnly({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.06em] text-vantage-faint">
+        {label}
+      </span>
+      <span className="block text-[14.5px] text-vantage-fog">{value}</span>
+    </div>
+  );
+}
+

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.ensure_onboarding_invitation(uuid) FROM anon, authenticated;

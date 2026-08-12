@@ -572,26 +572,16 @@ export const updateApplicantStage = createServerFn({ method: "POST" })
     const slug = stage?.slug as string | undefined;
     if (!slug) throw new Error("Unknown stage");
 
-    // Onboarding is a handoff: make sure there's exactly one account-setup
-    // invitation and hand its link to the onboarding email.
-    let inviteLink: string | undefined;
-    if (slug === "onboarding") {
-      const { data: a } = await supabase
-        .from("applicants")
-        .select("id, email, first_name, last_name, portal_profile_id")
-        .eq("id", data.id)
-        .maybeSingle();
-      if (a) inviteLink = await resolveOnboardingPortalLink(supabase, a as OnboardingApplicant);
-    }
-
+    // Onboarding is a handoff — the stage engine mints the account-setup
+    // invitation and points the onboarding email at it.
     const engine = await import("@/lib/recruiting/stage-engine.server");
     const res = await engine.applyStage({
       applicantId: data.id,
       stage: slug as never,
       actorId: userId,
       reason: "manual",
-      context: inviteLink ? { invitation_link: inviteLink, portal_link: inviteLink } : undefined,
     });
+
     if (!res.ok) throw new Error("Could not update the stage");
     return { ok: true };
   });

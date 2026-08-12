@@ -105,6 +105,31 @@ export interface ApplicantRow {
 const APPLICANT_COLS =
   "id, first_name, last_name, email, phone, licensed, state, resident_state, npn, recruiting_status, current_stage_id, assigned_recruiter_id, original_recruiter_id, scheduled_event_start, scheduled_event_url, calendly_scheduled_at, requested_overview_at, exam_date, exam_provider, confirmation_token, portal_profile_id";
 
+/**
+ * Account-setup link for an applicant entering Onboarding. New agents have no
+ * portal account yet, so every path into Onboarding must hand them a
+ * single-use invitation link instead of a login wall. Existing accounts keep
+ * going to the portal. Never throws.
+ */
+export async function onboardingAccountLink(a: ApplicantRow): Promise<string> {
+  if (a.portal_profile_id || !a.email) return `${SITE_URL}/login`;
+  try {
+    const supabase = await db();
+    const { data: res, error } = await supabase.rpc("ensure_onboarding_invitation", {
+      _applicant_id: a.id,
+    });
+    if (error) throw new Error(error.message);
+    const token: string | undefined = res?.token;
+    if (res?.ok && token) return `${SITE_URL}/portal-invite/${token}`;
+  } catch (e) {
+    console.warn("[recruiting] onboarding invite link failed:", (e as Error).message);
+  }
+  return `${SITE_URL}/login`;
+}
+
+
+
+
 export async function loadApplicant(applicantId: string): Promise<ApplicantRow | null> {
   const supabase = await db();
   const { data } = await supabase
@@ -575,12 +600,24 @@ export async function applyStage(args: ApplyStageArgs): Promise<ApplyStageResult
 
   const template = STAGE_EMAIL[args.stage];
   if (changed && template && !args.skipEmail) {
+    // Onboarding is the portal handoff: point every CTA at account setup.
+    let stageContext: EmailContext = { ...(args.context ?? {}) };
+    if (args.stage === "onboarding") {
+      const link = await onboardingAccountLink(fresh);
+      stageContext = {
+        onboarding_link: link,
+        invitation_link: link,
+        portal_link: link,
+        ...stageContext,
+      };
+    }
     await sendApplicantEmail(fresh, template, {
-      context: args.context,
+      context: stageContext,
       sendKey: args.sendKey ?? `stage:${args.stage}:${args.applicantId}`,
       actorId: args.actorId ?? null,
     });
   }
+
 
   // The recruiting agent gets their own notification on every real move.
   if (changed) await notifyRecruiterStage(fresh, args.stage, fromSlug);
