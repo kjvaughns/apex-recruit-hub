@@ -93,12 +93,62 @@ function AcademyHome() {
   }
 
   if (section === "presentations") {
+    const speakers = new Map<string, { slug: string; name: string; role: string | null; photo_url: string | null; count: number }>();
+    for (const r of presentations) {
+      const p = r.presenter;
+      const key = p?.slug || p?.id || "unknown";
+      const existing = speakers.get(key);
+      if (existing) existing.count += 1;
+      else
+        speakers.set(key, {
+          slug: key,
+          name: p?.name ?? "Vantage team",
+          role: p?.role ?? null,
+          photo_url: p?.photo_url ?? null,
+          count: 1,
+        });
+    }
+    const speakerList = Array.from(speakers.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const active = speaker ? speakers.get(speaker) : undefined;
+
+    if (speaker) {
+      const mine = presentations.filter((r) => (r.presenter?.slug || r.presenter?.id || "unknown") === speaker);
+      return (
+        <PortalShell>
+          <PageBody>
+            <Link
+              to="/portal/academy"
+              search={{ section: "presentations" }}
+              className="p-focus mb-4 inline-flex items-center gap-1 text-[13px]"
+              style={{ color: "var(--p-text-2)" }}
+            >
+              <ChevronLeft size={15} /> Speakers
+            </Link>
+            <PageHeader
+              title={active?.name ?? "Speaker"}
+              description={active?.role ?? "Recorded trainings from this speaker."}
+              actions={manageBtn}
+            />
+            {mine.length === 0 ? (
+              <Panel>
+                <EmptyState title="No recordings yet" description="This speaker doesn't have published recordings yet." />
+              </Panel>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {mine.map((r) => <PresentationCard key={r.id} r={r} />)}
+              </div>
+            )}
+          </PageBody>
+        </PortalShell>
+      );
+    }
+
     return (
       <PortalShell>
         <PageBody>
           {back}
-          <PageHeader title="Recorded Presentations" description="Trainings, call breakdowns, and past live sessions." actions={manageBtn} />
-          {presentations.length === 0 ? (
+          <PageHeader title="Recorded Presentations" description="Pick a speaker to see their trainings and call breakdowns." actions={manageBtn} />
+          {speakerList.length === 0 ? (
             <Panel>
               <EmptyState
                 title="No recordings yet"
@@ -107,13 +157,14 @@ function AcademyHome() {
             </Panel>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {presentations.map((r) => <PresentationCard key={r.id} r={r} />)}
+              {speakerList.map((s) => <SpeakerCard key={s.slug} s={s} />)}
             </div>
           )}
         </PageBody>
       </PortalShell>
     );
   }
+
 
   if (section === "courses") {
     return (
