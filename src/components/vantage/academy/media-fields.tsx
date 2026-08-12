@@ -276,7 +276,7 @@ export function TranscriptPanel({
               <Textarea rows={12} value={draft} onChange={(e) => setDraft(e.target.value)} />
             ) : (
               <>
-                <SpeakerNamesEditor t={t} ownerType={ownerType} ownerId={ownerId} onSaved={() => q.refetch()} />
+                <SpeakerNamesEditor t={t} ownerType={ownerType} ownerId={ownerId} onSaved={refresh} />
                 <TranscriptViewer
                   segments={t.transcript_segments as any}
                   fallbackText={t.transcript_text}
