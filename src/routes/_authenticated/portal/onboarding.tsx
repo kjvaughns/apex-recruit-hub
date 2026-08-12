@@ -481,19 +481,35 @@ function StepRow({
       <div className="flex items-start gap-3">
         {indicator}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={expanded}
+            className="flex w-full flex-wrap items-center gap-2 text-left"
+          >
             <h3 className="p-card-title" style={status === "upcoming" ? { color: "var(--p-text-3)" } : undefined}>
               {def.title}
             </h3>
             {status === "done" && <Badge tone="green">Done</Badge>}
             {status === "current" && <Badge tone="gold">Current step</Badge>}
-          </div>
+            <span
+              className="ml-auto text-[12px] transition-transform"
+              style={{
+                color: "var(--p-text-3)",
+                transform: expanded ? "rotate(180deg)" : "none",
+              }}
+              aria-hidden
+            >
+              ▾
+            </span>
+          </button>
 
           {!expanded ? (
             <p className="p-secondary mt-1">{def.summary}</p>
           ) : (
             <div className="mt-1.5">{def.render()}</div>
           )}
+
 
           {status === "current" && def.requireAgree && (
             <div className="mt-3">
