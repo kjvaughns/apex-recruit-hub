@@ -71,14 +71,19 @@ export function resolveMedia(rawUrl?: string | null): ResolvedMedia {
   if (yt) {
     return {
       kind: "youtube",
-      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0`,
+      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0&enablejsapi=1`,
       playbackUrl: null,
       fetchUrl: null,
     };
   }
   const vim = vimeoId(url);
   if (vim) {
-    return { kind: "vimeo", embedUrl: `https://player.vimeo.com/video/${vim}`, playbackUrl: null, fetchUrl: null };
+    return {
+      kind: "vimeo",
+      embedUrl: `https://player.vimeo.com/video/${vim}?api=1&player_id=vantage-vimeo`,
+      playbackUrl: null,
+      fetchUrl: null,
+    };
   }
   const loom = loomId(url);
   if (loom) {

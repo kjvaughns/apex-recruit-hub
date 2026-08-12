@@ -1234,6 +1234,7 @@ export type Database = {
           requested_at: string | null
           resolved_url: string | null
           source_url: string | null
+          speaker_names: Json
           status: string
           transcript_segments: Json | null
           transcript_text: string | null
@@ -1253,6 +1254,7 @@ export type Database = {
           requested_at?: string | null
           resolved_url?: string | null
           source_url?: string | null
+          speaker_names?: Json
           status?: string
           transcript_segments?: Json | null
           transcript_text?: string | null
@@ -1272,6 +1274,7 @@ export type Database = {
           requested_at?: string | null
           resolved_url?: string | null
           source_url?: string | null
+          speaker_names?: Json
           status?: string
           transcript_segments?: Json | null
           transcript_text?: string | null

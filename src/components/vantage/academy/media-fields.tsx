@@ -24,7 +24,9 @@ import {
   syncTranscription,
   regenerateNotes,
   saveTranscriptEdits,
+  saveSpeakerNames,
 } from "@/lib/academy-media.functions";
+import { TranscriptViewer, parseTimestampLabel } from "@/components/vantage/academy/transcript-viewer";
 import { Sparkles, RefreshCw, Upload, Info } from "lucide-react";
 
 export type OwnerType = "recording" | "library" | "lesson";
@@ -273,12 +275,15 @@ export function TranscriptPanel({
             {editing ? (
               <Textarea rows={12} value={draft} onChange={(e) => setDraft(e.target.value)} />
             ) : (
-              <div
-                className="p-secondary max-h-[220px] overflow-y-auto whitespace-pre-wrap rounded-[10px] p-3 leading-relaxed"
-                style={{ background: "var(--p-hover)" }}
-              >
-                {t.transcript_text}
-              </div>
+              <>
+                <SpeakerNamesEditor t={t} ownerType={ownerType} ownerId={ownerId} onSaved={refresh} />
+                <TranscriptViewer
+                  segments={t.transcript_segments as any}
+                  fallbackText={t.transcript_text}
+                  speakerNames={(t.speaker_names ?? {}) as Record<string, string>}
+                  maxHeight={260}
+                />
+              </>
             )}
           </div>
         )}
@@ -287,7 +292,67 @@ export function TranscriptPanel({
   );
 }
 
-export function NotesPreview({ notes }: { notes: any }) {
+/** Rename diarized speakers so learners see real names. */
+function SpeakerNamesEditor({
+  t,
+  ownerType,
+  ownerId,
+  onSaved,
+}: {
+  t: any;
+  ownerType: OwnerType;
+  ownerId: string;
+  onSaved: () => void;
+}) {
+  const saveNamesFn = useServerFn(saveSpeakerNames);
+  const keys: string[] = Array.from(
+    new Set(((t?.transcript_segments ?? []) as any[]).map((s) => s?.speaker).filter(Boolean)),
+  );
+  const [names, setNames] = useState<Record<string, string>>((t?.speaker_names ?? {}) as Record<string, string>);
+  const [saving, setSaving] = useState(false);
+  if (keys.length === 0) return null;
+
+  return (
+    <div className="rounded-[10px] p-3" style={{ background: "var(--p-hover)" }}>
+      <div className="p-label mb-2">Speaker names</div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {keys.map((k) => (
+          <Field key={k} label={k}>
+            <Input
+              value={names[k] ?? ""}
+              placeholder={k}
+              onChange={(e) => setNames((n) => ({ ...n, [k]: e.target.value }))}
+            />
+          </Field>
+        ))}
+      </div>
+      <Button
+        className="mt-2"
+        variant="secondary"
+        size="sm"
+        loading={saving}
+        onClick={async () => {
+          setSaving(true);
+          try {
+            await saveNamesFn({ data: { owner_type: ownerType, owner_id: ownerId, speaker_names: names } });
+            notify.success("Speaker names saved.");
+            onSaved();
+          } catch (e) {
+            notify.error(e instanceof Error ? e.message : "Couldn't save speaker names.");
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        Save names
+      </Button>
+    </div>
+  );
+}
+
+
+
+export function NotesPreview({ notes, onSeek }: { notes: any; onSeek?: (ms: number) => void }) {
   const lists: [string, string[]][] = [
     ["Key takeaways", notes?.key_takeaways ?? []],
     ["Sales concepts", notes?.sales_concepts ?? []],
@@ -315,15 +380,31 @@ export function NotesPreview({ notes }: { notes: any }) {
         <div>
           <div className="p-label mb-1">Moments</div>
           <ul className="space-y-1">
-            {moments.map((m, i) => (
-              <li key={i} className="p-secondary leading-snug">
-                <span style={{ color: "var(--p-gold)" }}>{m.timestamp}</span> {m.title}
-                {m.detail ? ` — ${m.detail}` : ""}
-              </li>
-            ))}
+            {moments.map((m, i) => {
+              const ms = parseTimestampLabel(m.timestamp);
+              return (
+                <li key={i} className="p-secondary leading-snug">
+                  {onSeek && ms != null ? (
+                    <button
+                      onClick={() => onSeek(ms)}
+                      className="p-focus rounded-md px-1 font-mono text-[12.5px] tabular-nums transition hover:bg-[var(--p-raised)]"
+                      style={{ color: "var(--p-gold)" }}
+                      aria-label={`Jump to ${m.timestamp}`}
+                    >
+                      {m.timestamp}
+                    </button>
+                  ) : (
+                    <span style={{ color: "var(--p-gold)" }}>{m.timestamp}</span>
+                  )}{" "}
+                  {m.title}
+                  {m.detail ? ` — ${m.detail}` : ""}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
     </div>
   );
 }
+

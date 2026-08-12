@@ -43,7 +43,7 @@ export async function submitTranscription(mediaUrl: string): Promise<string> {
   const res = await fetch(AAI, {
     method: "POST",
     headers: { authorization: key(), "content-type": "application/json" },
-    body: JSON.stringify({ audio_url: mediaUrl, punctuate: true, format_text: true }),
+    body: JSON.stringify({ audio_url: mediaUrl, punctuate: true, format_text: true, speaker_labels: true }),
   });
   const body = await res.text();
   if (!res.ok) {
@@ -55,10 +55,12 @@ export async function submitTranscription(mediaUrl: string): Promise<string> {
   return json.id;
 }
 
+export type TranscriptSegment = { start: number; end: number; text: string; speaker?: string | null };
+
 export type ProviderTranscript = {
   status: "queued" | "processing" | "completed" | "failed";
   text: string | null;
-  segments: { start: number; end: number; text: string }[] | null;
+  segments: TranscriptSegment[] | null;
   error: string | null;
 };
 
@@ -71,16 +73,47 @@ export async function fetchTranscription(jobId: string): Promise<ProviderTranscr
   }
   const j = JSON.parse(body) as any;
   const status = j.status === "error" ? "failed" : (j.status as ProviderTranscript["status"]);
-  const segments =
-    Array.isArray(j.words) && j.words.length
+  const utterances = Array.isArray(j.utterances) ? j.utterances : null;
+  const segments: TranscriptSegment[] | null = utterances?.length
+    ? splitUtterances(utterances)
+    : Array.isArray(j.words) && j.words.length
       ? groupWords(j.words as { start: number; end: number; text: string }[])
       : null;
   return { status, text: j.text ?? null, segments, error: j.error ?? null };
 }
 
+/** Break long speaker turns into readable ~45s chunks, keeping the speaker. */
+function splitUtterances(utterances: any[]): TranscriptSegment[] {
+  const out: TranscriptSegment[] = [];
+  for (const u of utterances) {
+    const speaker: string = u.speaker ? `Speaker ${u.speaker}` : "Speaker";
+    const words = Array.isArray(u.words) ? u.words : [];
+    if (!words.length || Number(u.end) - Number(u.start) <= 45000) {
+      out.push({ start: Number(u.start) || 0, end: Number(u.end) || 0, text: String(u.text ?? "").trim(), speaker });
+      continue;
+    }
+    let cur: { start: number; end: number; text: string[] } | null = null;
+    for (const w of words) {
+      if (!cur) cur = { start: Number(w.start) || 0, end: Number(w.end) || 0, text: [w.text] };
+      else {
+        cur.text.push(w.text);
+        cur.end = Number(w.end) || cur.end;
+      }
+      const long = cur.end - cur.start > 45000;
+      const sentenceEnd = /[.!?]$/.test(String(w.text ?? ""));
+      if (long && sentenceEnd) {
+        out.push({ start: cur.start, end: cur.end, text: cur.text.join(" "), speaker });
+        cur = null;
+      }
+    }
+    if (cur) out.push({ start: cur.start, end: cur.end, text: cur.text.join(" "), speaker });
+  }
+  return out;
+}
+
 /** Collapse word timings into ~20s readable paragraphs with timestamps. */
-function groupWords(words: { start: number; end: number; text: string }[]) {
-  const out: { start: number; end: number; text: string }[] = [];
+function groupWords(words: { start: number; end: number; text: string }[]): TranscriptSegment[] {
+  const out: TranscriptSegment[] = [];
   let cur: { start: number; end: number; text: string[] } | null = null;
   for (const w of words) {
     if (!cur) cur = { start: w.start, end: w.end, text: [w.text] };
@@ -89,13 +122,14 @@ function groupWords(words: { start: number; end: number; text: string }[]) {
       cur.end = w.end;
     }
     if (cur.end - cur.start > 20000) {
-      out.push({ start: cur.start, end: cur.end, text: cur.text.join(" ") });
+      out.push({ start: cur.start, end: cur.end, text: cur.text.join(" "), speaker: null });
       cur = null;
     }
   }
-  if (cur) out.push({ start: cur.start, end: cur.end, text: cur.text.join(" ") });
+  if (cur) out.push({ start: cur.start, end: cur.end, text: cur.text.join(" "), speaker: null });
   return out;
 }
+
 
 export type TrainingNotes = {
   summary: string;

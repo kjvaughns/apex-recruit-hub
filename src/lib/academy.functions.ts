@@ -661,7 +661,7 @@ export const getCourseLearner = createServerFn({ method: "POST" })
     const { data: transcripts } = mediaIds.length
       ? await s
           .from("media_transcripts")
-          .select("owner_id, transcript_text, transcript_segments, notes, status, notes_status")
+          .select("owner_id, transcript_text, transcript_segments, speaker_names, notes, status, notes_status")
           .eq("owner_type", "lesson")
           .in("owner_id", mediaIds)
       : { data: [] };
