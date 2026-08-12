@@ -164,11 +164,15 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
         id: z.string().uuid().optional(),
         module_id: z.string().uuid(),
         title: z.string().trim().min(1).max(200),
-        kind: z.enum(["lesson", "quiz"]),
-        media_type: z.enum(["video", "audio"]).optional().nullable(),
-        video_url: z.string().trim().max(1000).optional().or(z.literal("")),
+        kind: z.enum(["video", "audio", "text", "resource", "link", "quiz"]),
+        video_url: z.string().trim().max(2000).optional().or(z.literal("")),
         duration: z.string().trim().max(40).optional().or(z.literal("")),
         blurb: z.string().max(4000).optional().or(z.literal("")),
+        body: z.string().max(40000).optional().or(z.literal("")),
+        resource_url: z.string().trim().max(2000).optional().or(z.literal("")),
+        resource_label: z.string().trim().max(200).optional().or(z.literal("")),
+        file_path: z.string().trim().max(500).optional().or(z.literal("")),
+        is_published: z.boolean().optional(),
         quiz_pass_threshold: z.number().min(0).max(1).optional(),
       })
       .parse(d),
@@ -177,13 +181,19 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await assertCanManage(supabase, userId);
     const s = supabase as any;
+    const isMedia = data.kind === "video" || data.kind === "audio";
     const patch: Record<string, unknown> = {
       title: data.title,
       kind: data.kind,
-      media_type: data.kind === "quiz" ? null : (data.media_type ?? "video"),
-      video_url: data.video_url || null,
+      media_type: isMedia ? data.kind : null,
+      video_url: isMedia ? data.video_url || null : null,
       duration: data.duration || null,
       blurb: data.blurb || null,
+      body: data.kind === "text" ? data.body || null : null,
+      resource_url: data.kind === "resource" || data.kind === "link" ? data.resource_url || null : null,
+      resource_label: data.resource_label || null,
+      file_path: data.file_path || null,
+      is_published: data.is_published ?? true,
       quiz_pass_threshold: data.quiz_pass_threshold ?? 0.75,
     };
     if (data.id) {
@@ -204,6 +214,49 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
     return { id: created.id as string };
   });
 
+/** Duplicate a lesson (and its quiz questions) inside the same module. */
+export const adminDuplicateLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertCanManage(supabase, userId);
+    const s = supabase as any;
+    const { data: row } = await s.from("course_lessons").select("*").eq("id", data.id).maybeSingle();
+    if (!row) throw new Error("Lesson not found");
+    const { id, created_at, ...rest } = row as any;
+    const { data: created, error } = await s
+      .from("course_lessons")
+      .insert({ ...rest, title: `${row.title} (copy)`, position: (row.position ?? 0) + 1, is_published: false })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    const { data: qs } = await s.from("quiz_questions").select("*").eq("lesson_id", data.id).order("position");
+    if ((qs ?? []).length) {
+      await s.from("quiz_questions").insert(
+        (qs ?? []).map((q: any) => {
+          const { id: _qid, ...qr } = q;
+          return { ...qr, lesson_id: created.id };
+        }),
+      );
+    }
+    return { id: created.id as string };
+  });
+
+export const adminSetLessonPublished = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), is_published: z.boolean() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertCanManage(supabase, userId);
+    const { error } = await (supabase as any)
+      .from("course_lessons")
+      .update({ is_published: data.is_published })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const adminUpsertQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -214,6 +267,7 @@ export const adminUpsertQuestion = createServerFn({ method: "POST" })
         question_text: z.string().trim().min(1).max(1000),
         options: z.array(z.string().max(400)).min(2).max(6),
         correct_index: z.number().int().min(0),
+        explanation: z.string().max(2000).optional().or(z.literal("")),
         position: z.number().int().optional(),
       })
       .parse(d),
@@ -226,7 +280,9 @@ export const adminUpsertQuestion = createServerFn({ method: "POST" })
       question_text: data.question_text,
       options: data.options,
       correct_index: Math.min(data.correct_index, data.options.length - 1),
+      explanation: data.explanation || null,
     };
+
     if (data.id) {
       const { error } = await s.from("quiz_questions").update(patch).eq("id", data.id);
       if (error) throw new Error(error.message);
