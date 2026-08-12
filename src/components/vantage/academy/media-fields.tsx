@@ -348,10 +348,7 @@ function SpeakerNamesEditor({
   );
 }
 
-      </div>
-    </Panel>
-  );
-}
+
 
 export function NotesPreview({ notes, onSeek }: { notes: any; onSeek?: (ms: number) => void }) {
   const lists: [string, string[]][] = [
