@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { toast } from "sonner";
+import { ChevronRight, Plus, UserPlus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
 import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
@@ -16,7 +16,9 @@ import {
   PageBody,
   Panel,
   Button,
+  IconButton,
   Toolbar,
+  ToolbarSpacer,
   SegmentedControl,
   Badge,
   TableWrap,
@@ -26,8 +28,13 @@ import {
   TR,
   TD,
   EmptyState,
+  ErrorState,
   SearchField,
   Select,
+  Skeleton,
+  TableSkeleton,
+  ListSkeleton,
+  notify,
 } from "@/components/portal/ui";
 
 const searchSchema = z.object({

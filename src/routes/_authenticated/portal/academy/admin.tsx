@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
 import {
   DndContext,
   PointerSensor,
@@ -51,12 +50,18 @@ import {
   TR,
   TD,
   EmptyState,
+  ErrorState,
   Modal,
   Field,
   Input,
   Textarea,
   Select,
   FormGrid,
+  Checkbox,
+  Radio,
+  TableSkeleton,
+  CardSkeleton,
+  notify,
 } from "@/components/portal/ui";
 import { GripVertical, Plus, HelpCircle, Video, Trash2, ChevronLeft, Pencil } from "lucide-react";
 
@@ -174,7 +179,7 @@ function CoursesBuilder() {
     await delFn({ data: { id } });
     if (selected === id) setSelected(null);
     qc.invalidateQueries({ queryKey: ["academy", "courses"] });
-    toast.success("Course deleted.");
+    notify.success("Course deleted.");
   }
 
   return (
@@ -261,10 +266,10 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
     setBusy(true);
     try {
       const res = await saveFn({ data: { id: courseId, ...f } });
-      toast.success("Course saved.");
+      notify.success("Course saved.");
       onSaved(res.id);
     } catch (e) {
-      toast.error((e as Error).message || "Could not save.");
+      notify.error("Couldn't save. Please try again.");
       setBusy(false);
     }
   }
@@ -440,9 +445,9 @@ function LessonModal({ moduleId, lessonId, lesson, questions, onClose, onSaved }
         .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
       setF((p) => ({ ...p, video_url: signed.signedUrl }));
-      toast.success("Uploaded.");
+      notify.success("File uploaded.");
     } catch (e) {
-      toast.error((e as Error).message || "Upload failed.");
+      notify.error("Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -465,10 +470,10 @@ function LessonModal({ moduleId, lessonId, lesson, questions, onClose, onSaved }
           quiz_pass_threshold: Number(f.quiz_pass_threshold) || 0.75,
         },
       });
-      toast.success("Lesson saved.");
+      notify.success("Lesson saved.");
       onSaved();
     } catch (e) {
-      toast.error((e as Error).message || "Could not save.");
+      notify.error("Couldn't save. Please try again.");
       setBusy(false);
     }
   }
@@ -541,7 +546,7 @@ function QuestionsEditor({ lessonId, questions }: { lessonId: string; questions:
 
   async function add() {
     const clean = opts.map((o) => o.trim()).filter(Boolean);
-    if (!text.trim() || clean.length < 2) { toast.error("Add a question and at least 2 options."); return; }
+    if (!text.trim() || clean.length < 2) { notify.error("Add a question and at least 2 options."); return; }
     await saveFn({ data: { lesson_id: lessonId, question_text: text.trim(), options: clean, correct_index: Math.min(correct, clean.length - 1) } });
     setText(""); setOpts(["", "", "", ""]); setCorrect(0);
     invalidate();
@@ -601,7 +606,7 @@ function LibraryBuilder() {
     if (!confirm("Delete this resource?")) return;
     await delFn({ data: { id } });
     qc.invalidateQueries({ queryKey: ["academy", "library"] });
-    toast.success("Resource deleted.");
+    notify.success("Resource deleted.");
   }
 
   return (
@@ -672,9 +677,9 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
         .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
       setF((p) => ({ ...p, url: signed.signedUrl }));
-      toast.success("Uploaded.");
+      notify.success("File uploaded.");
     } catch (e) {
-      toast.error((e as Error).message || "Upload failed.");
+      notify.error("Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -696,10 +701,10 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
           category: f.category.trim(),
         },
       });
-      toast.success("Resource saved.");
+      notify.success("Resource saved.");
       onSaved();
     } catch (e) {
-      toast.error((e as Error).message || "Could not save.");
+      notify.error("Couldn't save. Please try again.");
       setBusy(false);
     }
   }

@@ -111,22 +111,20 @@ function TasksPage() {
         <div className="space-y-4">
           <Panel title="New task">
             <div className="grid gap-3 md:grid-cols-[1.6fr_1fr_.8fr_auto]">
-              <Field label="Title" className="md:contents md:[&>span]:hidden">
+              <Field label="Title">
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Task title"
-                  aria-label="Task title"
                 />
               </Field>
-              <Field label="Due" className="md:contents md:[&>span]:hidden">
+              <Field label="Due">
                 <DateTimePicker value={due || null} onChange={(iso) => setDue(iso ?? "")} />
               </Field>
-              <Field label="Priority" className="md:contents md:[&>span]:hidden">
+              <Field label="Priority">
                 <Select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as "low" | "normal" | "high")}
-                  aria-label="Priority"
                 >
                   <option value="low">Low</option>
                   <option value="normal">Normal</option>
@@ -135,7 +133,7 @@ function TasksPage() {
               </Field>
               <Button
                 variant="primary"
-                className="min-h-11 md:min-h-0"
+                className="min-h-11 md:min-h-0 md:self-end"
                 loading={createM.isPending}
                 onClick={() => {
                   if (!title.trim()) return;
