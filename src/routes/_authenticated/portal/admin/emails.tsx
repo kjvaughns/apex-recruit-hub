@@ -145,6 +145,8 @@ function TemplatesTab() {
       note: o.note ?? "",
       cta_label: o.cta_label ?? "",
       cta_url: o.cta_url ?? "",
+      secondary_cta_label: o.secondary_cta_label ?? "",
+      secondary_cta_url: o.secondary_cta_url ?? "",
     });
   }
 
@@ -161,6 +163,8 @@ function TemplatesTab() {
             note: draft["note"] ?? "",
             cta_label: draft["cta_label"] ?? "",
             cta_url: draft["cta_url"] ?? "",
+            secondary_cta_label: draft["secondary_cta_label"] ?? "",
+            secondary_cta_url: draft["secondary_cta_url"] ?? "",
           },
         },
       }),
@@ -176,7 +180,7 @@ function TemplatesTab() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "email-templates"] });
       notify.success("Reverted to the default copy.");
-      setDraft({ subject: "", title: "", intro: "", body: "", note: "", cta_label: "", cta_url: "" });
+      setDraft({ subject: "", title: "", intro: "", body: "", note: "", cta_label: "", cta_url: "", secondary_cta_label: "", secondary_cta_url: "" });
     },
   });
 
@@ -272,6 +276,22 @@ function TemplatesTab() {
                   value={draft["cta_url"] ?? ""}
                   placeholder={active.defaults.cta_url || "None"}
                   onChange={(e) => setDraft({ ...draft, cta_url: e.target.value })}
+                />
+              </Field>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Secondary button label">
+                <Input
+                  value={draft["secondary_cta_label"] ?? ""}
+                  placeholder={active.defaults.secondary_cta_label || "None"}
+                  onChange={(e) => setDraft({ ...draft, secondary_cta_label: e.target.value })}
+                />
+              </Field>
+              <Field label="Secondary button link">
+                <Input
+                  value={draft["secondary_cta_url"] ?? ""}
+                  placeholder={active.defaults.secondary_cta_url || "None"}
+                  onChange={(e) => setDraft({ ...draft, secondary_cta_url: e.target.value })}
                 />
               </Field>
             </div>

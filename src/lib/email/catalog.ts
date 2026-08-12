@@ -43,6 +43,8 @@ export interface EmailBody {
   details?: EmailDetail[];
   ctaLabel?: string;
   ctaUrl?: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaUrl?: string;
   note?: string;
 }
 
@@ -341,14 +343,19 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your licensing course is the gate to everything else, so start it today and work it daily.",
+        "Use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       bullets: [
         "Enroll in the licensing course",
         "Study daily — most agents finish in two to three weeks",
+        "Check your state requirements and apply for your license on nipr.com",
+        "Complete fingerprinting and background checks if your state requires them",
         "Tell your recruiter the day you pass",
       ],
       ctaLabel: "Start your course",
       ctaUrl: "{{course_link}}",
+      secondaryCtaLabel: "State requirements",
+      secondaryCtaUrl: "{{state_requirements_link}}",
     },
   }),
   def({
@@ -363,9 +370,12 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Quick nudge on your licensing course. Consistent daily study is what gets people through fast.",
+        "Use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       ctaLabel: "Back to your course",
       ctaUrl: "{{course_link}}",
+      secondaryCtaLabel: "State requirements",
+      secondaryCtaUrl: "{{state_requirements_link}}",
     },
   }),
   def({
@@ -892,6 +902,8 @@ const stageTemplates: EmailTemplateDef[] = [
         "Post your course confirmation screenshot in #unlicensed with \"I've got the course\"",
         "Work through your course daily — an hour or two beats a weekend cram",
         "Take the practice exams until you're consistently passing",
+        "Check your state requirements and apply for your license on nipr.com",
+        "Complete fingerprinting and background checks if your state requires them",
         "Message your recruiter the moment you're ready to schedule your state exam",
       ],
       details: [
@@ -901,6 +913,8 @@ const stageTemplates: EmailTemplateDef[] = [
       ],
       ctaLabel: "Open your course",
       ctaUrl: "{{course_link}}",
+      secondaryCtaLabel: "State requirements",
+      secondaryCtaUrl: "{{state_requirements_link}}",
       note: "Any question at all goes in Discord — it's also where you keep up with team success and team sales. Licensing cheat sheet: {{cheat_sheet_link}}",
 
     },
@@ -917,6 +931,7 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your state exam is locked in. Between now and then, practice exams are the highest-value thing you can do.",
+        "After you pass, use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       details: [
         { label: "Exam", value: "{{exam_when}}" },
@@ -926,9 +941,13 @@ const stageTemplates: EmailTemplateDef[] = [
         "Bring two forms of ID and arrive 30 minutes early",
         "Run practice exams until you're passing comfortably",
         "Text your recruiter the second you get your result",
+        "Check your state requirements and apply for your license on nipr.com",
+        "Complete fingerprinting and background checks if your state requires them",
       ],
       ctaLabel: "Back to your course",
       ctaUrl: "{{course_link}}",
+      secondaryCtaLabel: "State requirements",
+      secondaryCtaUrl: "{{state_requirements_link}}",
     },
   }),
   def({
@@ -942,11 +961,16 @@ const stageTemplates: EmailTemplateDef[] = [
     body: {
       title: "Exam reminder",
       intro: GREET,
-      lines: ["Quick reminder about your state exam. You've got this."],
+      lines: [
+        "Quick reminder about your state exam. You've got this.",
+        "After you pass, use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
+      ],
       details: [
         { label: "Exam", value: "{{exam_when}}" },
         { label: "Testing provider", value: "{{exam_provider}}" },
       ],
+      ctaLabel: "State requirements",
+      ctaUrl: "{{state_requirements_link}}",
       note: "Two forms of ID, arrive early, and tell {{recruiter_name}} how it goes.",
     },
   }),
@@ -980,17 +1004,24 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Congratulations. Now let's turn that pass into an active license so you can get contracted.",
+        "Click the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       bullets: [
-        "Apply for your license through your state's insurance department",
+        "Click State requirements to see your state's exact steps",
+        "Apply for your license on nipr.com",
         "Complete fingerprinting and the background check if your state requires them",
         "Wait for your license and NPN to be issued",
         "Send your NPN to your recruiter the day you get it — that starts onboarding",
       ],
-      details: [{ label: "Your recruiter", value: "{{recruiter_name}}" }],
-      ctaLabel: "Message your recruiter",
-      ctaUrl: "mailto:{{recruiter_email}}",
-      note: "Requirements vary by state — your recruiter will walk you through yours.",
+      details: [
+        { label: "Your recruiter", value: "{{recruiter_name}}" },
+        { label: "Reach them at", value: "{{recruiter_email}}" },
+      ],
+      ctaLabel: "State requirements",
+      ctaUrl: "{{state_requirements_link}}",
+      secondaryCtaLabel: "Message your recruiter",
+      secondaryCtaUrl: "mailto:{{recruiter_email}}",
+      note: "Requirements vary by state — the state requirements page will walk you through yours, and your recruiter is there if you get stuck.",
     },
   }),
   def({
