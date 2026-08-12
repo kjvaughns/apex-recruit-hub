@@ -41,15 +41,16 @@ export function PageHeader({
 }) {
   return (
     <div className={cn("mb-5", className)}>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="p-title truncate">{title}</h1>
+          <h1 className="p-title">{title}</h1>
           {description && (
             <p className="p-secondary mt-1 max-w-2xl leading-snug">{description}</p>
           )}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
+
       {children && <div className="mt-4">{children}</div>}
     </div>
   );
