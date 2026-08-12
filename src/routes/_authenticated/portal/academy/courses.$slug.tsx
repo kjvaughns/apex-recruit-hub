@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
@@ -19,6 +19,7 @@ import {
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
 import { resolveMedia } from "@/lib/academy/media";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
+import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft, CheckCircle2, Circle, Lock, HelpCircle, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/courses/$slug")({
