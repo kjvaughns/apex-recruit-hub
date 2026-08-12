@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { PortalShell } from "@/components/vantage/portal-shell";
+import { listEmailCampaigns, setCampaignSubscription } from "@/lib/email.functions";
 import {
   PageHeader,
   PageBody,
