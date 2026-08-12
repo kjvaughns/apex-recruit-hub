@@ -146,14 +146,9 @@ function ApplicantsPage() {
           title="Applicants"
           description="Every recruit you're working, from first application through licensing."
           actions={
-            <>
-              <Button variant="secondary" size="sm" onClick={() => setAddAgentOpen(true)}>
-                <UserPlus size={14} aria-hidden /> Add Agent
-              </Button>
-              <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
-                <Plus size={14} aria-hidden /> Add Applicant
-              </Button>
-            </>
+            <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
+              <Plus size={14} aria-hidden /> Add Applicant
+            </Button>
           }
         />
 
