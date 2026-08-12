@@ -5,7 +5,7 @@ import { VantageLogo } from "@/components/vantage/brand";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMe, addAgent, getMyOnboarding } from "@/lib/portal.functions";
+import { getMe, addAgent, getMyOnboarding, getMyRecruitingLink } from "@/lib/portal.functions";
 import { AddAgentModal } from "@/components/vantage/add-agent-modal";
 import { useTheme } from "@/components/vantage/theme";
 import { Avatar, Badge, btnClass } from "@/components/portal/ui";
@@ -144,6 +144,12 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const fetchOnboarding = useServerFn(getMyOnboarding);
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => fetchMe() });
   const onboardingQ = useQuery({ queryKey: ["my-onboarding"], queryFn: () => fetchOnboarding() });
+  const fetchMyLink = useServerFn(getMyRecruitingLink);
+  const myLinkQ = useQuery({ queryKey: ["my-recruiting-link"], queryFn: () => fetchMyLink() });
+  const agentInviteLink =
+    myLinkQ.data?.recruiting_slug && typeof window !== "undefined"
+      ? `${window.location.origin}/join/${myLinkQ.data.recruiting_slug}`
+      : null;
   const onb = onboardingQ.data;
   const onbInProgress = !!onb?.hasOnboarding && !onb.complete;
   const onboardingBadge = onb?.hasOnboarding ? (
@@ -412,6 +418,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
       {addAgentOpen && (
         <AddAgentModal
+          inviteLink={agentInviteLink}
           onClose={() => setAddAgentOpen(false)}
           onSubmit={async (fields) => {
             const res = await addAgentFn({

@@ -16,10 +16,14 @@ export type AddAgentFields = {
 export function AddAgentModal({
   onClose,
   onSubmit,
+  inviteLink,
 }: {
   onClose: () => void;
   onSubmit: (fields: AddAgentFields) => Promise<void>;
+  /** Shareable self-registration link (…/join/<slug>), when available. */
+  inviteLink?: string | null;
 }) {
+  const [copied, setCopied] = useState(false);
   const [f, setF] = useState<AddAgentFields>({
     first_name: "",
     last_name: "",
@@ -71,6 +75,31 @@ export function AddAgentModal({
       }
     >
       <div className="grid gap-4">
+        {inviteLink && (
+          <div
+            className="grid gap-2 rounded-[10px] border p-3"
+            style={{ borderColor: "var(--p-border)", background: "var(--p-surface-2)" }}
+          >
+            <div className="text-[13px] font-medium">Or share your invite link</div>
+            <p className="text-[12px] opacity-70">
+              Anyone with this link registers themselves as a new agent under you and lands in
+              onboarding.
+            </p>
+            <div className="flex items-center gap-2">
+              <Input value={inviteLink} readOnly onFocus={(e) => e.currentTarget.select()} />
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  navigator.clipboard?.writeText(inviteLink);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1800);
+                }}
+              >
+                {copied ? "Copied" : "Copy"}
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <Field label="First name" required>
             <Input
