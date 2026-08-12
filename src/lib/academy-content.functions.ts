@@ -367,7 +367,7 @@ export const listRecordingsLearner = createServerFn({ method: "GET" })
         .eq("status", "published")
         .order("recorded_on", { ascending: false })
         .order("created_at", { ascending: false }),
-      s.from("presenters").select("id, name, role, initials, photo_url"),
+      s.from("presenters").select("id, slug, name, role, initials, photo_url"),
     ]);
     const byId: Record<string, any> = {};
     for (const p of presenters ?? []) byId[p.id] = p;
@@ -384,7 +384,7 @@ export const getRecordingLearner = createServerFn({ method: "POST" })
     const { data: rec } = await s.from("recordings").select("*").eq("slug", data.slug).maybeSingle();
     if (!rec) return { found: false as const };
     const [{ data: presenter }, { data: transcript }] = await Promise.all([
-      s.from("presenters").select("id, name, role, initials, photo_url").eq("id", rec.presenter_id).maybeSingle(),
+      s.from("presenters").select("id, slug, name, role, initials, photo_url").eq("id", rec.presenter_id).maybeSingle(),
       s
         .from("media_transcripts")
         .select("transcript_text, transcript_segments, speaker_names, notes, status, notes_status")
