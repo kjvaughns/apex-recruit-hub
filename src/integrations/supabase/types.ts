@@ -924,6 +924,7 @@ export type Database = {
           email: string
           id: string
           matched: boolean
+          score: number | null
         }
         Insert: {
           answers?: Json
@@ -932,6 +933,7 @@ export type Database = {
           email: string
           id?: string
           matched?: boolean
+          score?: number | null
         }
         Update: {
           answers?: Json
@@ -940,6 +942,7 @@ export type Database = {
           email?: string
           id?: string
           matched?: boolean
+          score?: number | null
         }
         Relationships: [
           {
