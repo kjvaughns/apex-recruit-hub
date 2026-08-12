@@ -279,6 +279,22 @@ function TemplatesTab() {
                 />
               </Field>
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Secondary button label">
+                <Input
+                  value={draft["secondary_cta_label"] ?? ""}
+                  placeholder={active.defaults.secondary_cta_label || "None"}
+                  onChange={(e) => setDraft({ ...draft, secondary_cta_label: e.target.value })}
+                />
+              </Field>
+              <Field label="Secondary button link">
+                <Input
+                  value={draft["secondary_cta_url"] ?? ""}
+                  placeholder={active.defaults.secondary_cta_url || "None"}
+                  onChange={(e) => setDraft({ ...draft, secondary_cta_url: e.target.value })}
+                />
+              </Field>
+            </div>
             <Field label="Footnote">
               <Input
                 value={draft["note"] ?? ""}
