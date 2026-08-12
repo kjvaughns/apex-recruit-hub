@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { ChevronRight, Plus, UserPlus } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
 import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
@@ -80,7 +80,6 @@ function ApplicantsPage() {
   const [stage, setStage] = useState("");
   const [view, setView] = useState<View>("all");
   const [addOpen, setAddOpen] = useState(false);
-  const [addAgentOpen, setAddAgentOpen] = useState(false);
   const [addStageId, setAddStageId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -231,20 +230,6 @@ function ApplicantsPage() {
             setAddStageId(null);
             qc.invalidateQueries({ queryKey: ["applicants"] });
             setOpenId(id);
-          }}
-        />
-      )}
-      {addAgentOpen && (
-        <AddAgentModal
-          onClose={() => setAddAgentOpen(false)}
-          onSubmit={async (fields) => {
-            const res = await addAgentFn({ data: fields });
-            setAddAgentOpen(false);
-            qc.invalidateQueries({ queryKey: ["applicants"] });
-            notify.success("Agent added", "Their onboarding invite is on the way.", {
-              label: "View record",
-              onClick: () => setOpenId(res.id),
-            });
           }}
         />
       )}
