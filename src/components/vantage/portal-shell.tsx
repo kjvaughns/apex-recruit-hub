@@ -301,8 +301,18 @@ export function PortalShell({ children }: { children: ReactNode }) {
                   icon={ShieldCheck}
                   label="Admin"
                   active={
-                    path.startsWith("/portal/admin") && !path.startsWith("/portal/admin/audit")
+                    path.startsWith("/portal/admin") &&
+                    !path.startsWith("/portal/admin/audit") &&
+                    !path.startsWith("/portal/admin/emails")
                   }
+                  collapsed={collapsed}
+                  onClick={() => setMobileOpen(false)}
+                />
+                <NavRow
+                  to="/portal/admin/emails"
+                  icon={Mail}
+                  label="Emails"
+                  active={path.startsWith("/portal/admin/emails")}
                   collapsed={collapsed}
                   onClick={() => setMobileOpen(false)}
                 />
