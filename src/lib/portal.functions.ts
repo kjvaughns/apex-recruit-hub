@@ -428,9 +428,9 @@ async function afterOnboardingUpdate(supabase: any, res: OnboardingResult) {
 }
 
 
-/** The signed-in agent's onboarding state. Marks portal_account_setup complete
- *  on first view (logging in proves it) and fires the completion email if that
- *  transition finishes onboarding. Non-agents resolve to { hasOnboarding:false }. */
+/** The signed-in agent's onboarding state (recomputed on each view; fires the
+ *  completion email once all steps are done). Non-agents resolve to
+ *  { hasOnboarding:false }. */
 export const getMyOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
