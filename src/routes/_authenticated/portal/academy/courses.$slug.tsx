@@ -196,9 +196,11 @@ function CoursePlayer() {
             ) : current ? (
               <LessonView
                 lesson={current.lesson}
+                transcript={((data as any).transcripts ?? []).find((t: any) => t.owner_id === current.lesson.id) ?? null}
                 completed={current.completed}
                 onComplete={() => qc.invalidateQueries({ queryKey: ["academy", "learn", slug] })}
               />
+
             ) : (
               <Panel><EmptyState title="No lessons yet" description="This course has no content yet." /></Panel>
             )}
