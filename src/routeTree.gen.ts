@@ -28,7 +28,6 @@ import { Route as AuthenticatedPortalPipelineRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalOrganizationRouteImport } from './routes/_authenticated/portal/organization'
 import { Route as AuthenticatedPortalOnboardingRouteImport } from './routes/_authenticated/portal/onboarding'
 import { Route as AuthenticatedPortalLeaderboardRouteImport } from './routes/_authenticated/portal/leaderboard'
-import { Route as AuthenticatedPortalInvitationsRouteImport } from './routes/_authenticated/portal/invitations'
 import { Route as AuthenticatedPortalCalendarRouteImport } from './routes/_authenticated/portal/calendar'
 import { Route as AuthenticatedPortalResourcesRouteRouteImport } from './routes/_authenticated/portal/resources/route'
 import { Route as AuthenticatedPortalCrmRouteRouteImport } from './routes/_authenticated/portal/crm/route'
@@ -161,12 +160,6 @@ const AuthenticatedPortalLeaderboardRoute =
   AuthenticatedPortalLeaderboardRouteImport.update({
     id: '/leaderboard',
     path: '/leaderboard',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalInvitationsRoute =
-  AuthenticatedPortalInvitationsRouteImport.update({
-    id: '/invitations',
-    path: '/invitations',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalCalendarRoute =
@@ -352,7 +345,6 @@ export interface FileRoutesByFullPath {
   '/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
   '/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
-  '/portal/invitations': typeof AuthenticatedPortalInvitationsRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
   '/portal/organization': typeof AuthenticatedPortalOrganizationRoute
@@ -394,7 +386,6 @@ export interface FileRoutesByTo {
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/application-complete': typeof ApplicationCompleteIndexRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
-  '/portal/invitations': typeof AuthenticatedPortalInvitationsRoute
   '/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
   '/portal/organization': typeof AuthenticatedPortalOrganizationRoute
@@ -445,7 +436,6 @@ export interface FileRoutesById {
   '/_authenticated/portal/crm': typeof AuthenticatedPortalCrmRouteRouteWithChildren
   '/_authenticated/portal/resources': typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   '/_authenticated/portal/calendar': typeof AuthenticatedPortalCalendarRoute
-  '/_authenticated/portal/invitations': typeof AuthenticatedPortalInvitationsRoute
   '/_authenticated/portal/leaderboard': typeof AuthenticatedPortalLeaderboardRoute
   '/_authenticated/portal/onboarding': typeof AuthenticatedPortalOnboardingRoute
   '/_authenticated/portal/organization': typeof AuthenticatedPortalOrganizationRoute
@@ -496,7 +486,6 @@ export interface FileRouteTypes {
     | '/portal/crm'
     | '/portal/resources'
     | '/portal/calendar'
-    | '/portal/invitations'
     | '/portal/leaderboard'
     | '/portal/onboarding'
     | '/portal/organization'
@@ -538,7 +527,6 @@ export interface FileRouteTypes {
     | '/portal-invite/$token'
     | '/application-complete'
     | '/portal/calendar'
-    | '/portal/invitations'
     | '/portal/leaderboard'
     | '/portal/onboarding'
     | '/portal/organization'
@@ -588,7 +576,6 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/crm'
     | '/_authenticated/portal/resources'
     | '/_authenticated/portal/calendar'
-    | '/_authenticated/portal/invitations'
     | '/_authenticated/portal/leaderboard'
     | '/_authenticated/portal/onboarding'
     | '/_authenticated/portal/organization'
@@ -770,13 +757,6 @@ declare module '@tanstack/react-router' {
       path: '/leaderboard'
       fullPath: '/portal/leaderboard'
       preLoaderRoute: typeof AuthenticatedPortalLeaderboardRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/invitations': {
-      id: '/_authenticated/portal/invitations'
-      path: '/invitations'
-      fullPath: '/portal/invitations'
-      preLoaderRoute: typeof AuthenticatedPortalInvitationsRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/_authenticated/portal/calendar': {
@@ -1105,7 +1085,6 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalCrmRouteRoute: typeof AuthenticatedPortalCrmRouteRouteWithChildren
   AuthenticatedPortalResourcesRouteRoute: typeof AuthenticatedPortalResourcesRouteRouteWithChildren
   AuthenticatedPortalCalendarRoute: typeof AuthenticatedPortalCalendarRoute
-  AuthenticatedPortalInvitationsRoute: typeof AuthenticatedPortalInvitationsRoute
   AuthenticatedPortalLeaderboardRoute: typeof AuthenticatedPortalLeaderboardRoute
   AuthenticatedPortalOnboardingRoute: typeof AuthenticatedPortalOnboardingRoute
   AuthenticatedPortalOrganizationRoute: typeof AuthenticatedPortalOrganizationRoute
@@ -1128,7 +1107,6 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalResourcesRouteRoute:
       AuthenticatedPortalResourcesRouteRouteWithChildren,
     AuthenticatedPortalCalendarRoute: AuthenticatedPortalCalendarRoute,
-    AuthenticatedPortalInvitationsRoute: AuthenticatedPortalInvitationsRoute,
     AuthenticatedPortalLeaderboardRoute: AuthenticatedPortalLeaderboardRoute,
     AuthenticatedPortalOnboardingRoute: AuthenticatedPortalOnboardingRoute,
     AuthenticatedPortalOrganizationRoute: AuthenticatedPortalOrganizationRoute,

@@ -1575,6 +1575,8 @@ export const updateMyProfile = createServerFn({ method: "POST" })
         first_name: z.string().trim().max(80).optional(),
         last_name: z.string().trim().max(80).optional(),
         phone: z.string().trim().max(40).optional().or(z.literal("")),
+        npn: z.string().trim().max(40).optional().or(z.literal("")),
+        resident_state: z.string().trim().max(60).optional().or(z.literal("")),
         avatar_url: z.string().trim().url().max(600).optional().or(z.literal("")),
       })
       .parse(d),
@@ -1585,7 +1587,20 @@ export const updateMyProfile = createServerFn({ method: "POST" })
     if (data.first_name !== undefined) patch.first_name = data.first_name;
     if (data.last_name !== undefined) patch.last_name = data.last_name;
     if (data.phone !== undefined) patch.phone = data.phone || null;
+    if (data.npn !== undefined) patch.npn = data.npn || null;
+    if (data.resident_state !== undefined) patch.resident_state = data.resident_state || null;
     if (data.avatar_url !== undefined) patch.avatar_url = data.avatar_url || null;
+    // Keep the denormalized full_name (used in org/leaderboard) in sync.
+    if (data.first_name !== undefined || data.last_name !== undefined) {
+      const { data: cur } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", userId)
+        .maybeSingle();
+      const fn = data.first_name ?? (cur as any)?.first_name ?? "";
+      const ln = data.last_name ?? (cur as any)?.last_name ?? "";
+      patch.full_name = [fn, ln].filter(Boolean).join(" ") || null;
+    }
     const { error } = await supabase.from("profiles").update(patch as never).eq("id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
