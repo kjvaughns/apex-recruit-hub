@@ -6,9 +6,8 @@ import { z } from "zod";
 import { ChevronRight, Plus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
-import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
+import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
-import { AddAgentModal } from "@/components/vantage/add-agent-modal";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
 import {
@@ -93,7 +92,6 @@ function ApplicantsPage() {
 
   const fn = useServerFn(listApplicants);
   const changeStage = useServerFn(updateApplicantStage);
-  const addAgentFn = useServerFn(addAgent);
 
   // Shared query drives both tabs. The List tab additionally applies q/stage/view.
   const applicantsQ = useQuery({
