@@ -149,38 +149,99 @@ export function MetricRow({ children, className }: { children: ReactNode; classN
 /* Buttons                                                                    */
 /* -------------------------------------------------------------------------- */
 
-type BtnVariant = "primary" | "secondary" | "ghost" | "destructive";
+type BtnVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 type BtnSize = "sm" | "md";
 
 export function Button({
   variant = "secondary",
   size = "md",
+  loading,
   className,
+  children,
+  disabled,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant; size?: BtnSize }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: BtnVariant;
+  size?: BtnSize;
+  loading?: boolean;
+}) {
   return (
-    <button className={cn(btnClass(variant, size), className)} {...rest} />
+    <button
+      className={cn(btnClass(variant, size), className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...rest}
+    >
+      {loading && <Spinner />}
+      {children}
+    </button>
+  );
+}
+
+/** Small inline spinner used by Button's loading state. */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-[1.5px] border-current border-t-transparent",
+        className,
+      )}
+    />
+  );
+}
+
+/** Icon-only button. `label` is required so it always has an accessible name. */
+export function IconButton({
+  label,
+  variant = "ghost",
+  size = "md",
+  className,
+  children,
+  ...rest
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  label: string;
+  variant?: BtnVariant;
+  size?: BtnSize;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className={cn(
+        btnClass(variant, size),
+        size === "sm" ? "w-8 px-0" : "h-[36px] w-[36px] px-0",
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </button>
   );
 }
 
 export function btnClass(variant: BtnVariant = "secondary", size: BtnSize = "md") {
   const base =
-    "p-focus inline-flex items-center justify-center gap-1.5 rounded-[10px] border font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap";
+    "p-focus inline-flex items-center justify-center gap-1.5 rounded-[10px] border font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100 whitespace-nowrap";
   const sizes = size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-[36px] px-3.5 text-[13.5px]";
   const variants: Record<BtnVariant, string> = {
     primary: "border-transparent text-[#0B0B0C] hover:brightness-[1.06]",
     secondary: "hover:brightness-[1.08]",
+    outline: "bg-transparent hover:bg-[var(--p-hover)]",
     ghost: "border-transparent bg-transparent hover:bg-[var(--p-hover)]",
     destructive: "border-transparent text-white hover:brightness-[1.06]",
   };
   const styleByVariant: Record<BtnVariant, string> = {
     primary: "[background:var(--p-gold)]",
     secondary: "[background:var(--p-raised)] [border-color:var(--p-border)] [color:var(--p-text)]",
+    outline: "[border-color:var(--p-border)] [color:var(--p-text)]",
     ghost: "[color:var(--p-text-2)]",
     destructive: "[background:var(--p-red)]",
   };
   return cn(base, sizes, variants[variant], styleByVariant[variant]);
 }
+
 
 /* -------------------------------------------------------------------------- */
 /* Toolbar                                                                    */
