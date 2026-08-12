@@ -1769,18 +1769,15 @@ export const createApplicantManual = createServerFn({ method: "POST" })
 
 // ---- Add Agent: manual onboarding fast-path ------------------------------
 
-/** The caller must be able to invite an agent (admin/manager, or leader with
- *  can_invite_agents) — mirrors create_invitation's own guard, checked up front
- *  so we never create an orphan applicant. */
+/** Every portal user may invite agents — we only verify the caller has an
+ *  active profile so we never create an orphan applicant. */
 async function assertCanInviteAgent(supabase: any, userId: string) {
-  const [{ data: roleRows }, { data: prof }] = await Promise.all([
-    supabase.from("user_roles").select("role").eq("user_id", userId),
-    supabase.from("profiles").select("can_invite_agents").eq("id", userId).maybeSingle(),
-  ]);
-  const roles = (roleRows ?? []).map((r: { role: string }) => r.role);
-  const privileged = roles.some((r: string) => r === "admin" || r === "super_admin" || r === "manager");
-  const leaderCanInvite = roles.includes("leader") && !!prof?.can_invite_agents;
-  if (!privileged && !leaderCanInvite) {
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("id, is_active")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!prof || prof.is_active === false) {
     throw new Error("You're not permitted to add agents.");
   }
 }
