@@ -414,7 +414,13 @@ export function PortalShell({ children }: { children: ReactNode }) {
         <AddAgentModal
           onClose={() => setAddAgentOpen(false)}
           onSubmit={async (fields) => {
-            const res = await addAgentFn({ data: fields });
+            const res = await addAgentFn({
+              data: {
+                full_name: `${fields.first_name} ${fields.last_name}`.trim(),
+                email: fields.email,
+                phone: fields.phone,
+              },
+            });
             setAddAgentOpen(false);
             qc.invalidateQueries({ queryKey: ["applicants"] });
             toast.success("Agent added — onboarding invite sent.", {
@@ -427,6 +433,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
           }}
         />
       )}
+
     </div>
   );
 }
