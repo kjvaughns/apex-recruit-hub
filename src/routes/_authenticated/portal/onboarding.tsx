@@ -369,33 +369,61 @@ function StepChecklist({
   pending?: boolean;
   preview?: boolean;
 }) {
+  const allKeys = STEP_DEFS.map((d) => d.key);
+  const [open, setOpen] = useState<string[]>(() =>
+    preview ? allKeys : [STEP_DEFS[Math.min(currentIndex < 0 ? 0 : currentIndex, STEP_DEFS.length - 1)].key],
+  );
+  const allOpen = open.length === allKeys.length;
+
   return (
-    <div className="divide-y" style={{ borderColor: "var(--p-border)" }}>
-      {STEP_DEFS.map((def, i) => {
-        const state = stepState(steps, def.key);
-        const done = state.completed;
-        const isCurrent = !preview && !done && i === currentIndex;
-        const status: "done" | "current" | "upcoming" = done ? "done" : isCurrent ? "current" : "upcoming";
-        return (
-          <StepRow
-            key={def.key}
-            n={i + 1}
-            def={def}
-            status={preview ? "upcoming" : status}
-            state={state}
-            pending={pending}
-            preview={preview}
-            onComplete={() =>
-              def.key === "agentspace_contracting" && onCompleteContracting
-                ? onCompleteContracting()
-                : onComplete?.(def.key)
-            }
-          />
-        );
-      })}
+    <div>
+      <div
+        className="flex items-center justify-between px-4 py-2.5"
+        style={{ borderBottom: "1px solid var(--p-border)" }}
+      >
+        <span className="p-label">Onboarding steps ({allKeys.length})</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setOpen(allOpen ? [] : allKeys)}
+        >
+          {allOpen ? "Collapse all" : "Expand all"}
+        </Button>
+      </div>
+      <div className="divide-y" style={{ borderColor: "var(--p-border)" }}>
+        {STEP_DEFS.map((def, i) => {
+          const state = stepState(steps, def.key);
+          const done = state.completed;
+          const isCurrent = !preview && !done && i === currentIndex;
+          const status: "done" | "current" | "upcoming" = done ? "done" : isCurrent ? "current" : "upcoming";
+          return (
+            <StepRow
+              key={def.key}
+              n={i + 1}
+              def={def}
+              status={preview ? "upcoming" : status}
+              state={state}
+              pending={pending}
+              preview={preview}
+              expanded={open.includes(def.key)}
+              onToggle={() =>
+                setOpen((prev) =>
+                  prev.includes(def.key) ? prev.filter((k) => k !== def.key) : [...prev, def.key],
+                )
+              }
+              onComplete={() =>
+                def.key === "agentspace_contracting" && onCompleteContracting
+                  ? onCompleteContracting()
+                  : onComplete?.(def.key)
+              }
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
+
 
 function StepRow({
   n,
