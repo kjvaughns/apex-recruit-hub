@@ -17,6 +17,8 @@ import {
   notify,
 } from "@/components/portal/ui";
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
+import { resolveMedia } from "@/lib/academy/media";
+import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { ChevronLeft, CheckCircle2, Circle, Lock, HelpCircle, Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/courses/$slug")({
