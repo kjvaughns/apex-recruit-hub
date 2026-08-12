@@ -67,7 +67,9 @@ export type EmailVarKey =
   | "cheat_sheet_link"
   | "instagram_link"
   | "weekly_schedule"
-  | "agency_code";
+  | "agency_code"
+  | "stage_name"
+  | "previous_stage";
 
 export type EmailContext = Partial<Record<EmailVarKey, string | null | undefined>>;
 
@@ -136,6 +138,8 @@ export const EMAIL_VAR_KEYS: EmailVarKey[] = [
   "instagram_link",
   "weekly_schedule",
   "agency_code",
+  "stage_name",
+  "previous_stage",
 ];
 
 const TOKEN = /\{\{\s*([a-z_]+)\s*\}\}/g;

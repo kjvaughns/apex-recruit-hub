@@ -427,17 +427,16 @@ export async function applicantContext(
   } as EmailContext;
 }
 
-/** Send any applicant email with the recruiting agent's labelled copy. */
+/** Send an applicant email. Recruiters are notified separately on stage moves. */
 export async function sendApplicantEmail(
   a: ApplicantRow,
   template: string,
   opts: { context?: EmailContext; sendKey?: string; actorId?: string | null } = {},
 ): Promise<void> {
   if (!a.email) return;
-  const { sendWithAgentCopy } = await import("@/lib/email/dispatch.server");
-  const recruiter = await loadRecruiter(a);
+  const { sendEmail } = await import("@/lib/email/dispatch.server");
   const context = await applicantContext(a, opts.context ?? {});
-  await sendWithAgentCopy({
+  await sendEmail({
     template,
     to: a.email,
     toName: context.full_name ?? undefined,
@@ -446,7 +445,38 @@ export async function sendApplicantEmail(
     sendKey: opts.sendKey ?? null,
     sentBy: opts.actorId ?? null,
     automated: !opts.actorId,
-    agent: recruiter ? { email: recruiter.email, name: recruiter.name } : null,
+  });
+}
+
+/**
+ * Tell the recruiting agent one of their applicants moved forward. Sent once
+ * per applicant per stage; preference-gated like every other agent email.
+ */
+export async function notifyRecruiterStage(
+  a: ApplicantRow,
+  to: StageSlug,
+  from: StageSlug | null,
+): Promise<void> {
+  const recruiter = await loadRecruiter(a);
+  if (!recruiter?.email) return;
+  if (recruiter.email.trim().toLowerCase() === (a.email ?? "").trim().toLowerCase()) return;
+
+  const { sendEmail } = await import("@/lib/email/dispatch.server");
+  const applicantName = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || a.email || "Your applicant";
+  await sendEmail({
+    template: "agent-applicant-stage",
+    to: recruiter.email,
+    toName: recruiter.name,
+    profileId: recruiter.id,
+    applicantId: a.id,
+    sendKey: `stage-alert:${a.id}:${to}`,
+    context: {
+      ...emailLinks({ portal_link: `${SITE_URL}/portal/crm/${a.id}` }),
+      first_name: (recruiter.name ?? "").trim().split(/\s+/)[0] || "there",
+      applicant_name: applicantName,
+      stage_name: STAGE_LABELS[to],
+      previous_stage: from ? STAGE_LABELS[from] : "their previous stage",
+    },
   });
 }
 
@@ -545,6 +575,9 @@ export async function applyStage(args: ApplyStageArgs): Promise<ApplyStageResult
       actorId: args.actorId ?? null,
     });
   }
+
+  // The recruiting agent gets their own notification on every real move.
+  if (changed) await notifyRecruiterStage(fresh, args.stage, fromSlug);
 
   return { ok: true, changed, from: fromSlug, to: args.stage };
 }

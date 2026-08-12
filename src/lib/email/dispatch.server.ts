@@ -201,40 +201,6 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
   return { status: "failed", error: error ?? "unknown" };
 }
 
-/**
- * Send an applicant email and deliver the recruiting agent their labelled
- * copy. Both sends are independent and neither can break the caller.
- */
-export async function sendWithAgentCopy(
-  args: SendArgs & { agent?: { email?: string | null; name?: string | null } | null },
-): Promise<void> {
-  await sendEmail(args);
-
-  const agentEmail = args.agent?.email?.trim().toLowerCase();
-  if (!agentEmail || agentEmail === args.to?.trim().toLowerCase()) return;
-
-  const applicantName =
-    args.copyFor ??
-    args.toName ??
-    args.context?.full_name ??
-    args.context?.first_name ??
-    args.to;
-
-  await sendEmail({
-    ...args,
-    to: agentEmail,
-    toName: args.agent?.name ?? null,
-    profileId: null,
-    copyFor: applicantName ?? undefined,
-    sendKey: args.sendKey ? `copy:${args.sendKey}` : null,
-    context: {
-      ...(args.context ?? {}),
-      first_name: (args.agent?.name ?? "").trim().split(/\s+/)[0] || "there",
-    },
-    ignorePrefs: true,
-  });
-}
-
 /** Free-form recruiter-composed email — still branded, logged, and deduped. */
 export async function sendComposed(args: {
   to: string;
