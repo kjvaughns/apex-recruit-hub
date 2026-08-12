@@ -1166,6 +1166,7 @@ export type Database = {
           is_required: boolean
           media_type: string | null
           position: number
+          section: string
           slug: string | null
           status: string
           thumbnail_url: string | null
@@ -1186,6 +1187,7 @@ export type Database = {
           is_required?: boolean
           media_type?: string | null
           position?: number
+          section?: string
           slug?: string | null
           status?: string
           thumbnail_url?: string | null
@@ -1206,6 +1208,7 @@ export type Database = {
           is_required?: boolean
           media_type?: string | null
           position?: number
+          section?: string
           slug?: string | null
           status?: string
           thumbnail_url?: string | null
