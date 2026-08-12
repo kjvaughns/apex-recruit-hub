@@ -32,6 +32,49 @@ export interface SendTemplateEmailOptions {
  * ({ sent: false }); any other failure throws — EmailAPIError exposes
  * .code and .status for branching.
  */
+/**
+ * Send a free-form email (recruiter-composed subject + HTML body) through the
+ * managed API, bypassing the registered-template registry. Used by the applicant
+ * Send Email composer. Same suppression/throw contract as sendTemplateEmail.
+ */
+export async function sendRawEmail(
+  to: string,
+  subject: string,
+  html: string,
+  options: { idempotencyKey?: string; replyTo?: string; text?: string } = {}
+): Promise<SendTemplateEmailResult> {
+  const apiKey = process.env['LOVABLE_API_KEY']
+  if (!apiKey) {
+    throw new Error('LOVABLE_API_KEY is not configured')
+  }
+  if (!to) {
+    throw new Error('Recipient is required')
+  }
+  try {
+    await sendLovableEmail(
+      {
+        to,
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject,
+        html,
+        text: options.text ?? html.replace(/<[^>]+>/g, ' '),
+        purpose: 'transactional',
+        label: 'applicant-compose',
+        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
+        reply_to: options.replyTo,
+      },
+      { apiKey, sendUrl: process.env['LOVABLE_SEND_URL'] }
+    )
+  } catch (error) {
+    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
+      return { sent: false, reason: 'recipient_suppressed' }
+    }
+    throw error
+  }
+  return { sent: true }
+}
+
 export async function sendTemplateEmail(
   templateName: string,
   to: string,

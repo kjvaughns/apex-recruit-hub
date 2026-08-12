@@ -13,7 +13,9 @@ import {
   sendFollowUpEmail,
   setDiscordConfirmed,
   listAssignableUsers,
+  sendApplicantEmail,
 } from "@/lib/portal.functions";
+import { APPLICANT_EMAIL_TEMPLATES, fillTemplate } from "@/lib/emails/catalog";
 import { getInvitableContext, promoteApplicantToAgent } from "@/lib/invitations.functions";
 import {
   onboardingProgress,
@@ -144,6 +146,7 @@ export function ApplicantRecord({
   const [savingNote, setSavingNote] = useState(false);
   const [promoteOpen, setPromoteOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
 
   async function onStage(stageId: string) {
     try {
@@ -219,10 +222,9 @@ export function ApplicantRecord({
         <div className="flex flex-wrap gap-1.5">
           <QuickAction href={a.phone ? `tel:${a.phone}` : undefined} label="Call" />
           <QuickAction href={a.phone ? `sms:${a.phone}` : undefined} label="Text" />
-          <QuickAction
-            href={a.email ? `mailto:${a.email}` : undefined}
-            label="Send Email"
-          />
+          <Button variant="secondary" size="sm" onClick={() => setEmailOpen(true)} disabled={!a.email}>
+            Send Email
+          </Button>
           <Button variant="secondary" size="sm" onClick={() => setLogOpen(true)}>
             Log Activity
           </Button>
@@ -377,6 +379,16 @@ export function ApplicantRecord({
           onClose={() => setLogOpen(false)}
           onLogged={() => {
             setLogOpen(false);
+            invalidate();
+          }}
+        />
+      )}
+      {emailOpen && (
+        <EmailComposerModal
+          applicant={a}
+          onClose={() => setEmailOpen(false)}
+          onSent={() => {
+            setEmailOpen(false);
             invalidate();
           }}
         />
@@ -627,6 +639,93 @@ function LogActivityModal({
         <Field label="Notes" required={isFollowUp}>
           <Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Details…" />
         </Field>
+      </div>
+    </Modal>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Send Email composer                                                        */
+/* -------------------------------------------------------------------------- */
+
+function EmailComposerModal({
+  applicant,
+  onClose,
+  onSent,
+}: {
+  applicant: any;
+  onClose: () => void;
+  onSent: () => void;
+}) {
+  const sendFn = useServerFn(sendApplicantEmail);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const values: Record<string, string> = {
+    first_name: applicant.first_name ?? "",
+    last_name: applicant.last_name ?? "",
+    full_name: `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim(),
+    evaluation_link: `${origin}/evaluation?a=${applicant.id}`,
+    portal_link: `${origin}/login`,
+  };
+
+  const [templateKey, setTemplateKey] = useState("");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+
+  function applyTemplate(key: string) {
+    setTemplateKey(key);
+    const t = APPLICANT_EMAIL_TEMPLATES.find((x) => x.key === key);
+    if (t) {
+      setSubject(fillTemplate(t.subject, values));
+      setBody(fillTemplate(t.body, values));
+    }
+  }
+
+  const mut = useMutation({
+    mutationFn: () => sendFn({ data: { id: applicant.id, subject: subject.trim(), body: body.trim() } }),
+    onSuccess: (res: any) => {
+      toast.success(res?.status === "sent" ? "Email sent." : "Email queued.");
+      onSent();
+    },
+    onError: (e: unknown) => toast.error((e as Error).message || "Could not send email."),
+  });
+
+  return (
+    <Modal
+      title="Send email"
+      description={applicant.email}
+      width={640}
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={() => mut.mutate()} disabled={mut.isPending || !subject.trim() || !body.trim()}>
+            {mut.isPending ? "Sending…" : "Send email"}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <Field label="Template">
+          <Select value={templateKey} onChange={(e) => applyTemplate(e.target.value)}>
+            <option value="">— choose a template —</option>
+            {APPLICANT_EMAIL_TEMPLATES.map((t) => (
+              <option key={t.key} value={t.key}>{t.label}</option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Subject">
+          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
+        </Field>
+        <Field label="Message" hint="Edit freely before sending. Preview below.">
+          <Textarea rows={8} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write your message…" />
+        </Field>
+        {body.trim() && (
+          <div className="rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+            <div className="p-label mb-1.5">Preview</div>
+            <div className="p-secondary mb-1 font-semibold">{subject || "(no subject)"}</div>
+            <div className="p-body whitespace-pre-wrap">{body}</div>
+          </div>
+        )}
       </div>
     </Modal>
   );

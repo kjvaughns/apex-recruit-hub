@@ -785,6 +785,79 @@ export const logApplicantActivity = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Send a recruiter-composed email to an applicant (free-form subject/body from
+ *  the Send Email composer). Delivers best-effort, logs to the outbox, and adds
+ *  an email_sent activity to the timeline. */
+export const sendApplicantEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        subject: z.string().trim().min(1).max(300),
+        body: z.string().trim().min(1).max(20000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: a } = await supabase
+      .from("applicants")
+      .select("id, email, first_name, last_name")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!a?.email) throw new Error("Applicant has no email on file.");
+
+    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const html = `<div style="font-family:system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.6;color:#111">${esc(
+      data.body,
+    ).replace(/\n/g, "<br>")}</div>`;
+
+    let status = "pending";
+    let error: string | null = null;
+    try {
+      const { sendRawEmail } = await import("@/lib/email-templates/send-email");
+      const r = await sendRawEmail(a.email, data.subject, html, {
+        idempotencyKey: `compose-${data.id}-${Date.now()}`,
+      });
+      status = r.sent ? "sent" : "skipped";
+    } catch (e) {
+      status = "failed";
+      error = (e as Error).message;
+    }
+
+    try {
+      await (supabase as any).rpc("enqueue_email", {
+        payload: {
+          to_email: a.email,
+          to_name: [a.first_name, a.last_name].filter(Boolean).join(" ") || null,
+          subject: data.subject,
+          html,
+          template_key: "custom",
+          applicant_id: data.id,
+          status,
+          error,
+        },
+      });
+    } catch {
+      /* best-effort outbox log */
+    }
+
+    await supabase.from("applicant_activities").insert({
+      applicant_id: data.id,
+      event_type: "email_sent",
+      summary: `Email sent: ${data.subject}`,
+      actor_id: userId,
+      data: { subject: data.subject },
+    } as never);
+    await supabase
+      .from("applicants")
+      .update({ last_contacted_at: new Date().toISOString() } as never)
+      .eq("id", data.id);
+
+    return { ok: true, status };
+  });
+
 /** Active profiles the caller can assign as recruiter/manager (RLS scopes it). */
 export const listAssignableUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
