@@ -287,7 +287,7 @@ export function TranscriptPanel({
   );
 }
 
-export function NotesPreview({ notes }: { notes: any }) {
+export function NotesPreview({ notes, onSeek }: { notes: any; onSeek?: (ms: number) => void }) {
   const lists: [string, string[]][] = [
     ["Key takeaways", notes?.key_takeaways ?? []],
     ["Sales concepts", notes?.sales_concepts ?? []],
@@ -315,15 +315,31 @@ export function NotesPreview({ notes }: { notes: any }) {
         <div>
           <div className="p-label mb-1">Moments</div>
           <ul className="space-y-1">
-            {moments.map((m, i) => (
-              <li key={i} className="p-secondary leading-snug">
-                <span style={{ color: "var(--p-gold)" }}>{m.timestamp}</span> {m.title}
-                {m.detail ? ` — ${m.detail}` : ""}
-              </li>
-            ))}
+            {moments.map((m, i) => {
+              const ms = parseTimestampLabel(m.timestamp);
+              return (
+                <li key={i} className="p-secondary leading-snug">
+                  {onSeek && ms != null ? (
+                    <button
+                      onClick={() => onSeek(ms)}
+                      className="p-focus rounded-md px-1 font-mono text-[12.5px] tabular-nums transition hover:bg-[var(--p-raised)]"
+                      style={{ color: "var(--p-gold)" }}
+                      aria-label={`Jump to ${m.timestamp}`}
+                    >
+                      {m.timestamp}
+                    </button>
+                  ) : (
+                    <span style={{ color: "var(--p-gold)" }}>{m.timestamp}</span>
+                  )}{" "}
+                  {m.title}
+                  {m.detail ? ` — ${m.detail}` : ""}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
     </div>
   );
 }
+
