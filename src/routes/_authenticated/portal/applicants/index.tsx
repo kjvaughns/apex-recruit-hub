@@ -418,7 +418,7 @@ function ListView({
             <TH>Applicant</TH>
             <TH>Contact</TH>
             <TH>Stage</TH>
-            <TH>Signals</TH>
+            <TH>Statuses</TH>
             <TH>Dates</TH>
             <TH align="right">Actions</TH>
           </THead>
