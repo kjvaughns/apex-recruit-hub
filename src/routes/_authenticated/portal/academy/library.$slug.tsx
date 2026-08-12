@@ -5,6 +5,8 @@ import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageBody, Panel, Button, Badge, EmptyState, ErrorState, CardSkeleton } from "@/components/portal/ui";
 import { getLibraryResource } from "@/lib/academy.functions";
 import { ChevronLeft, Video, Headphones, FileText, Link2, Download, ExternalLink } from "lucide-react";
+import { resolveMedia } from "@/lib/academy/media";
+import { AudioBlock } from "@/components/vantage/academy/audio-block";
 
 export const Route = createFileRoute("/_authenticated/portal/academy/library/$slug")({
   head: () => ({ meta: [{ title: "Resource — Vantage Academy" }, { name: "robots", content: "noindex" }] }),
