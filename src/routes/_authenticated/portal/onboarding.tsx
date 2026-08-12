@@ -432,6 +432,8 @@ function StepRow({
   state,
   pending,
   preview,
+  expanded,
+  onToggle,
   onComplete,
 }: {
   n: number;
@@ -440,10 +442,12 @@ function StepRow({
   state: OnboardingStepState;
   pending?: boolean;
   preview?: boolean;
+  expanded: boolean;
+  onToggle: () => void;
   onComplete: () => void;
 }) {
   const [agreed, setAgreed] = useState(false);
-  const expanded = status === "current" || (preview && n === 1);
+
 
   const indicator =
     status === "done" ? (
