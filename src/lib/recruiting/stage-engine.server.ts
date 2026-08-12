@@ -113,19 +113,15 @@ const APPLICANT_COLS =
  */
 export async function onboardingAccountLink(a: ApplicantRow): Promise<string> {
   if (a.portal_profile_id) return `${SITE_URL}/portal/onboarding`;
-  if (!a.email) return `${SITE_URL}/login`;
-  try {
-    const supabase = await db();
-    const { data: res, error } = await supabase.rpc("ensure_onboarding_invitation", {
-      _applicant_id: a.id,
-    });
-    if (error) throw new Error(error.message);
-    const token: string | undefined = res?.token;
-    if (res?.ok && token) return `${SITE_URL}/portal-invite/${token}`;
-  } catch (e) {
-    console.warn("[recruiting] onboarding invite link failed:", (e as Error).message);
-  }
-  return `${SITE_URL}/login`;
+  if (!a.email) throw new Error("Applicant has no email address.");
+  const supabase = await db();
+  const { data: res, error } = await supabase.rpc("ensure_onboarding_invitation", {
+    _applicant_id: a.id,
+  });
+  if (error) throw new Error(error.message);
+  const token: string | undefined = res?.token;
+  if (!res?.ok || !token) throw new Error("Could not create an onboarding registration link.");
+  return `${SITE_URL}/portal-invite/${token}`;
 }
 
 

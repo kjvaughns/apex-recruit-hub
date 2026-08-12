@@ -25,10 +25,10 @@ const Email = ({ firstName, portalLink, copyFor }: Props) => (
       Welcome.
     </Text>
     <Text style={paragraph}>
-      Your first stop is the agent portal. That&apos;s where you&apos;ll find your full onboarding
-      checklist — log in and knock it out:
+      First, create your agent portal account. Your information is already filled in — confirm your
+      NPN and choose a password to open your onboarding checklist:
     </Text>
-    <GoldButton href={portalLink || '#'} label="Open your portal" />
+    <GoldButton href={portalLink || '#'} label="Create my agent account" />
     <Text style={paragraph}>Here&apos;s what&apos;s waiting for you — four quick steps:</Text>
     <Step label="AgentSpace contracting" />
     <Step label="Discord role update" />
@@ -42,5 +42,5 @@ export const template = {
   component: Email,
   subject: TITLE,
   displayName: 'Welcome to onboarding',
-  previewData: { firstName: 'Jordan', portalLink: 'https://vantage-financial.net/portal' },
+  previewData: { firstName: 'Jordan', portalLink: 'https://vantage-financial.net/portal-invite/sample-token' },
 } satisfies TemplateEntry

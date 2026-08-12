@@ -221,6 +221,18 @@ export const sendApplicantEmail = createServerFn({ method: "POST" })
 
     const stamp = new Date().toISOString();
     if (data.template) {
+      if (data.template === "welcome-onboarding") {
+        const { loadApplicant, sendApplicantEmail: sendRecruitingEmail } = await import(
+          "@/lib/recruiting/stage-engine.server"
+        );
+        const applicant = await loadApplicant(a.id);
+        if (!applicant) throw new Error("Applicant not found.");
+        await sendRecruitingEmail(applicant, data.template, {
+          actorId: userId,
+          sendKey: `manual-${data.template}-${a.id}-${stamp}`,
+        });
+        return { status: "sent" as const };
+      }
       const { sendEmail } = await import("@/lib/email/dispatch.server");
       const result = await sendEmail({
         template: data.template,
