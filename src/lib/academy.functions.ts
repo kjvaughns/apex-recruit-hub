@@ -547,8 +547,19 @@ export const getAcademyHome = createServerFn({ method: "GET" })
     for (const j of joins ?? []) (byResource[j.resource_id] ??= []).push(tagName[j.tag_id]);
     const resourceCards = (resources ?? []).map((r: any) => ({ ...r, tags: byResource[r.id] ?? [] }));
 
-    return { courses: courseCards, resources: resourceCards, tags: (tags ?? []).map((t: any) => t.name) };
+    const { count: recordingCount } = await s
+      .from("recordings")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published");
+
+    return {
+      courses: courseCards,
+      resources: resourceCards,
+      tags: (tags ?? []).map((t: any) => t.name),
+      recordingCount: recordingCount ?? 0,
+    };
   });
+
 
 export const getLibraryResource = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
