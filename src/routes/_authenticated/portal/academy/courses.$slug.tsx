@@ -235,12 +235,12 @@ function LessonView({
   const media = resolveMedia(lesson.video_url);
   const nativeRef = useRef<HTMLMediaElement | null>(null);
   const frameRef = useRef<HTMLIFrameElement | null>(null);
-  const isNative = kind === "audio" || (kind === "video" && media.kind === "direct");
+  const isNative = (kind === "audio" && !media.embedUrl) || (kind === "video" && media.kind === "direct");
   const target = isNative
     ? ({ kind: "element", ref: nativeRef } as const)
-    : kind === "video" && media.kind === "youtube"
+    : media.kind === "youtube"
       ? ({ kind: "youtube", ref: frameRef } as const)
-      : kind === "video" && media.kind === "vimeo"
+      : media.kind === "vimeo"
         ? ({ kind: "vimeo", ref: frameRef } as const)
         : ({ kind: "none" } as const);
   const { seek, canSeek, currentMs } = useMediaSeek(target);
@@ -249,13 +249,15 @@ function LessonView({
     <>
       {kind === "audio" && (
         <Panel>
-          {lesson.video_url ? (
-            <audio ref={nativeRef as React.RefObject<HTMLAudioElement>} controls src={lesson.video_url} className="w-full" />
-          ) : (
-            <div className="p-muted">No audio attached.</div>
-          )}
+          <AudioBlock
+            url={lesson.video_url}
+            title={lesson.title}
+            nativeRef={nativeRef as React.Ref<HTMLAudioElement>}
+            frameRef={frameRef}
+          />
         </Panel>
       )}
+
 
       {kind === "video" && (
         <div className="p-panel overflow-hidden">
