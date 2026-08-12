@@ -576,5 +576,8 @@ export async function applyStage(args: ApplyStageArgs): Promise<ApplyStageResult
     });
   }
 
+  // The recruiting agent gets their own notification on every real move.
+  if (changed) await notifyRecruiterStage(fresh, args.stage, fromSlug);
+
   return { ok: true, changed, from: fromSlug, to: args.stage };
 }
