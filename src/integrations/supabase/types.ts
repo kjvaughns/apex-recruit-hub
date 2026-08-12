@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      applicant_action_tokens: {
+        Row: {
+          action: string
+          applicant_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          action: string
+          applicant_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          action?: string
+          applicant_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_action_tokens_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applicant_activities: {
         Row: {
           actor_id: string | null
@@ -52,6 +90,53 @@ export type Database = {
           },
           {
             foreignKeyName: "applicant_activities_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applicant_sequences: {
+        Row: {
+          anchor_at: string | null
+          applicant_id: string
+          created_at: string
+          id: string
+          kind: string
+          next_send_at: string | null
+          status: string
+          stop_reason: string | null
+          touch_count: number
+          updated_at: string
+        }
+        Insert: {
+          anchor_at?: string | null
+          applicant_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          next_send_at?: string | null
+          status?: string
+          stop_reason?: string | null
+          touch_count?: number
+          updated_at?: string
+        }
+        Update: {
+          anchor_at?: string | null
+          applicant_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          next_send_at?: string | null
+          status?: string
+          stop_reason?: string | null
+          touch_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applicant_sequences_applicant_id_fkey"
             columns: ["applicant_id"]
             isOneToOne: false
             referencedRelation: "applicants"
@@ -140,12 +225,18 @@ export type Database = {
           city: string | null
           confirmation_token: string | null
           consent_contact: boolean
+          course_confirmed_at: string | null
           created_at: string
           current_stage_id: string | null
           date_of_birth: string | null
           discord_confirmed: boolean
           email: string
           evaluation_completed_at: string | null
+          exam_date: string | null
+          exam_notes: string | null
+          exam_passed_at: string | null
+          exam_provider: string | null
+          exam_result: string | null
           first_name: string
           hired_at: string | null
           id: string
@@ -155,6 +246,7 @@ export type Database = {
           last_follow_up_at: string | null
           last_name: string
           licensed: boolean
+          licensing_at: string | null
           licensing_status: string | null
           next_follow_up_at: string | null
           npn: string | null
@@ -168,6 +260,7 @@ export type Database = {
           phone: string | null
           portal_invitation_id: string | null
           portal_profile_id: string | null
+          pre_licensing_at: string | null
           priority: string
           promoted_by_user_id: string | null
           promoted_to_agent_at: string | null
@@ -193,6 +286,7 @@ export type Database = {
           status: string
           success_page_type: string | null
           team_id: string | null
+          training_started_at: string | null
           updated_at: string
           wants_one_on_one: boolean
           why_text: string | null
@@ -208,12 +302,18 @@ export type Database = {
           city?: string | null
           confirmation_token?: string | null
           consent_contact?: boolean
+          course_confirmed_at?: string | null
           created_at?: string
           current_stage_id?: string | null
           date_of_birth?: string | null
           discord_confirmed?: boolean
           email: string
           evaluation_completed_at?: string | null
+          exam_date?: string | null
+          exam_notes?: string | null
+          exam_passed_at?: string | null
+          exam_provider?: string | null
+          exam_result?: string | null
           first_name: string
           hired_at?: string | null
           id?: string
@@ -223,6 +323,7 @@ export type Database = {
           last_follow_up_at?: string | null
           last_name: string
           licensed?: boolean
+          licensing_at?: string | null
           licensing_status?: string | null
           next_follow_up_at?: string | null
           npn?: string | null
@@ -236,6 +337,7 @@ export type Database = {
           phone?: string | null
           portal_invitation_id?: string | null
           portal_profile_id?: string | null
+          pre_licensing_at?: string | null
           priority?: string
           promoted_by_user_id?: string | null
           promoted_to_agent_at?: string | null
@@ -261,6 +363,7 @@ export type Database = {
           status?: string
           success_page_type?: string | null
           team_id?: string | null
+          training_started_at?: string | null
           updated_at?: string
           wants_one_on_one?: boolean
           why_text?: string | null
@@ -276,12 +379,18 @@ export type Database = {
           city?: string | null
           confirmation_token?: string | null
           consent_contact?: boolean
+          course_confirmed_at?: string | null
           created_at?: string
           current_stage_id?: string | null
           date_of_birth?: string | null
           discord_confirmed?: boolean
           email?: string
           evaluation_completed_at?: string | null
+          exam_date?: string | null
+          exam_notes?: string | null
+          exam_passed_at?: string | null
+          exam_provider?: string | null
+          exam_result?: string | null
           first_name?: string
           hired_at?: string | null
           id?: string
@@ -291,6 +400,7 @@ export type Database = {
           last_follow_up_at?: string | null
           last_name?: string
           licensed?: boolean
+          licensing_at?: string | null
           licensing_status?: string | null
           next_follow_up_at?: string | null
           npn?: string | null
@@ -304,6 +414,7 @@ export type Database = {
           phone?: string | null
           portal_invitation_id?: string | null
           portal_profile_id?: string | null
+          pre_licensing_at?: string | null
           priority?: string
           promoted_by_user_id?: string | null
           promoted_to_agent_at?: string | null
@@ -329,6 +440,7 @@ export type Database = {
           status?: string
           success_page_type?: string | null
           team_id?: string | null
+          training_started_at?: string | null
           updated_at?: string
           wants_one_on_one?: boolean
           why_text?: string | null

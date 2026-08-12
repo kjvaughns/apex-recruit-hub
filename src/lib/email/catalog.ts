@@ -260,17 +260,18 @@ const applicantTemplates: EmailTemplateDef[] = [
     label: "No show follow up",
     audience: "applicant",
     category: "follow_up",
-    trigger: "Manual — applicant missed their call",
-    manualOnly: true,
-    subject: "Missed you today",
+    trigger: "Status set to No Show or Follow Up — capped 3-touch series",
+    prefKey: "applicant_follow_ups",
+    subject: "We missed you — grab another time",
     body: {
       title: "We missed you",
       intro: GREET,
       lines: [
-        "We had you down for a call today and didn't connect. If you're still interested, rebook and we'll pick up where we left off.",
+        "We had you down for a call and didn't connect. If you're still interested, grab another time and we'll pick up right where we left off.",
+        "If the timing isn't right, just reply and let us know — no hard feelings either way.",
       ],
-      ctaLabel: "Rebook your call",
-      ctaUrl: "{{overview_link}}",
+      ctaLabel: "Pick a new time",
+      ctaUrl: "{{reschedule_link}}",
     },
   }),
   def({
@@ -278,16 +279,29 @@ const applicantTemplates: EmailTemplateDef[] = [
     label: "Accepted",
     audience: "applicant",
     category: "recruiting",
-    trigger: "Applicant is marked hired",
-    subject: "You're in — welcome to Vantage Financial",
+    trigger: "Evaluation is completed — applicant is conditionally hired",
+    subject: "You've been selected — welcome to Vantage Financial",
     body: {
-      title: "You're in",
+      title: "You've been selected",
       intro: GREET,
       lines: [
-        "Congratulations — you've been accepted to {{agency_name}}. Your next steps are waiting in the portal.",
+        "Congratulations — you've been selected to join {{agency_name}}. Everything from here runs on one thing: getting you licensed.",
+        "Step one is your licensing course. Grab it today, then tap the button below so we can move you into pre licensing and start checking in on your progress.",
       ],
-      ctaLabel: "Get started",
-      ctaUrl: "{{portal_link}}",
+      bullets: [
+        "Get your licensing course (use partner code karmakore at checkout)",
+        "Join the Vantage Discord so you're plugged into the team",
+        "Study daily — most agents finish in two to three weeks",
+        "Tell your recruiter when you're ready to schedule your state exam",
+      ],
+      details: [
+        { label: "Licensing course", value: "{{course_link}}" },
+        { label: "Discord", value: "{{discord_link}}" },
+        { label: "Your recruiter", value: "{{recruiter_name}}" },
+      ],
+      ctaLabel: "I've purchased my course",
+      ctaUrl: "{{course_confirm_link}}",
+      note: "Tap that button once you've enrolled and we'll take it from there.",
     },
   }),
   def({
@@ -377,12 +391,19 @@ const applicantTemplates: EmailTemplateDef[] = [
     trigger: "Applicant or agent enters training",
     subject: "Your Vantage training starts now",
     body: {
-      title: "Training time",
+      title: "Training starts now",
       intro: GREET,
       lines: [
-        "The Vantage Closer Course comes before live training — finish it first so live sessions actually land.",
+        "Onboarding is done — you're in training. This is where the reps happen, so show up on camera and ready to dial.",
+        "Your week: Monday 9:30 AM team meeting, Monday ~10:30 AM new agent training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, Tuesday and Thursday 6:00 PM film review, live dials 10-6 daily.",
+        "Finish the Vantage Closer Course if you haven't yet — live training builds directly on it.",
       ],
-      ctaLabel: "Continue training",
+      bullets: [
+        "Join every session from the Discord training room",
+        "Camera on, headset ready, notes open",
+        "Bring one recorded call to film review each week",
+      ],
+      ctaLabel: "Open Vantage Academy",
       ctaUrl: "{{academy_link}}",
     },
   }),
@@ -425,12 +446,23 @@ const applicantTemplates: EmailTemplateDef[] = [
     category: "onboarding",
     trigger: "Onboarding checklist is created",
     prefKey: "onboarding_updates",
-    subject: "Your Vantage onboarding checklist",
+    subject: "Welcome to Vantage — your onboarding checklist",
     body: {
-      title: "Your onboarding checklist",
+      title: "Welcome to the team",
       intro: GREET,
-      lines: ["Five steps and you're fully set up. Knock them out in one sitting if you can."],
-      ctaLabel: "Continue onboarding",
+      lines: [
+        "You're licensed and officially a Vantage agent. Five steps and you're fully set up — most people knock them out in one sitting.",
+        "1) AgentSpace contracting — log in with your NPN, verify your info, refresh your profile, complete the SureLC steps, then request contracts until each one shows Pending. Message Vantage when they're all requested.",
+        "2) Discord role update — head to Start Here, open New App, and select Licensed Agent so you get the right channels.",
+        "3) Read the Agent Playbook in the Academy Library.",
+        "4) Agent expectations and schedule — Monday 9:30 AM team meeting, Monday ~10:30 AM new agent training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, Tuesday and Thursday 6:00 PM film review, live dials 10-6 daily.",
+        "5) Complete the Vantage Closer Course before live training starts.",
+      ],
+      details: [
+        { label: "Discord", value: "{{discord_link}}" },
+        { label: "Academy", value: "{{academy_link}}" },
+      ],
+      ctaLabel: "Start onboarding",
       ctaUrl: "{{onboarding_link}}",
     },
   }),
@@ -812,8 +844,156 @@ const campaignTemplates: EmailTemplateDef[] = [
   }),
 ];
 
+
+/* ------------------------------------------------------------------ */
+/* Recruiting journey stages                                           */
+/* ------------------------------------------------------------------ */
+
+const stageTemplates: EmailTemplateDef[] = [
+  def({
+    name: "pre-licensing",
+    label: "Pre licensing",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "Applicant confirms their licensing course purchase (or is moved to Pre Licensing)",
+    subject: "You're in pre licensing — here's the plan",
+    body: {
+      title: "Pre licensing starts now",
+      intro: GREET,
+      lines: [
+        "Your course is the only thing standing between you and getting paid, so treat it like a job.",
+        "Most agents finish in two to three weeks studying an hour or two a day. When you're ready to test, tell your recruiter and we'll get your exam on the calendar.",
+      ],
+      bullets: [
+        "Work through your course daily — an hour or two beats a weekend cram",
+        "Take the practice exams until you're consistently passing",
+        "Message your recruiter the moment you're ready to schedule your state exam",
+        "Stay plugged into Discord so you're learning the business while you study",
+      ],
+      details: [
+        { label: "Your recruiter", value: "{{recruiter_name}}" },
+        { label: "Reach them at", value: "{{recruiter_email}}" },
+      ],
+      ctaLabel: "Open your course",
+      ctaUrl: "{{course_link}}",
+      note: "Licensing cheat sheet: {{cheat_sheet_link}}",
+    },
+  }),
+  def({
+    name: "state-exam-scheduled",
+    label: "State exam scheduled",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "A recruiter sets the applicant's state exam date",
+    subject: "Your state exam is on the calendar",
+    body: {
+      title: "Your exam is booked",
+      intro: GREET,
+      lines: [
+        "Your state exam is locked in. Between now and then, practice exams are the highest-value thing you can do.",
+      ],
+      details: [
+        { label: "Exam", value: "{{exam_when}}" },
+        { label: "Testing provider", value: "{{exam_provider}}" },
+      ],
+      bullets: [
+        "Bring two forms of ID and arrive 30 minutes early",
+        "Run practice exams until you're passing comfortably",
+        "Text your recruiter the second you get your result",
+      ],
+      ctaLabel: "Back to your course",
+      ctaUrl: "{{course_link}}",
+    },
+  }),
+  def({
+    name: "state-exam-reminder",
+    label: "State exam reminder",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "Automated exam reminder series (3 days, 1 day, morning of)",
+    prefKey: "recruiting_updates",
+    subject: "Exam reminder — {{exam_when}}",
+    body: {
+      title: "Exam reminder",
+      intro: GREET,
+      lines: ["Quick reminder about your state exam. You've got this."],
+      details: [
+        { label: "Exam", value: "{{exam_when}}" },
+        { label: "Testing provider", value: "{{exam_provider}}" },
+      ],
+      note: "Two forms of ID, arrive early, and tell {{recruiter_name}} how it goes.",
+    },
+  }),
+  def({
+    name: "state-exam-agent-reminder",
+    label: "State exam reminder (recruiter)",
+    audience: "agent",
+    category: "recruiting",
+    trigger: "Automated exam reminder series — recruiter copy",
+    prefKey: "recruiting_updates",
+    subject: "{{applicant_name}} tests {{exam_when}}",
+    body: {
+      title: "Exam coming up",
+      intro: GREET,
+      lines: ["One of your applicants has their state exam coming up — a check-in goes a long way."],
+      details: [
+        { label: "Applicant", value: "{{applicant_name}}" },
+        { label: "Exam", value: "{{exam_when}}" },
+      ],
+    },
+  }),
+  def({
+    name: "licensing-next-steps",
+    label: "Licensing next steps",
+    audience: "applicant",
+    category: "recruiting",
+    trigger: "Recruiter marks the state exam passed",
+    subject: "You passed — here's what's next",
+    body: {
+      title: "You passed your exam",
+      intro: GREET,
+      lines: [
+        "Congratulations. Now let's turn that pass into an active license so you can get contracted.",
+      ],
+      bullets: [
+        "Apply for your license through your state's insurance department",
+        "Complete fingerprinting and the background check if your state requires them",
+        "Wait for your license and NPN to be issued",
+        "Send your NPN to your recruiter the day you get it — that starts onboarding",
+      ],
+      details: [{ label: "Your recruiter", value: "{{recruiter_name}}" }],
+      ctaLabel: "Message your recruiter",
+      ctaUrl: "mailto:{{recruiter_email}}",
+      note: "Requirements vary by state — your recruiter will walk you through yours.",
+    },
+  }),
+  def({
+    name: "active-agent",
+    label: "Active agent",
+    audience: "agent",
+    category: "onboarding",
+    trigger: "Agent moves to the Active stage",
+    subject: "You're officially active at Vantage",
+    body: {
+      title: "You're active",
+      intro: GREET,
+      lines: [
+        "Onboarding and training are behind you — you're an active Vantage agent. From here it's dials, film review, and reps.",
+      ],
+      bullets: [
+        "Live dials 10-6 daily",
+        "Monday 9:30 AM team meeting",
+        "Tuesday and Thursday 6:00 PM film review",
+      ],
+      ctaLabel: "Open the portal",
+      ctaUrl: "{{portal_link}}",
+    },
+  }),
+];
+
 export const EMAIL_TEMPLATE_LIST: EmailTemplateDef[] = [
   ...applicantTemplates,
+  ...stageTemplates,
   ...agentTemplates,
   ...campaignTemplates,
 ];

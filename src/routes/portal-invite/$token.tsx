@@ -90,7 +90,8 @@ function InviteAcceptPage() {
       });
       // Log the new user straight into the portal.
       await supabase.auth.signInWithPassword({ email: res.email, password });
-      navigate({ to: "/portal" });
+      // New agents land on their onboarding checklist, not the dashboard.
+      navigate({ to: "/portal/onboarding" });
     } catch (e) {
       setErrors([(e as Error).message || "Something went wrong. Please try again."]);
       setBusy(false);

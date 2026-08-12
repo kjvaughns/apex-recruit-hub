@@ -77,6 +77,19 @@ const footerStyle: React.CSSProperties = {
   margin: 0,
 }
 
+const socialStyle: React.CSSProperties = {
+  padding: '0 34px 26px 34px',
+  margin: 0,
+  fontSize: '12px',
+  lineHeight: '1.6',
+}
+
+const socialLink: React.CSSProperties = {
+  color: GOLD,
+  textDecoration: 'none',
+  fontWeight: 700,
+}
+
 const hr: React.CSSProperties = {
   borderColor: 'rgba(255,255,255,0.09)',
   margin: 0,
@@ -142,6 +155,7 @@ export function Shell({
   footerNote,
   copyFor,
   prefsUrl,
+  hideSocial,
   children,
 }: {
   preview: string
@@ -152,6 +166,8 @@ export function Shell({
   copyFor?: string
   /** Optional emails link here so recipients can manage their categories. */
   prefsUrl?: string
+  /** Security/account emails hide the social footer. */
+  hideSocial?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -188,11 +204,20 @@ export function Shell({
               </>
             ) : null}
           </Text>
+          {hideSocial ? null : (
+            <Text style={socialStyle}>
+              <a href={INSTAGRAM_URL} style={socialLink}>
+                Follow @vantage.financial on Instagram
+              </a>
+            </Text>
+          )}
         </Container>
       </Body>
     </Html>
   )
 }
+
+export const INSTAGRAM_URL = 'https://instagram.com/vantage.financial'
 
 export function greet(name?: string) {
   return name && name.trim() ? name.trim() : 'there'

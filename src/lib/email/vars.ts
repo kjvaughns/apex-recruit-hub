@@ -55,7 +55,19 @@ export type EmailVarKey =
   | "tip_title"
   | "tip_body"
   | "state"
-  | "applicant_name";
+  | "applicant_name"
+  | "recruiter_email"
+  | "recruiter_phone"
+  | "reschedule_link"
+  | "exam_date"
+  | "exam_time"
+  | "exam_when"
+  | "exam_provider"
+  | "course_confirm_link"
+  | "cheat_sheet_link"
+  | "instagram_link"
+  | "weekly_schedule"
+  | "agency_code";
 
 export type EmailContext = Partial<Record<EmailVarKey, string | null | undefined>>;
 
@@ -112,6 +124,18 @@ export const EMAIL_VAR_KEYS: EmailVarKey[] = [
   "tip_body",
   "state",
   "applicant_name",
+  "recruiter_email",
+  "recruiter_phone",
+  "reschedule_link",
+  "exam_date",
+  "exam_time",
+  "exam_when",
+  "exam_provider",
+  "course_confirm_link",
+  "cheat_sheet_link",
+  "instagram_link",
+  "weekly_schedule",
+  "agency_code",
 ];
 
 const TOKEN = /\{\{\s*([a-z_]+)\s*\}\}/g;

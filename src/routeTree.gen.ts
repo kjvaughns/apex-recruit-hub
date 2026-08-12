@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApplicationCompleteIndexRouteImport } from './routes/application-complete/index'
 import { Route as PortalInviteTokenRouteImport } from './routes/portal-invite/$token'
+import { Route as CoursePurchasedTokenRouteImport } from './routes/course-purchased.$token'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as ApplicationCompleteUnlicensedTokenRouteImport } from './routes/application-complete/unlicensed.$token'
@@ -103,6 +104,11 @@ const ApplicationCompleteIndexRoute =
 const PortalInviteTokenRoute = PortalInviteTokenRouteImport.update({
   id: '/portal-invite/$token',
   path: '/portal-invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursePurchasedTokenRoute = CoursePurchasedTokenRouteImport.update({
+  id: '/course-purchased/$token',
+  path: '/course-purchased/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPortalRouteRoute =
@@ -358,6 +364,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
@@ -407,6 +414,7 @@ export interface FileRoutesByTo {
   '/evaluation': typeof EvaluationRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
+  '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/application-complete': typeof ApplicationCompleteIndexRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
@@ -455,6 +463,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/course-purchased/$token': typeof CoursePurchasedTokenRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/_authenticated/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
@@ -508,6 +517,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/schedule'
     | '/portal'
+    | '/course-purchased/$token'
     | '/portal-invite/$token'
     | '/application-complete/'
     | '/portal/academy'
@@ -557,6 +567,7 @@ export interface FileRouteTypes {
     | '/evaluation'
     | '/login'
     | '/schedule'
+    | '/course-purchased/$token'
     | '/portal-invite/$token'
     | '/application-complete'
     | '/portal/calendar'
@@ -604,6 +615,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/schedule'
     | '/_authenticated/portal'
+    | '/course-purchased/$token'
     | '/portal-invite/$token'
     | '/application-complete/'
     | '/_authenticated/portal/academy'
@@ -656,6 +668,7 @@ export interface RootRouteChildren {
   EvaluationRoute: typeof EvaluationRoute
   LoginRoute: typeof LoginRoute
   ScheduleRoute: typeof ScheduleRoute
+  CoursePurchasedTokenRoute: typeof CoursePurchasedTokenRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
   ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
@@ -727,6 +740,13 @@ declare module '@tanstack/react-router' {
       path: '/portal-invite/$token'
       fullPath: '/portal-invite/$token'
       preLoaderRoute: typeof PortalInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/course-purchased/$token': {
+      id: '/course-purchased/$token'
+      path: '/course-purchased/$token'
+      fullPath: '/course-purchased/$token'
+      preLoaderRoute: typeof CoursePurchasedTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal': {
@@ -1222,6 +1242,7 @@ const rootRouteChildren: RootRouteChildren = {
   EvaluationRoute: EvaluationRoute,
   LoginRoute: LoginRoute,
   ScheduleRoute: ScheduleRoute,
+  CoursePurchasedTokenRoute: CoursePurchasedTokenRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
   ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,

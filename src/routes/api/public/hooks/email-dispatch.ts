@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { emailLinks, SITE_URL } from "@/lib/email/links";
-import { formatDate, formatTime } from "@/lib/email/vars";
 import {
   ONBOARDING_STEP_LABELS,
   ONBOARDING_STEP_ORDER,
@@ -54,6 +53,90 @@ function ctWeekday(date = new Date()): string {
   }).format(date);
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Automated sequences                                                 */
+/* ------------------------------------------------------------------ */
+
+/** Template per sequence touch. */
+const SEQUENCE_TEMPLATE: Record<string, string> = {
+  interview_reminders: "interview-reminder",
+  exam_reminders: "state-exam-reminder",
+  no_show_followup: "no-show-followup",
+};
+
+/**
+ * Sends every sequence touch that is due, then re-arms (or retires) the row.
+ * Idempotent: each touch has its own dedupe key.
+ */
+async function runSequences(): Promise<number> {
+  const supabase = await db();
+  const engine = await import("@/lib/recruiting/stage-engine.server");
+  const nowIso = new Date().toISOString();
+
+  const { data: rows } = await supabase
+    .from("applicant_sequences")
+    .select("id, applicant_id, kind, touch_count, anchor_at, next_send_at")
+    .eq("status", "active")
+    .lte("next_send_at", nowIso)
+    .limit(200);
+
+  let sent = 0;
+  for (const row of rows ?? []) {
+    const template = SEQUENCE_TEMPLATE[row.kind];
+    const applicant = await engine.loadApplicant(row.applicant_id);
+    if (!template || !applicant) {
+      await supabase
+        .from("applicant_sequences")
+        .update({ status: "stopped", next_send_at: null, stop_reason: "unresolvable" })
+        .eq("id", row.id);
+      continue;
+    }
+
+    // Skip a touch whose window has passed but keep the series alive.
+    const touch = row.touch_count as number;
+    const anchor = (row.anchor_at as string) ?? nowIso;
+
+    const result = await engine.sendApplicantEmail(applicant, template, {
+      sendKey: `seq:${row.kind}:${row.id}:${touch}`,
+    });
+    void result;
+    sent += 1;
+
+    // The recruiter gets their own exam reminder.
+    if (row.kind === "exam_reminders") {
+      const recruiter = await engine.loadRecruiter(applicant);
+      if (recruiter?.email) {
+        const context = await engine.applicantContext(applicant, {
+          first_name: (recruiter.name ?? "").split(/\s+/)[0] || "there",
+        });
+        const { sendEmail } = await import("@/lib/email/dispatch.server");
+        await sendEmail({
+          template: "state-exam-agent-reminder",
+          to: recruiter.email,
+          toName: recruiter.name,
+          profileId: recruiter.id,
+          applicantId: applicant.id,
+          sendKey: `seq:exam-agent:${row.id}:${touch}`,
+          context,
+        });
+      }
+    }
+
+    const next = engine.sequenceNextSend(row.kind as never, anchor, touch + 1);
+    await supabase
+      .from("applicant_sequences")
+      .update({
+        touch_count: touch + 1,
+        next_send_at: next,
+        status: next ? "active" : "done",
+        stop_reason: next ? null : "completed",
+      })
+      .eq("id", row.id);
+  }
+  return sent;
+}
+
 /* ------------------------------------------------------------------ */
 /* Reminders                                                           */
 /* ------------------------------------------------------------------ */
@@ -61,47 +144,10 @@ function ctWeekday(date = new Date()): string {
 async function runReminders() {
   const supabase = await db();
   const now = Date.now();
-  const from = new Date(now + 23 * 3600_000).toISOString();
-  const to = new Date(now + 25 * 3600_000).toISOString();
-  const counts = { interview: 0, overview: 0, followUp: 0, onboarding: 0 };
+  const counts: Record<string, number> = { sequences: 0, followUp: 0, onboarding: 0 };
 
-  // 24h interview + overview reminders.
-  const { data: upcoming } = await supabase
-    .from("applicants")
-    .select(
-      "id, first_name, last_name, email, licensed, calendly_scheduled_at, requested_overview_at, assigned_recruiter_id",
-    )
-    .or(
-      `and(calendly_scheduled_at.gte.${from},calendly_scheduled_at.lte.${to}),and(requested_overview_at.gte.${from},requested_overview_at.lte.${to})`,
-    );
-
-  for (const a of upcoming ?? []) {
-    if (!a.email) continue;
-    const isInterview = !!a.calendly_scheduled_at;
-    const when = isInterview ? a.calendly_scheduled_at : a.requested_overview_at;
-    const date = formatDate(when) ?? undefined;
-    const time = formatTime(when) ?? undefined;
-    const template = isInterview ? "interview-reminder" : "overview-reminder";
-    const result = await send({
-      template,
-      to: a.email,
-      toName: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || null,
-      applicantId: a.id,
-      sendKey: `${a.id}-${when}`,
-      context: {
-        ...emailLinks(),
-        first_name: a.first_name ?? undefined,
-        interview_date: date,
-        interview_time: time,
-        overview_date: date,
-        overview_time: time,
-      },
-    });
-    if (result.status === "sent") {
-      if (isInterview) counts.interview += 1;
-      else counts.overview += 1;
-    }
-  }
+  // Interview, exam, and follow-up sequences (see the stage engine).
+  counts.sequences = await runSequences();
 
   // Applicant follow-ups due — nudge the recruiting agent.
   const { data: due } = await supabase

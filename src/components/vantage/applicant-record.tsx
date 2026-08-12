@@ -14,6 +14,9 @@ import {
   setDiscordConfirmed,
   listAssignableUsers,
   sendApplicantEmail,
+  setApplicantExam,
+  markExamResult,
+  startApplicantFollowUp,
 } from "@/lib/portal.functions";
 import { fillTemplate } from "@/lib/emails/catalog";
 import { composerTemplates } from "@/lib/email/catalog";
@@ -341,6 +344,9 @@ export function ApplicantRecord({
             </div>
           </Panel>
         )}
+
+        {/* State exam */}
+        <StateExamCard applicant={a} onDone={invalidate} />
 
         {/* Onboarding progress */}
         {currentStage?.slug === "onboarding" && (
@@ -1089,6 +1095,113 @@ const EVAL_LABELS: Record<string, string> = {
 };
 function evalFieldLabel(k: string): string {
   return EVAL_LABELS[k] ?? k.replace(/_/g, " ");
+}
+
+/* -------------------------------------------------------------------------- */
+/* State exam scheduling + result                                             */
+/* -------------------------------------------------------------------------- */
+
+function StateExamCard({ applicant, onDone }: { applicant: any; onDone: () => void }) {
+  const schedule = useServerFn(setApplicantExam);
+  const mark = useServerFn(markExamResult);
+  const followUp = useServerFn(startApplicantFollowUp);
+  const [date, setDate] = useState(isoToLocalInput(applicant.exam_date));
+  const [provider, setProvider] = useState(applicant.exam_provider ?? "");
+  const [busy, setBusy] = useState(false);
+
+  async function run(fn: () => Promise<unknown>, message: string) {
+    setBusy(true);
+    try {
+      await fn();
+      notify.success(message);
+      onDone();
+    } catch (e) {
+      notify.error(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel
+      title="State exam"
+      description="Scheduling the exam moves them to State Exam and starts their reminder sequence."
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Exam date & time">
+          <Input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} />
+        </Field>
+        <Field label="Provider / location">
+          <Input
+            value={provider}
+            placeholder="PSI, Pearson VUE, online…"
+            onChange={(e) => setProvider(e.target.value)}
+          />
+        </Field>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          disabled={busy || !date}
+          onClick={() =>
+            run(
+              () =>
+                schedule({
+                  data: {
+                    id: applicant.id,
+                    exam_date: localInputToIso(date) ?? date,
+                    exam_provider: provider,
+                  },
+                }),
+              "Exam scheduled — reminders are on",
+            )
+          }
+        >
+          {applicant.exam_date ? "Update exam" : "Schedule exam"}
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={busy}
+          onClick={() =>
+            run(
+              () => mark({ data: { id: applicant.id, result: "passed" } }),
+              "Marked passed — moved to Licensing",
+            )
+          }
+        >
+          <Check size={14} aria-hidden /> Passed
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={busy}
+          onClick={() =>
+            run(() => mark({ data: { id: applicant.id, result: "failed" } }), "Marked not passed")
+          }
+        >
+          Not passed
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          onClick={() =>
+            run(() => followUp({ data: { id: applicant.id } }), "Follow up sequence started")
+          }
+        >
+          Start follow up
+        </Button>
+      </div>
+      {applicant.exam_result && (
+        <div className="mt-3">
+          <Badge tone={applicant.exam_result === "passed" ? "green" : "red"}>
+            {applicant.exam_result === "passed" ? "Passed" : "Not passed"}
+          </Badge>
+        </div>
+      )}
+    </Panel>
+  );
 }
 
 function OnboardingProgressCard({ steps }: { steps: unknown }) {

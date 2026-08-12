@@ -123,6 +123,7 @@ export async function renderEmail(
     footerNote: footerNote(def),
     prefsUrl: def.prefKey ? (ctx.preferences_link ?? undefined) : undefined,
     copyFor: options.copyFor ?? undefined,
+    hideSocial: def.category === "security",
   });
 
   const [html, text] = await Promise.all([render(element), render(element, { plainText: true })]);
