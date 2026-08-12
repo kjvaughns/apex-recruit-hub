@@ -71,7 +71,7 @@ export function resolveMedia(rawUrl?: string | null): ResolvedMedia {
   if (yt) {
     return {
       kind: "youtube",
-      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0`,
+      embedUrl: `https://www.youtube.com/embed/${yt}?rel=0&enablejsapi=1`,
       playbackUrl: null,
       fetchUrl: null,
     };
