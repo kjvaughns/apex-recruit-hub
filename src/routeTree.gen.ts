@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApplicationCompleteIndexRouteImport } from './routes/application-complete/index'
 import { Route as PortalInviteTokenRouteImport } from './routes/portal-invite/$token'
+import { Route as JoinSlugRouteImport } from './routes/join.$slug'
 import { Route as CoursePurchasedTokenRouteImport } from './routes/course-purchased.$token'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
@@ -104,6 +105,11 @@ const ApplicationCompleteIndexRoute =
 const PortalInviteTokenRoute = PortalInviteTokenRouteImport.update({
   id: '/portal-invite/$token',
   path: '/portal-invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinSlugRoute = JoinSlugRouteImport.update({
+  id: '/join/$slug',
+  path: '/join/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursePurchasedTokenRoute = CoursePurchasedTokenRouteImport.update({
@@ -365,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/schedule': typeof ScheduleRoute
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
+  '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
@@ -415,6 +422,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
+  '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/application-complete': typeof ApplicationCompleteIndexRoute
   '/portal/calendar': typeof AuthenticatedPortalCalendarRoute
@@ -464,6 +472,7 @@ export interface FileRoutesById {
   '/schedule': typeof ScheduleRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/course-purchased/$token': typeof CoursePurchasedTokenRoute
+  '/join/$slug': typeof JoinSlugRoute
   '/portal-invite/$token': typeof PortalInviteTokenRoute
   '/application-complete/': typeof ApplicationCompleteIndexRoute
   '/_authenticated/portal/academy': typeof AuthenticatedPortalAcademyRouteRouteWithChildren
@@ -518,6 +527,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/portal'
     | '/course-purchased/$token'
+    | '/join/$slug'
     | '/portal-invite/$token'
     | '/application-complete/'
     | '/portal/academy'
@@ -568,6 +578,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/schedule'
     | '/course-purchased/$token'
+    | '/join/$slug'
     | '/portal-invite/$token'
     | '/application-complete'
     | '/portal/calendar'
@@ -616,6 +627,7 @@ export interface FileRouteTypes {
     | '/schedule'
     | '/_authenticated/portal'
     | '/course-purchased/$token'
+    | '/join/$slug'
     | '/portal-invite/$token'
     | '/application-complete/'
     | '/_authenticated/portal/academy'
@@ -669,6 +681,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ScheduleRoute: typeof ScheduleRoute
   CoursePurchasedTokenRoute: typeof CoursePurchasedTokenRoute
+  JoinSlugRoute: typeof JoinSlugRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
   ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
@@ -740,6 +753,13 @@ declare module '@tanstack/react-router' {
       path: '/portal-invite/$token'
       fullPath: '/portal-invite/$token'
       preLoaderRoute: typeof PortalInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$slug': {
+      id: '/join/$slug'
+      path: '/join/$slug'
+      fullPath: '/join/$slug'
+      preLoaderRoute: typeof JoinSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/course-purchased/$token': {
@@ -1243,6 +1263,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ScheduleRoute: ScheduleRoute,
   CoursePurchasedTokenRoute: CoursePurchasedTokenRoute,
+  JoinSlugRoute: JoinSlugRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
   ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
