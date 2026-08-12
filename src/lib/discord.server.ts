@@ -38,6 +38,23 @@ export async function getDiscordWebhookUrl(supabase: MinimalClient): Promise<str
   }
 }
 
+/**
+ * Read the webhook URL with the service-role client.
+ * `system_settings` is RLS-locked to signed-in staff/admins, so the public
+ * application-submission path (anon key) can never see it — this path can.
+ */
+export async function getDiscordWebhookUrlAsAdmin(): Promise<string | null> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return await getDiscordWebhookUrl(supabaseAdmin as unknown as MinimalClient);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("[discord] could not read webhook setting:", e);
+    return null;
+  }
+}
+
+
 function buildPayload(a: RecruitAlert) {
   const name = `${a.firstName} ${a.lastName}`.trim() || "New recruit";
   return {
