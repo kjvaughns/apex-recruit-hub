@@ -735,6 +735,25 @@ const agentTemplates: EmailTemplateDef[] = [
     },
   }),
   def({
+    name: "agent-applicant-stage",
+    label: "Applicant moved to a new stage",
+    audience: "agent",
+    category: "recruiting",
+    trigger: "One of your applicants progresses to a new stage",
+    prefKey: "recruiting_updates",
+    subject: "{{applicant_name}} moved to {{stage_name}}",
+    body: {
+      title: "{{applicant_name}} is now in {{stage_name}}",
+      intro: GREET,
+      lines: [
+        "{{applicant_name}} just moved from {{previous_stage}} to {{stage_name}}.",
+        "We already sent them what they need for this step — open their record to see the timeline and add your own touch.",
+      ],
+      ctaLabel: "Open the applicant",
+      ctaUrl: "{{portal_link}}",
+    },
+  }),
+  def({
     name: "new-agent-assigned",
     label: "New agent assigned",
     audience: "agent",
