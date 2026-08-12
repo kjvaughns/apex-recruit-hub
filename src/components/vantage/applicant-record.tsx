@@ -764,37 +764,41 @@ function EmailComposerModal({
   onClose: () => void;
   onSent: () => void;
 }) {
-  const sendFn = useServerFn(sendApplicantEmail);
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const sendFn = useServerFn(sendBrandedApplicantEmail);
+  const catalog = composerTemplates();
   const values: Record<string, string> = {
     first_name: applicant.first_name ?? "",
     last_name: applicant.last_name ?? "",
     full_name: `${applicant.first_name ?? ""} ${applicant.last_name ?? ""}`.trim(),
-    evaluation_link: `${origin}/evaluation?a=${applicant.id}`,
-    portal_link: `${origin}/login`,
   };
 
-  const [templateKey, setTemplateKey] = useState("");
+  const [mode, setMode] = useState<"template" | "custom">("template");
+  const [templateName, setTemplateName] = useState(catalog[0]?.name ?? "");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
-  function applyTemplate(key: string) {
-    setTemplateKey(key);
-    const t = APPLICANT_EMAIL_TEMPLATES.find((x) => x.key === key);
-    if (t) {
-      setSubject(fillTemplate(t.subject, values));
-      setBody(fillTemplate(t.body, values));
-    }
-  }
+  const active = catalog.find((t) => t.name === templateName);
 
   const mut = useMutation({
-    mutationFn: () => sendFn({ data: { id: applicant.id, subject: subject.trim(), body: body.trim() } }),
+    mutationFn: () =>
+      sendFn({
+        data:
+          mode === "template"
+            ? { applicantId: applicant.id, template: templateName }
+            : { applicantId: applicant.id, subject: subject.trim(), message: body.trim() },
+      }),
     onSuccess: (res: any) => {
-      notify.success(res?.status === "sent" ? "Email sent" : "Email queued for delivery");
+      if (res?.status === "skipped") {
+        notify.info?.("Email not delivered", "This address is unsubscribed or bounced previously.");
+      } else {
+        notify.success("Email sent");
+      }
       onSent();
     },
     onError: () => notify.error("Couldn't send that email", "Please try again in a moment."),
   });
+
+  const ready = mode === "template" ? !!templateName : !!subject.trim() && !!body.trim();
 
   return (
     <Modal
@@ -809,7 +813,7 @@ function EmailComposerModal({
             variant="primary"
             onClick={() => mut.mutate()}
             loading={mut.isPending}
-            disabled={!subject.trim() || !body.trim()}
+            disabled={!ready}
           >
             Send email
           </Button>
@@ -817,26 +821,54 @@ function EmailComposerModal({
       }
     >
       <div className="space-y-4">
-        <Field label="Template">
-          <Select value={templateKey} onChange={(e) => applyTemplate(e.target.value)}>
-            <option value="">— choose a template —</option>
-            {APPLICANT_EMAIL_TEMPLATES.map((t) => (
-              <option key={t.key} value={t.key}>{t.label}</option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Subject">
-          <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
-        </Field>
-        <Field label="Message" hint="Edit freely before sending. Preview below.">
-          <Textarea rows={8} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write your message…" />
-        </Field>
-        {body.trim() && (
-          <div className="rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
-            <div className="p-label mb-1.5">Preview</div>
-            <div className="p-secondary mb-1 font-semibold">{subject || "(no subject)"}</div>
-            <div className="p-body whitespace-pre-wrap">{body}</div>
-          </div>
+        <SegmentedControl
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "template", label: "Branded template" },
+            { value: "custom", label: "Write your own" },
+          ]}
+        />
+        {mode === "template" ? (
+          <>
+            <Field label="Template" hint="Sent in the Vantage template, personalized automatically.">
+              <Select value={templateName} onChange={(e) => setTemplateName(e.target.value)}>
+                {catalog.map((t) => (
+                  <option key={t.name} value={t.name}>{t.label}</option>
+                ))}
+              </Select>
+            </Field>
+            {active ? (
+              <div
+                className="rounded-[10px] border p-3"
+                style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}
+              >
+                <div className="p-label mb-1.5">Preview</div>
+                <div className="p-secondary mb-1 font-semibold">
+                  {fillTemplate(active.subject, values)}
+                </div>
+                <div className="p-body whitespace-pre-wrap">
+                  {fillTemplate(active.body, values)}
+                </div>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <Field label="Subject">
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" />
+            </Field>
+            <Field label="Message" hint="Sent inside the Vantage branded layout.">
+              <Textarea rows={8} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write your message…" />
+            </Field>
+            {body.trim() && (
+              <div className="rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+                <div className="p-label mb-1.5">Preview</div>
+                <div className="p-secondary mb-1 font-semibold">{subject || "(no subject)"}</div>
+                <div className="p-body whitespace-pre-wrap">{body}</div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </Modal>
