@@ -24,6 +24,8 @@ export interface TemplateOverride {
   note?: string | null;
   cta_label?: string | null;
   cta_url?: string | null;
+  secondary_cta_label?: string | null;
+  secondary_cta_url?: string | null;
 }
 
 export interface RenderedEmail {
@@ -108,6 +110,8 @@ export async function renderEmail(
 
   const ctaLabel = (o.cta_label && o.cta_label.trim()) || def.body.ctaLabel;
   const ctaUrl = keep((o.cta_url && o.cta_url.trim()) || def.body.ctaUrl);
+  const secondaryCtaLabel = (o.secondary_cta_label && o.secondary_cta_label.trim()) || def.body.secondaryCtaLabel;
+  const secondaryCtaUrl = keep((o.secondary_cta_url && o.secondary_cta_url.trim()) || def.body.secondaryCtaUrl);
   const noteRaw = o.note !== undefined && o.note !== null ? o.note : def.body.note;
 
   const element = React.createElement(GenericEmail, {
@@ -119,6 +123,8 @@ export async function renderEmail(
     details,
     ctaLabel: ctaUrl ? ctaLabel : undefined,
     ctaUrl: ctaUrl ?? undefined,
+    secondaryCtaLabel: secondaryCtaUrl ? secondaryCtaLabel : undefined,
+    secondaryCtaUrl: secondaryCtaUrl ?? undefined,
     note: keep(noteRaw) ?? undefined,
     footerNote: footerNote(def),
     prefsUrl: def.prefKey ? (ctx.preferences_link ?? undefined) : undefined,
