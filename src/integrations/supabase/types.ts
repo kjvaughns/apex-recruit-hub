@@ -157,6 +157,7 @@ export type Database = {
           licensed: boolean
           licensing_status: string | null
           next_follow_up_at: string | null
+          npn: string | null
           onboarding_completed_at: string | null
           onboarding_steps: Json | null
           original_recruiter_id: string | null
@@ -170,6 +171,7 @@ export type Database = {
           priority: string
           promoted_by_user_id: string | null
           promoted_to_agent_at: string | null
+          recruiting_status: string
           ref_slug: string | null
           referral_landing_url: string | null
           referral_source: string | null
@@ -177,6 +179,7 @@ export type Database = {
           referred_by_name_snapshot: string | null
           referred_by_profile_id: string | null
           requested_overview_at: string | null
+          resident_state: string | null
           scheduled_event_end: string | null
           scheduled_event_id: string | null
           scheduled_event_start: string | null
@@ -222,6 +225,7 @@ export type Database = {
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
+          npn?: string | null
           onboarding_completed_at?: string | null
           onboarding_steps?: Json | null
           original_recruiter_id?: string | null
@@ -235,6 +239,7 @@ export type Database = {
           priority?: string
           promoted_by_user_id?: string | null
           promoted_to_agent_at?: string | null
+          recruiting_status?: string
           ref_slug?: string | null
           referral_landing_url?: string | null
           referral_source?: string | null
@@ -242,6 +247,7 @@ export type Database = {
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
           requested_overview_at?: string | null
+          resident_state?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -287,6 +293,7 @@ export type Database = {
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
+          npn?: string | null
           onboarding_completed_at?: string | null
           onboarding_steps?: Json | null
           original_recruiter_id?: string | null
@@ -300,6 +307,7 @@ export type Database = {
           priority?: string
           promoted_by_user_id?: string | null
           promoted_to_agent_at?: string | null
+          recruiting_status?: string
           ref_slug?: string | null
           referral_landing_url?: string | null
           referral_source?: string | null
@@ -307,6 +315,7 @@ export type Database = {
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
           requested_overview_at?: string | null
+          resident_state?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -1400,6 +1409,7 @@ export type Database = {
           parent_user_id: string | null
           phone: string | null
           recruiting_slug: string | null
+          resident_state: string | null
           state: string | null
           status: string
           team_id: string | null
@@ -1434,6 +1444,7 @@ export type Database = {
           parent_user_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
+          resident_state?: string | null
           state?: string | null
           status?: string
           team_id?: string | null
@@ -1468,6 +1479,7 @@ export type Database = {
           parent_user_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
+          resident_state?: string | null
           state?: string | null
           status?: string
           team_id?: string | null
