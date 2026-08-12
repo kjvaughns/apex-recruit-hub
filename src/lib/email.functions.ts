@@ -316,34 +316,3 @@ export const setCampaignSubscription = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
-
-export const saveNotificationPrefs = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z
-      .object({
-        email_enabled: z.boolean().optional(),
-        recruiting_updates: z.boolean().optional(),
-        applicant_follow_ups: z.boolean().optional(),
-        training_reminders: z.boolean().optional(),
-        meeting_reminders: z.boolean().optional(),
-        agency_announcements: z.boolean().optional(),
-        onboarding_updates: z.boolean().optional(),
-      })
-      .parse(d),
-  )
-  .handler(async ({ context, data }) => {
-    const { supabase, userId } = context;
-    const { data: row } = await supabase
-      .from("profiles")
-      .select("notification_prefs")
-      .eq("id", userId)
-      .maybeSingle();
-    const prefs = { ...((row?.notification_prefs as Record<string, unknown>) ?? {}), ...data };
-    const { error } = await supabase
-      .from("profiles")
-      .update({ notification_prefs: prefs as never, updated_at: new Date().toISOString() } as never)
-      .eq("id", userId);
-    if (error) throw new Error(error.message);
-    return prefs;
-  });

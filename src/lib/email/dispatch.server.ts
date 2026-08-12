@@ -79,7 +79,7 @@ async function prefAllows(profileId: string, prefKey: PrefKey): Promise<boolean>
       .eq("id", profileId)
       .maybeSingle();
     const prefs = (data?.notification_prefs ?? {}) as Record<string, unknown>;
-    if (prefs["email_enabled"] === false) return false;
+    if (prefs["email_enabled"] === false || prefs["email_notifications"] === false) return false;
     return prefs[prefKey] !== false;
   } catch {
     return true;
