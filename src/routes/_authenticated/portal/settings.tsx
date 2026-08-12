@@ -141,9 +141,9 @@ function ProfileSection() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Profile saved.");
+      notify.success("Profile saved.");
     },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not save profile."),
+    onError: () => notify.error("Could not save your profile.", "Please try again."),
   });
 
   async function onAvatar(file: File) {
@@ -161,12 +161,28 @@ function ProfileSection() {
       await saveFn({ data: { avatar_url: url } });
       setAvatarUrl(url);
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Photo updated.");
-    } catch (e) {
-      toast.error((e as Error).message || "Upload failed.");
+      notify.success("Photo updated.");
+    } catch {
+      notify.error("Could not upload your photo.", "Please try a different image.");
     } finally {
       setUploading(false);
     }
+  }
+
+  if (meQ.isError) {
+    return (
+      <Panel title="Profile">
+        <ErrorState description="We couldn't load your profile." onRetry={() => meQ.refetch()} />
+      </Panel>
+    );
+  }
+
+  if (meQ.isLoading) {
+    return (
+      <Panel title="Profile">
+        <TextSkeleton lines={5} />
+      </Panel>
+    );
   }
 
   return (
@@ -209,8 +225,8 @@ function ProfileSection() {
         </Field>
       </FormGrid>
 
-      <Button variant="primary" className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
-        {save.isPending ? "Saving…" : "Save profile"}
+      <Button variant="primary" className="mt-5" loading={save.isPending} onClick={() => save.mutate()}>
+        Save profile
       </Button>
     </Panel>
   );

@@ -236,11 +236,9 @@ function ApplicantsPage() {
             const res = await addAgentFn({ data: fields });
             setAddAgentOpen(false);
             qc.invalidateQueries({ queryKey: ["applicants"] });
-            toast.success("Agent added — onboarding invite sent.", {
-              action: {
-                label: "View record",
-                onClick: () => setOpenId(res.id),
-              },
+            notify.success("Agent added", "Their onboarding invite is on the way.", {
+              label: "View record",
+              onClick: () => setOpenId(res.id),
             });
           }}
         />
