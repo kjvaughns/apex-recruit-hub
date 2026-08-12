@@ -1867,10 +1867,6 @@ export type Database = {
     }
     Functions: {
       academy_can_manage: { Args: { _uid: string }; Returns: boolean }
-      academy_enroll: {
-        Args: { _slug: string; _user: string }
-        Returns: undefined
-      }
       academy_slugify: { Args: { _txt: string }; Returns: string }
       can_access_user: {
         Args: { _target: string; _viewer: string }
