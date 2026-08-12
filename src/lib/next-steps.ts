@@ -3,7 +3,7 @@
  * Keep these in one place so the thank-you pages and emails never drift.
  */
 export const XCEL_COURSE_URL =
-  "https://xcelsolutions.com/karmakore";
+  "https://partners.xcelsolutions.com/karmakore";
 
 export const XCEL_PARTNER_CODE = "karmakore";
 
