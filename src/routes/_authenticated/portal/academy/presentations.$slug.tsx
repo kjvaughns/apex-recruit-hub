@@ -36,6 +36,24 @@ function RecordingPage() {
   const q = useQuery({ queryKey: ["academy", "recording", slug], queryFn: () => getFn({ data: { slug } }) });
   const [tab, setTab] = useState<"notes" | "transcript">("notes");
 
+  // Hooks must run on every render, so keep media refs/seek above the early returns.
+  const nativeRef = useRef<HTMLMediaElement | null>(null);
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const recData = q.data && q.data.found ? (q.data as any) : null;
+  const recPre = recData?.recording as any;
+  const mediaPre = resolveMedia(recPre?.video_url);
+  const isAudioPre = recPre?.format === "audio";
+  const isNativePre =
+    isAudioPre || mediaPre.kind === "direct" || (!!recPre?.video_url && !mediaPre.embedUrl);
+  const target = isNativePre
+    ? ({ kind: "element", ref: nativeRef } as const)
+    : mediaPre.kind === "youtube"
+      ? ({ kind: "youtube", ref: frameRef } as const)
+      : mediaPre.kind === "vimeo"
+        ? ({ kind: "vimeo", ref: frameRef } as const)
+        : ({ kind: "none" } as const);
+  const { seek, canSeek, currentMs } = useMediaSeek(target);
+
   if (q.isError)
     return (
       <PortalShell>
