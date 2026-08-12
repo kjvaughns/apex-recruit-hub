@@ -38,6 +38,23 @@ export async function getDiscordWebhookUrl(supabase: MinimalClient): Promise<str
   }
 }
 
+/**
+ * Read the webhook URL with the service-role client.
+ * `system_settings` is RLS-locked to signed-in staff/admins, so the public
+ * application-submission path (anon key) can never see it — this path can.
+ */
+export async function getDiscordWebhookUrlAsAdmin(): Promise<string | null> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return await getDiscordWebhookUrl(supabaseAdmin as unknown as MinimalClient);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("[discord] could not read webhook setting:", e);
+    return null;
+  }
+}
+
+
 function buildPayload(a: RecruitAlert) {
   const name = `${a.firstName} ${a.lastName}`.trim() || "New recruit";
   return {
@@ -79,9 +96,22 @@ export async function postRecruitAlert(url: string, a: RecruitAlert): Promise<bo
   }
 }
 
-/** Convenience: look up the webhook and post, never throwing. */
-export async function notifyNewRecruit(supabase: MinimalClient, a: RecruitAlert): Promise<void> {
-  const url = await getDiscordWebhookUrl(supabase);
-  if (!url) return;
-  await postRecruitAlert(url, a);
+/**
+ * Convenience: look up the webhook and post, never throwing.
+ * Always resolves the URL through the service-role client so it works on the
+ * public (anonymous) application-submission path too.
+ */
+export async function notifyNewRecruit(a: RecruitAlert): Promise<void> {
+  const url = await getDiscordWebhookUrlAsAdmin();
+  if (!url) {
+    // eslint-disable-next-line no-console
+    console.warn("[discord] no webhook configured — skipping new-recruit post");
+    return;
+  }
+  const ok = await postRecruitAlert(url, a);
+  if (!ok) {
+    // eslint-disable-next-line no-console
+    console.warn("[discord] new-recruit post was rejected by Discord");
+  }
 }
+

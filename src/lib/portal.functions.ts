@@ -1154,8 +1154,8 @@ export const adminTestDiscordWebhook = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     await assertAdmin(supabase, userId);
-    const { getDiscordWebhookUrl, postRecruitAlert } = await import("@/lib/discord.server");
-    const url = await getDiscordWebhookUrl(supabase as never);
+    const { getDiscordWebhookUrlAsAdmin, postRecruitAlert } = await import("@/lib/discord.server");
+    const url = await getDiscordWebhookUrlAsAdmin();
     if (!url) {
       return {
         ok: false,
