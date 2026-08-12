@@ -230,18 +230,32 @@ function CourseCard({ c }: { c: any }) {
 
 function PresentationCard({ r }: { r: any }) {
   return (
-    <Link to="/portal/academy/library/$slug" params={{ slug: r.slug }} className="p-panel overflow-hidden transition hover:[border-color:var(--p-border-strong)]">
-      <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>
-        <PlayCircle size={34} />
-      </div>
+    <Link
+      to="/portal/academy/presentations/$slug"
+      params={{ slug: r.slug }}
+      className="p-panel overflow-hidden transition hover:[border-color:var(--p-border-strong)]"
+    >
+      {r.thumbnail_url ? (
+        <img src={r.thumbnail_url} alt={`${r.title} cover`} loading="lazy" className="aspect-video w-full object-cover" />
+      ) : (
+        <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>
+          {r.format === "audio" ? <Headphones size={30} /> : <PlayCircle size={34} />}
+        </div>
+      )}
       <div className="p-3">
-        <div className="p-card-title truncate">{r.title}</div>
-        {r.category && <div className="p-muted mt-0.5">{r.category}</div>}
+        <div className="flex items-start justify-between gap-2">
+          <div className="p-card-title truncate">{r.title}</div>
+          {r.is_new && <Badge tone="blue">New</Badge>}
+        </div>
+        <div className="p-muted mt-0.5 truncate">
+          {[r.presenter?.name, r.topic, r.duration].filter(Boolean).join(" · ")}
+        </div>
         {r.description && <p className="p-secondary mt-1 line-clamp-2 leading-snug">{r.description}</p>}
       </div>
     </Link>
   );
 }
+
 
 function LibrarySection({ resources }: { resources: any[] }) {
   const [search, setSearch] = useState("");
