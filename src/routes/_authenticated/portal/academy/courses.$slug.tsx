@@ -18,6 +18,7 @@ import {
 } from "@/components/portal/ui";
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
 import { resolveMedia } from "@/lib/academy/media";
+import { AudioBlock } from "@/components/vantage/academy/audio-block";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft, CheckCircle2, Circle, Lock, HelpCircle, Trophy } from "lucide-react";

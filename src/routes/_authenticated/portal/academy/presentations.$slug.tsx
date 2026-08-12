@@ -14,6 +14,7 @@ import {
 } from "@/components/portal/ui";
 import { getRecordingLearner } from "@/lib/academy-content.functions";
 import { resolveMedia } from "@/lib/academy/media";
+import { AudioBlock } from "@/components/vantage/academy/audio-block";
 import { NotesPreview } from "@/components/vantage/academy/media-fields";
 import { TranscriptViewer, useMediaSeek } from "@/components/vantage/academy/transcript-viewer";
 import { ChevronLeft } from "lucide-react";
