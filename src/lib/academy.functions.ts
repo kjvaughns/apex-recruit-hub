@@ -70,6 +70,8 @@ export const adminUpsertCourse = createServerFn({ method: "POST" })
         long_description: z.string().max(6000).optional().or(z.literal("")),
         instructor_name: z.string().max(160).optional().or(z.literal("")),
         instructor_role: z.string().max(160).optional().or(z.literal("")),
+        thumbnail_url: z.string().trim().max(2000).optional().or(z.literal("")),
+        outcomes: z.array(z.string().trim().max(300)).max(20).optional(),
         is_required: z.boolean().optional(),
         status: z.enum(["draft", "published"]).optional(),
       })
@@ -85,6 +87,8 @@ export const adminUpsertCourse = createServerFn({ method: "POST" })
       long_description: data.long_description || null,
       instructor_name: data.instructor_name || null,
       instructor_role: data.instructor_role || null,
+      thumbnail_url: data.thumbnail_url || null,
+      outcomes: (data.outcomes ?? []).filter(Boolean),
       is_required: data.is_required ?? false,
       status: data.status ?? "draft",
     };
@@ -98,6 +102,7 @@ export const adminUpsertCourse = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { id: created.id as string };
   });
+
 
 export const adminDeleteCourse = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -159,11 +164,15 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
         id: z.string().uuid().optional(),
         module_id: z.string().uuid(),
         title: z.string().trim().min(1).max(200),
-        kind: z.enum(["lesson", "quiz"]),
-        media_type: z.enum(["video", "audio"]).optional().nullable(),
-        video_url: z.string().trim().max(1000).optional().or(z.literal("")),
+        kind: z.enum(["video", "audio", "text", "resource", "link", "quiz"]),
+        video_url: z.string().trim().max(2000).optional().or(z.literal("")),
         duration: z.string().trim().max(40).optional().or(z.literal("")),
         blurb: z.string().max(4000).optional().or(z.literal("")),
+        body: z.string().max(40000).optional().or(z.literal("")),
+        resource_url: z.string().trim().max(2000).optional().or(z.literal("")),
+        resource_label: z.string().trim().max(200).optional().or(z.literal("")),
+        file_path: z.string().trim().max(500).optional().or(z.literal("")),
+        is_published: z.boolean().optional(),
         quiz_pass_threshold: z.number().min(0).max(1).optional(),
       })
       .parse(d),
@@ -172,13 +181,19 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     await assertCanManage(supabase, userId);
     const s = supabase as any;
+    const isMedia = data.kind === "video" || data.kind === "audio";
     const patch: Record<string, unknown> = {
       title: data.title,
       kind: data.kind,
-      media_type: data.kind === "quiz" ? null : (data.media_type ?? "video"),
-      video_url: data.video_url || null,
+      media_type: isMedia ? data.kind : null,
+      video_url: isMedia ? data.video_url || null : null,
       duration: data.duration || null,
       blurb: data.blurb || null,
+      body: data.kind === "text" ? data.body || null : null,
+      resource_url: data.kind === "resource" || data.kind === "link" ? data.resource_url || null : null,
+      resource_label: data.resource_label || null,
+      file_path: data.file_path || null,
+      is_published: data.is_published ?? true,
       quiz_pass_threshold: data.quiz_pass_threshold ?? 0.75,
     };
     if (data.id) {
@@ -199,6 +214,49 @@ export const adminUpsertLesson = createServerFn({ method: "POST" })
     return { id: created.id as string };
   });
 
+/** Duplicate a lesson (and its quiz questions) inside the same module. */
+export const adminDuplicateLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertCanManage(supabase, userId);
+    const s = supabase as any;
+    const { data: row } = await s.from("course_lessons").select("*").eq("id", data.id).maybeSingle();
+    if (!row) throw new Error("Lesson not found");
+    const { id, created_at, ...rest } = row as any;
+    const { data: created, error } = await s
+      .from("course_lessons")
+      .insert({ ...rest, title: `${row.title} (copy)`, position: (row.position ?? 0) + 1, is_published: false })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    const { data: qs } = await s.from("quiz_questions").select("*").eq("lesson_id", data.id).order("position");
+    if ((qs ?? []).length) {
+      await s.from("quiz_questions").insert(
+        (qs ?? []).map((q: any) => {
+          const { id: _qid, ...qr } = q;
+          return { ...qr, lesson_id: created.id };
+        }),
+      );
+    }
+    return { id: created.id as string };
+  });
+
+export const adminSetLessonPublished = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), is_published: z.boolean() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertCanManage(supabase, userId);
+    const { error } = await (supabase as any)
+      .from("course_lessons")
+      .update({ is_published: data.is_published })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const adminUpsertQuestion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -209,6 +267,7 @@ export const adminUpsertQuestion = createServerFn({ method: "POST" })
         question_text: z.string().trim().min(1).max(1000),
         options: z.array(z.string().max(400)).min(2).max(6),
         correct_index: z.number().int().min(0),
+        explanation: z.string().max(2000).optional().or(z.literal("")),
         position: z.number().int().optional(),
       })
       .parse(d),
@@ -221,7 +280,9 @@ export const adminUpsertQuestion = createServerFn({ method: "POST" })
       question_text: data.question_text,
       options: data.options,
       correct_index: Math.min(data.correct_index, data.options.length - 1),
+      explanation: data.explanation || null,
     };
+
     if (data.id) {
       const { error } = await s.from("quiz_questions").update(patch).eq("id", data.id);
       if (error) throw new Error(error.message);
@@ -486,8 +547,19 @@ export const getAcademyHome = createServerFn({ method: "GET" })
     for (const j of joins ?? []) (byResource[j.resource_id] ??= []).push(tagName[j.tag_id]);
     const resourceCards = (resources ?? []).map((r: any) => ({ ...r, tags: byResource[r.id] ?? [] }));
 
-    return { courses: courseCards, resources: resourceCards, tags: (tags ?? []).map((t: any) => t.name) };
+    const { count: recordingCount } = await s
+      .from("recordings")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published");
+
+    return {
+      courses: courseCards,
+      resources: resourceCards,
+      tags: (tags ?? []).map((t: any) => t.name),
+      recordingCount: recordingCount ?? 0,
+    };
   });
+
 
 export const getLibraryResource = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -577,13 +649,23 @@ export const getCourseLearner = createServerFn({ method: "POST" })
       .eq("course_id", course.id)
       .order("position");
     const modIds = (modules ?? []).map((m: any) => m.id);
-    const { data: lessons } = modIds.length
+    const { data: allLessons } = modIds.length
       ? await s.from("course_lessons").select("*").in("module_id", modIds).order("position")
       : { data: [] };
-    const quizIds = (lessons ?? []).filter((l: any) => l.kind === "quiz").map((l: any) => l.id);
+    const lessons = (allLessons ?? []).filter((l: any) => l.is_published !== false);
+    const quizIds = lessons.filter((l: any) => l.kind === "quiz").map((l: any) => l.id);
     const { data: questions } = quizIds.length
       ? await s.from("quiz_questions").select("id, lesson_id, question_text, options, position").in("lesson_id", quizIds).order("position")
       : { data: [] };
+    const mediaIds = lessons.filter((l: any) => l.kind === "video" || l.kind === "audio").map((l: any) => l.id);
+    const { data: transcripts } = mediaIds.length
+      ? await s
+          .from("media_transcripts")
+          .select("owner_id, transcript_text, transcript_segments, notes, status, notes_status")
+          .eq("owner_type", "lesson")
+          .in("owner_id", mediaIds)
+      : { data: [] };
+
     const { data: progress } = await s
       .from("lesson_progress")
       .select("lesson_id, completed_at, quiz_score")
@@ -596,9 +678,11 @@ export const getCourseLearner = createServerFn({ method: "POST" })
       modules: modules ?? [],
       lessons: lessons ?? [],
       questions: questions ?? [], // no correct_index
+      transcripts: transcripts ?? [],
       progress: progress ?? [],
       enrollment,
     };
+
   });
 
 async function lessonCourseId(s: any, lessonId: string): Promise<{ courseId: string; threshold: number } | null> {
@@ -644,14 +728,16 @@ export const submitQuiz = createServerFn({ method: "POST" })
     if (!info) throw new Error("Quiz not found");
     const { data: questions } = await s
       .from("quiz_questions")
-      .select("id, correct_index, position")
+      .select("id, correct_index, explanation, position")
       .eq("lesson_id", data.lesson_id)
       .order("position");
     const qs = questions ?? [];
     if (qs.length === 0) throw new Error("This quiz has no questions yet.");
     let correct = 0;
-    qs.forEach((qq: any, i: number) => {
-      if (data.answers[i] === qq.correct_index) correct += 1;
+    const results = qs.map((qq: any, i: number) => {
+      const ok = data.answers[i] === qq.correct_index;
+      if (ok) correct += 1;
+      return { id: qq.id as string, correct: ok, correct_index: qq.correct_index as number, explanation: (qq.explanation ?? null) as string | null };
     });
     const score = correct / qs.length;
     const passed = score >= info.threshold;
@@ -670,5 +756,6 @@ export const submitQuiz = createServerFn({ method: "POST" })
         { onConflict: "enrollment_id,lesson_id" },
       );
     await recomputeCompletion(s, enrollmentId, info.courseId);
-    return { passed, score, threshold: info.threshold };
+    return { passed, score, threshold: info.threshold, results };
   });
+

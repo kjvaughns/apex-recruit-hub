@@ -6,6 +6,7 @@ import { z } from "zod";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getMe } from "@/lib/portal.functions";
 import { getAcademyHome } from "@/lib/academy.functions";
+import { listRecordingsLearner } from "@/lib/academy-content.functions";
 import {
   PageHeader,
   PageBody,
@@ -41,8 +42,10 @@ function typeIcon(type: string, size: number) {
 function AcademyHome() {
   const { section } = Route.useSearch();
   const homeFn = useServerFn(getAcademyHome);
+  const recFn = useServerFn(listRecordingsLearner);
   const meFn = useServerFn(getMe);
   const q = useQuery({ queryKey: ["academy", "home"], queryFn: () => homeFn() });
+  const recQ = useQuery({ queryKey: ["academy", "recordings"], queryFn: () => recFn() });
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => meFn() });
   const canManage =
     (meQ.data?.roles ?? []).some((r) => r === "admin" || r === "super_admin") ||
@@ -50,8 +53,9 @@ function AcademyHome() {
 
   const courses = (q.data?.courses ?? []) as any[];
   const resources = (q.data?.resources ?? []) as any[];
-  const presentations = resources.filter((r) => r.section === "presentation");
-  const library = resources.filter((r) => r.section !== "presentation");
+  const presentations = (recQ.data?.recordings ?? []) as any[];
+  const library = resources.filter((r) => r.section !== "presentation" && (r.status ?? "published") !== "draft");
+
 
   const manageBtn = canManage ? (
     <Link to="/portal/academy/admin"><Button variant="secondary" size="sm">Manage Academy</Button></Link>
@@ -226,18 +230,32 @@ function CourseCard({ c }: { c: any }) {
 
 function PresentationCard({ r }: { r: any }) {
   return (
-    <Link to="/portal/academy/library/$slug" params={{ slug: r.slug }} className="p-panel overflow-hidden transition hover:[border-color:var(--p-border-strong)]">
-      <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>
-        <PlayCircle size={34} />
-      </div>
+    <Link
+      to="/portal/academy/presentations/$slug"
+      params={{ slug: r.slug }}
+      className="p-panel overflow-hidden transition hover:[border-color:var(--p-border-strong)]"
+    >
+      {r.thumbnail_url ? (
+        <img src={r.thumbnail_url} alt={`${r.title} cover`} loading="lazy" className="aspect-video w-full object-cover" />
+      ) : (
+        <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}>
+          {r.format === "audio" ? <Headphones size={30} /> : <PlayCircle size={34} />}
+        </div>
+      )}
       <div className="p-3">
-        <div className="p-card-title truncate">{r.title}</div>
-        {r.category && <div className="p-muted mt-0.5">{r.category}</div>}
+        <div className="flex items-start justify-between gap-2">
+          <div className="p-card-title truncate">{r.title}</div>
+          {r.is_new && <Badge tone="blue">New</Badge>}
+        </div>
+        <div className="p-muted mt-0.5 truncate">
+          {[r.presenter?.name, r.topic, r.duration].filter(Boolean).join(" · ")}
+        </div>
         {r.description && <p className="p-secondary mt-1 line-clamp-2 leading-snug">{r.description}</p>}
       </div>
     </Link>
   );
 }
+
 
 function LibrarySection({ resources }: { resources: any[] }) {
   const [search, setSearch] = useState("");
