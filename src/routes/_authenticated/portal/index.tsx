@@ -15,6 +15,8 @@ import {
   Badge,
   Button,
   EmptyState,
+  CardSkeleton,
+  MetricSkeleton,
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
@@ -226,12 +228,20 @@ function DashboardPage() {
   );
 }
 
+/** Mirrors the real dashboard: link panel, metric row, then the two columns. */
 function SkeletonGrid() {
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="p-panel h-[88px] animate-pulse" />
-      ))}
+    <div className="space-y-4">
+      <CardSkeleton lines={1} />
+      <MetricRow>
+        {[0, 1, 2, 3].map((i) => (
+          <MetricSkeleton key={i} />
+        ))}
+      </MetricRow>
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+        <CardSkeleton lines={5} />
+        <CardSkeleton lines={5} />
+      </div>
     </div>
   );
 }

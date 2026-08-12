@@ -2,11 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Trophy } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getCompanyLeaderboard, type CompanyLeaderboardRow } from "@/lib/portal.functions";
 import {
   PageHeader, PageBody, Toolbar, Select, SegmentedControl, TableWrap, Table, THead, TH, TR, TD,
-  Avatar, Badge, EmptyState, Modal, Panel,
+  Avatar, Badge, EmptyState, ErrorState, TableSkeleton, Modal, Panel,
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/leaderboard")({
@@ -83,7 +84,7 @@ function LeaderboardPage() {
         ) : (
           <div className="space-y-3">
             <Toolbar>
-              <Select value={metric} onChange={(e) => setMetric(e.target.value as Metric)} className="h-9 w-full text-[13px] sm:hidden">
+              <Select value={metric} onChange={(e) => setMetric(e.target.value as Metric)} className="h-9 w-full text-[13px] sm:hidden" aria-label="Rank by">
                 {METRICS.map((m) => <option key={m.key} value={m.key}>Rank by: {m.label}</option>)}
               </Select>
               <SegmentedControl
@@ -94,38 +95,39 @@ function LeaderboardPage() {
                 onChange={setMetric}
               />
               <div className="flex w-full flex-col gap-2 sm:ml-auto sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
-                <Select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="h-9 w-full text-[12.5px] sm:w-auto">
+                <Select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="h-9 w-full text-[12.5px] sm:w-auto" aria-label="Period">
                   {PERIODS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
                 </Select>
-                <Select value={role} onChange={(e) => setRole(e.target.value as any)} className="h-9 w-full text-[12.5px] sm:w-auto">
+                <Select value={role} onChange={(e) => setRole(e.target.value as any)} className="h-9 w-full text-[12.5px] sm:w-auto" aria-label="Role">
                   <option value="">All roles</option>
                   <option value="agent">Agent</option>
                   <option value="leader">Leader</option>
                   <option value="manager">Manager</option>
                   <option value="admin">Admin</option>
                 </Select>
-                <Select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="h-9 w-full text-[12.5px] sm:w-auto">
+                <Select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="h-9 w-full text-[12.5px] sm:w-auto" aria-label="Team">
                   <option value="">All teams</option>
                   {teams.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </Select>
               </div>
             </Toolbar>
 
-            {q.isLoading ? (
-              <Panel><div className="p-secondary p-10 text-center">Loading…</div></Panel>
+            {q.isError ? (
+              <Panel><ErrorState description="We couldn't load the leaderboard right now." onRetry={() => q.refetch()} /></Panel>
+            ) : q.isLoading ? (
+              <TableSkeleton rows={8} cols={6} />
             ) : ranked.length === 0 ? (
-              <Panel><EmptyState title="No results" description="No results for these filters. Try widening the period or clearing filters." /></Panel>
+              <Panel>
+                <EmptyState
+                  icon={<Trophy size={16} />}
+                  title="No results for these filters"
+                  description="Try widening the period or clearing the role/team filters to see ranked performance."
+                />
+              </Panel>
             ) : (
-              <>
-                {/* Top 3 podium */}
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {ranked.slice(0, 3).map((r) => (
-                    <PodiumCard key={r.profile_id} row={r} isMe={r.profile_id === meId} onClick={() => setSelected(r)} />
-                  ))}
-                </div>
-
-                <TableWrap>
-                  <Table>
+              <TableWrap>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[720px]">
                     <THead>
                       <TH className="w-10">Rank</TH>
                       <TH>Agent</TH>
@@ -134,14 +136,25 @@ function LeaderboardPage() {
                       <TH align="right">Hires</TH>
                       <TH align="right">Activated</TH>
                       <TH align="right">Conv.</TH>
-                      <TH align="right">Change</TH>
                     </THead>
                     <tbody>
                       {ranked.map((r) => {
                         const isMe = r.profile_id === meId;
+                        const topTone = r.rank === 1 ? "var(--p-gold)" : r.rank <= 3 ? "var(--p-text-2)" : "var(--p-text-3)";
                         return (
-                          <TR key={r.profile_id} onClick={() => setSelected(r)}>
-                            <TD><span className="p-metric text-[15px]" style={isMe ? { color: "var(--p-gold)" } : undefined}>{r.rank}</span></TD>
+                          <TR
+                            key={r.profile_id}
+                            onClick={() => setSelected(r)}
+                            className={isMe ? "[background:var(--p-gold-soft)]" : undefined}
+                          >
+                            <TD>
+                              <span
+                                className="p-metric text-[15px] tabular-nums"
+                                style={{ color: topTone, fontWeight: r.rank === 1 ? 700 : 600 }}
+                              >
+                                {r.rank}
+                              </span>
+                            </TD>
                             <TD>
                               <div className="flex min-w-0 items-center gap-2.5">
                                 <Avatar name={r.full_name} src={r.avatar_url} size={28} />
@@ -161,57 +174,24 @@ function LeaderboardPage() {
                             <TD align="right" className="p-body">{(r as any).hired_count ?? 0}</TD>
                             <TD align="right" className="p-body">{r.promoted_count}</TD>
                             <TD align="right" className="p-muted">{Math.round(r.conversion * 100)}%</TD>
-                            <TD align="right"><Movement move={r.move} /></TD>
                           </TR>
                         );
                       })}
                     </tbody>
                   </Table>
-                </TableWrap>
-              </>
+                </div>
+              </TableWrap>
             )}
           </div>
         )}
       </PageBody>
 
-      {selected && <ProfileModal row={selected} onClose={() => setSelected(null)} />}
+      {selected && <ProfileModal row={selected} isMe={selected.profile_id === meId} onClose={() => setSelected(null)} />}
     </PortalShell>
   );
 }
 
-function Movement({ move }: { move: number }) {
-  if (move === 0) return <span className="p-muted text-[12px]">—</span>;
-  const up = move > 0;
-  return (
-    <Badge tone={up ? "green" : "red"}>{up ? "↑" : "↓"} {Math.abs(move)}</Badge>
-  );
-}
-
-function PodiumCard({ row, isMe, onClick }: { row: Ranked; isMe: boolean; onClick: () => void }) {
-  const place = row.rank;
-  const ring = place === 1 ? "var(--p-gold)" : place === 2 ? "var(--p-text-3)" : "#B87333";
-  return (
-    <button onClick={onClick} className="p-panel flex items-center gap-3 p-4 text-left transition hover:[border-color:var(--p-border-strong)]">
-      <div className="grid h-9 w-9 flex-none place-items-center rounded-full text-[15px] font-bold" style={{ background: `${ring}22`, color: ring }}>
-        {place}
-      </div>
-      <Avatar name={row.full_name} src={row.avatar_url} size={40} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 truncate text-[14px] font-semibold">
-          <span className="truncate">{row.full_name || "Unnamed"}</span>
-          {isMe && <Badge tone="gold">You</Badge>}
-        </div>
-        <div className="p-muted truncate text-[12px] capitalize">{row.role ?? "—"}</div>
-      </div>
-      <div className="text-right">
-        <div className="p-metric text-[20px]" style={{ color: "var(--p-gold)" }}>{Math.round(Number(row.total))}</div>
-        <Movement move={row.move} />
-      </div>
-    </button>
-  );
-}
-
-function ProfileModal({ row, onClose }: { row: Ranked; onClose: () => void }) {
+function ProfileModal({ row, isMe, onClose }: { row: Ranked; isMe: boolean; onClose: () => void }) {
   const stats: { label: string; value: string }[] = [
     { label: "Rank", value: `#${row.rank}` },
     { label: "New applicants", value: String(row.new_count) },
@@ -233,7 +213,10 @@ function ProfileModal({ row, onClose }: { row: Ranked; onClose: () => void }) {
         </button>
       }
     >
-      <div className="flex items-center gap-3"><Avatar name={row.full_name} src={row.avatar_url} size={48} /></div>
+      <div className="flex items-center gap-3">
+        <Avatar name={row.full_name} src={row.avatar_url} size={48} />
+        {isMe && <Badge tone="gold">You</Badge>}
+      </div>
       <div className="mt-4 grid grid-cols-2 gap-3">
         {stats.map((s) => (
           <div key={s.label} className="p-panel px-3 py-2.5">

@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
 import {
   DndContext,
   PointerSensor,
@@ -51,12 +50,18 @@ import {
   TR,
   TD,
   EmptyState,
+  ErrorState,
   Modal,
   Field,
   Input,
   Textarea,
   Select,
   FormGrid,
+  Checkbox,
+  Radio,
+  TableSkeleton,
+  CardSkeleton,
+  notify,
 } from "@/components/portal/ui";
 import { GripVertical, Plus, HelpCircle, Video, Trash2, ChevronLeft, Pencil } from "lucide-react";
 
@@ -76,7 +81,11 @@ function AcademyAdmin() {
 
   if (meQ.isLoading)
     return (
-      <PortalShell><PageBody><div className="p-secondary">Loading…</div></PageBody></PortalShell>
+      <PortalShell>
+        <PageBody>
+          <CardSkeleton lines={4} />
+        </PageBody>
+      </PortalShell>
     );
   if (!canManage)
     return (
@@ -171,10 +180,14 @@ function CoursesBuilder() {
 
   async function del(id: string) {
     if (!confirm("Delete this course and all its content?")) return;
-    await delFn({ data: { id } });
-    if (selected === id) setSelected(null);
-    qc.invalidateQueries({ queryKey: ["academy", "courses"] });
-    toast.success("Course deleted.");
+    try {
+      await delFn({ data: { id } });
+      if (selected === id) setSelected(null);
+      qc.invalidateQueries({ queryKey: ["academy", "courses"] });
+      notify.success("Course deleted.");
+    } catch {
+      notify.error("Couldn't delete this course. Please try again.");
+    }
   }
 
   return (
@@ -184,7 +197,11 @@ function CoursesBuilder() {
         actions={<Button variant="primary" size="sm" onClick={() => setMetaOpen({})}><Plus size={14} /> New</Button>}
         padded={false}
       >
-        {courses.length === 0 ? (
+        {coursesQ.isError ? (
+          <ErrorState description="Couldn't load courses. Please try again." onRetry={() => coursesQ.refetch()} />
+        ) : coursesQ.isLoading ? (
+          <TableSkeleton rows={4} cols={3} />
+        ) : courses.length === 0 ? (
           <EmptyState title="No courses yet" description="Create your first course to get started." />
         ) : (
           <TableWrap className="border-0">
@@ -261,10 +278,10 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
     setBusy(true);
     try {
       const res = await saveFn({ data: { id: courseId, ...f } });
-      toast.success("Course saved.");
+      notify.success("Course saved.");
       onSaved(res.id);
     } catch (e) {
-      toast.error((e as Error).message || "Could not save.");
+      notify.error("Couldn't save. Please try again.");
       setBusy(false);
     }
   }
@@ -276,7 +293,7 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={save} disabled={busy || !f.title.trim()}>{busy ? "Saving…" : "Save"}</Button>
+          <Button variant="primary" onClick={save} disabled={!f.title.trim()} loading={busy}>Save</Button>
         </>
       }
     >
@@ -295,10 +312,12 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
             </Select>
           </Field>
           <Field label="Required">
-            <label className="mt-2 inline-flex items-center gap-2 text-[13.5px]" style={{ color: "var(--p-text)" }}>
-              <input type="checkbox" checked={f.is_required} onChange={(e) => setF({ ...f, is_required: e.target.checked })} />
-              Mark this course required
-            </label>
+            <Checkbox
+              checked={f.is_required}
+              onChange={(v) => setF({ ...f, is_required: v })}
+              label="Mark this course required"
+              className="mt-2"
+            />
           </Field>
         </FormGrid>
       </div>
@@ -345,7 +364,8 @@ function CourseEditor({ courseId, onEditMeta }: { courseId: string; onEditMeta: 
     invalidate();
   }
 
-  if (q.isLoading) return <Panel><div className="p-secondary">Loading…</div></Panel>;
+  if (q.isError) return <Panel><ErrorState description="Couldn't load this course. Please try again." onRetry={() => q.refetch()} /></Panel>;
+  if (q.isLoading) return <Panel><CardSkeleton lines={5} /></Panel>;
 
   return (
     <Panel
@@ -440,9 +460,9 @@ function LessonModal({ moduleId, lessonId, lesson, questions, onClose, onSaved }
         .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
       setF((p) => ({ ...p, video_url: signed.signedUrl }));
-      toast.success("Uploaded.");
+      notify.success("File uploaded.");
     } catch (e) {
-      toast.error((e as Error).message || "Upload failed.");
+      notify.error("Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -465,10 +485,10 @@ function LessonModal({ moduleId, lessonId, lesson, questions, onClose, onSaved }
           quiz_pass_threshold: Number(f.quiz_pass_threshold) || 0.75,
         },
       });
-      toast.success("Lesson saved.");
+      notify.success("Lesson saved.");
       onSaved();
     } catch (e) {
-      toast.error((e as Error).message || "Could not save.");
+      notify.error("Couldn't save. Please try again.");
       setBusy(false);
     }
   }
@@ -478,7 +498,7 @@ function LessonModal({ moduleId, lessonId, lesson, questions, onClose, onSaved }
       title={lessonId ? "Edit lesson" : "New lesson"}
       width={620}
       onClose={onClose}
-      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={busy || !f.title.trim()}>{busy ? "Saving…" : "Save"}</Button></>}
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!f.title.trim()} loading={busy}>Save</Button></>}
     >
       <div className="space-y-4">
         <FormGrid>
@@ -541,7 +561,7 @@ function QuestionsEditor({ lessonId, questions }: { lessonId: string; questions:
 
   async function add() {
     const clean = opts.map((o) => o.trim()).filter(Boolean);
-    if (!text.trim() || clean.length < 2) { toast.error("Add a question and at least 2 options."); return; }
+    if (!text.trim() || clean.length < 2) { notify.error("Add a question and at least 2 options."); return; }
     await saveFn({ data: { lesson_id: lessonId, question_text: text.trim(), options: clean, correct_index: Math.min(correct, clean.length - 1) } });
     setText(""); setOpts(["", "", "", ""]); setCorrect(0);
     invalidate();
@@ -574,7 +594,7 @@ function QuestionsEditor({ lessonId, questions }: { lessonId: string; questions:
         <Input placeholder="Question text" value={text} onChange={(e) => setText(e.target.value)} />
         {opts.map((o, i) => (
           <div key={i} className="flex items-center gap-2">
-            <input type="radio" name="correct" checked={correct === i} onChange={() => setCorrect(i)} aria-label={`Mark option ${i + 1} correct`} />
+            <Radio name="correct" checked={correct === i} onChange={() => setCorrect(i)} label={<span className="sr-only">{`Mark option ${i + 1} correct`}</span>} />
             <Input placeholder={`Option ${i + 1}`} value={o} onChange={(e) => setOpts(opts.map((x, xi) => (xi === i ? e.target.value : x)))} />
           </div>
         ))}
@@ -599,9 +619,13 @@ function LibraryBuilder() {
 
   async function del(id: string) {
     if (!confirm("Delete this resource?")) return;
-    await delFn({ data: { id } });
-    qc.invalidateQueries({ queryKey: ["academy", "library"] });
-    toast.success("Resource deleted.");
+    try {
+      await delFn({ data: { id } });
+      qc.invalidateQueries({ queryKey: ["academy", "library"] });
+      notify.success("Resource deleted.");
+    } catch {
+      notify.error("Couldn't delete this resource. Please try again.");
+    }
   }
 
   return (
@@ -611,7 +635,11 @@ function LibraryBuilder() {
         actions={<Button variant="primary" size="sm" onClick={() => setEdit({})}><Plus size={14} /> New</Button>}
         padded={false}
       >
-        {resources.length === 0 ? (
+        {q.isError ? (
+          <ErrorState description="Couldn't load library resources. Please try again." onRetry={() => q.refetch()} />
+        ) : q.isLoading ? (
+          <TableSkeleton rows={4} cols={3} />
+        ) : resources.length === 0 ? (
           <EmptyState title="No resources yet" description="Add your first library resource." />
         ) : (
           <TableWrap className="border-0">
@@ -672,9 +700,9 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
         .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
       setF((p) => ({ ...p, url: signed.signedUrl }));
-      toast.success("Uploaded.");
+      notify.success("File uploaded.");
     } catch (e) {
-      toast.error((e as Error).message || "Upload failed.");
+      notify.error("Upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -696,10 +724,10 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
           category: f.category.trim(),
         },
       });
-      toast.success("Resource saved.");
+      notify.success("Resource saved.");
       onSaved();
     } catch (e) {
-      toast.error((e as Error).message || "Could not save.");
+      notify.error("Couldn't save. Please try again.");
       setBusy(false);
     }
   }
@@ -709,7 +737,7 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
       title={resource ? "Edit resource" : "New resource"}
       width={560}
       onClose={onClose}
-      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={busy || !f.title.trim()}>{busy ? "Saving…" : "Save"}</Button></>}
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!f.title.trim()} loading={busy}>Save</Button></>}
     >
       <div className="space-y-4">
         <Field label="Title" required><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></Field>
@@ -724,9 +752,7 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
             </Select>
           </Field>
           <Field label="Required">
-            <label className="mt-2 inline-flex items-center gap-2 text-[13.5px]" style={{ color: "var(--p-text)" }}>
-              <input type="checkbox" checked={f.is_required} onChange={(e) => setF({ ...f, is_required: e.target.checked })} /> Required
-            </label>
+            <Checkbox checked={f.is_required} onChange={(v) => setF({ ...f, is_required: v })} label="Required" className="mt-2" />
           </Field>
         </FormGrid>
         <Field label={f.type === "link" ? "URL" : "URL (or upload below)"}>

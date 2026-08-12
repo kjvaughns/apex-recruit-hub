@@ -6,7 +6,7 @@ import { adminListStages, adminUpsertStage } from "@/lib/portal.functions";
 import { useState } from "react";
 import {
   PageHeader, PageBody, Panel, TableWrap, Table, THead, TH, TR, TD,
-  Input, Field, Button,
+  Input, Field, Button, TableSkeleton, ErrorState, EmptyState, notify,
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/stages")({
@@ -18,10 +18,15 @@ function StagesPage() {
   const listFn = useServerFn(adminListStages);
   const upsertFn = useServerFn(adminUpsertStage);
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "stages"], queryFn: () => listFn() });
+  const stagesQ = useQuery({ queryKey: ["admin", "stages"], queryFn: () => listFn() });
+  const { data, isLoading } = stagesQ;
   const upsert = useMutation({
     mutationFn: (v: any) => upsertFn({ data: v }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "stages"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "stages"] });
+      notify.success("Pipeline stages updated.");
+    },
+    onError: () => notify.error("Could not update pipeline stages.", "Please try again."),
   });
 
   const [name, setName] = useState("");
@@ -35,10 +40,14 @@ function StagesPage() {
       <PageBody>
         <PageHeader title="Pipeline stages" description="Configure the recruiting pipeline stages, colors, and order." />
         <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+          {isLoading ? (
+            <TableSkeleton rows={5} cols={5} />
+          ) : stagesQ.isError ? (
+            <TableWrap>
+              <ErrorState description="We couldn't load pipeline stages." onRetry={() => stagesQ.refetch()} />
+            </TableWrap>
+          ) : (
           <TableWrap>
-            {isLoading ? (
-              <div className="p-secondary p-6 text-center">Loading…</div>
-            ) : (
               <Table>
                 <THead>
                   <TH>Order</TH>
@@ -80,10 +89,17 @@ function StagesPage() {
                       </TD>
                     </TR>
                   ))}
+                  {stages.length === 0 && (
+                    <TR>
+                      <TD colSpan={5}>
+                        <EmptyState title="No pipeline stages yet" description="Add your first stage to start building the recruiting pipeline." />
+                      </TD>
+                    </TR>
+                  )}
                 </tbody>
               </Table>
-            )}
           </TableWrap>
+          )}
 
           <Panel title="Add a stage" description="New stage" padded>
             <form
@@ -115,8 +131,8 @@ function StagesPage() {
                   onChange={(e) => setColor(e.target.value)}
                 />
               </Field>
-              <Button type="submit" variant="primary" disabled={upsert.isPending} className="w-full">
-                {upsert.isPending ? "Saving…" : "Add stage"}
+              <Button type="submit" variant="primary" loading={upsert.isPending} className="w-full">
+                Add stage
               </Button>
             </form>
           </Panel>

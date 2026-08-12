@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { PageBody, Panel, Button, Badge, EmptyState } from "@/components/portal/ui";
+import { PageBody, Panel, Button, Badge, EmptyState, ErrorState, CardSkeleton } from "@/components/portal/ui";
 import { getLibraryResource } from "@/lib/academy.functions";
 import { ChevronLeft, Video, Headphones, FileText, Link2, Download, ExternalLink } from "lucide-react";
 
@@ -19,7 +19,27 @@ function ResourceDetail() {
   const getFn = useServerFn(getLibraryResource);
   const q = useQuery({ queryKey: ["academy", "resource", slug], queryFn: () => getFn({ data: { slug } }) });
 
-  if (q.isLoading) return <PortalShell><PageBody><div className="p-secondary">Loading…</div></PageBody></PortalShell>;
+  if (q.isError) {
+    return (
+      <PortalShell>
+        <PageBody>
+          <ErrorState description="We couldn't load this resource right now. Please try again." onRetry={() => q.refetch()} />
+        </PageBody>
+      </PortalShell>
+    );
+  }
+
+  if (q.isLoading) {
+    return (
+      <PortalShell>
+        <PageBody>
+          <div className="mx-auto max-w-3xl">
+            <CardSkeleton lines={6} />
+          </div>
+        </PageBody>
+      </PortalShell>
+    );
+  }
   if (!q.data?.found) {
     return (
       <PortalShell>
@@ -41,27 +61,36 @@ function ResourceDetail() {
         </Link>
 
         <div className="mx-auto max-w-3xl space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-[10px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}><Icon size={18} /></span>
-              <div>
-                <h1 className="p-title">{r.title}</h1>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px]" style={{ background: "var(--p-raised)", color: "var(--p-gold)" }}><Icon size={18} /></span>
+              <div className="min-w-0">
+                <h1 className="p-title truncate">{r.title}</h1>
                 <div className="p-muted mt-0.5 capitalize">{r.type}</div>
               </div>
             </div>
-            {r.is_required && <Badge tone="gold">Required</Badge>}
+            {r.is_required && <Badge tone="gold" className="shrink-0">Required</Badge>}
           </div>
 
           {r.type === "video" && (
             <div className="p-panel overflow-hidden">
-              {r.url ? <video controls src={r.url} className="aspect-video w-full bg-black" /> : <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>No media</div>}
+              {r.url ? <video controls src={r.url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} /> : <div className="grid aspect-video place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>No media</div>}
             </div>
           )}
           {r.type === "audio" && (
             <Panel>{r.url ? <audio controls src={r.url} className="w-full" /> : <span className="p-muted">No media.</span>}</Panel>
           )}
           {r.type === "file" && (
-            <Panel title="File" actions={r.url && <a href={r.url} target="_blank" rel="noreferrer noopener" className="p-focus inline-flex h-8 items-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-semibold text-[#0B0B0C]" style={{ background: "var(--p-gold)" }}><Download size={14} /> Download</a>}>
+            <Panel
+              title="File"
+              actions={
+                r.url && (
+                  <a href={r.url} target="_blank" rel="noreferrer noopener">
+                    <Button variant="primary" size="sm"><Download size={14} /> Download</Button>
+                  </a>
+                )
+              }
+            >
               {r.url ? (
                 <iframe src={r.url} title={r.title} className="h-[60vh] w-full rounded-[10px]" style={{ background: "var(--p-raised)" }} />
               ) : (
@@ -73,8 +102,8 @@ function ResourceDetail() {
             <Panel>
               {r.description && <p className="p-secondary mb-3">{r.description}</p>}
               {r.url && (
-                <a href={r.url} target="_blank" rel="noreferrer noopener" className="p-focus inline-flex h-[36px] items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] font-semibold text-[#0B0B0C]" style={{ background: "var(--p-gold)" }}>
-                  <ExternalLink size={14} /> Open
+                <a href={r.url} target="_blank" rel="noreferrer noopener">
+                  <Button variant="primary" size="sm"><ExternalLink size={14} /> Open</Button>
                 </a>
               )}
             </Panel>

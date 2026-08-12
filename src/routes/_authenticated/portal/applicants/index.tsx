@@ -3,12 +3,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { toast } from "sonner";
+import { ChevronRight, Plus } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { ApplicantRecord } from "@/components/vantage/applicant-record";
-import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
+import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
-import { AddAgentModal } from "@/components/vantage/add-agent-modal";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
 import {
@@ -16,7 +15,9 @@ import {
   PageBody,
   Panel,
   Button,
+  IconButton,
   Toolbar,
+  ToolbarSpacer,
   SegmentedControl,
   Badge,
   TableWrap,
@@ -26,8 +27,13 @@ import {
   TR,
   TD,
   EmptyState,
+  ErrorState,
   SearchField,
   Select,
+  Skeleton,
+  TableSkeleton,
+  ListSkeleton,
+  notify,
 } from "@/components/portal/ui";
 
 const searchSchema = z.object({
@@ -73,7 +79,6 @@ function ApplicantsPage() {
   const [stage, setStage] = useState("");
   const [view, setView] = useState<View>("all");
   const [addOpen, setAddOpen] = useState(false);
-  const [addAgentOpen, setAddAgentOpen] = useState(false);
   const [addStageId, setAddStageId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,10 +92,9 @@ function ApplicantsPage() {
 
   const fn = useServerFn(listApplicants);
   const changeStage = useServerFn(updateApplicantStage);
-  const addAgentFn = useServerFn(addAgent);
 
   // Shared query drives both tabs. The List tab additionally applies q/stage/view.
-  const { data, isLoading } = useQuery({
+  const applicantsQ = useQuery({
     queryKey: ["applicants", { q, scope, stage, view, tab: activeTab }],
     queryFn: () =>
       fn({
@@ -100,6 +104,7 @@ function ApplicantsPage() {
             : { q, scope, stage, view, limit: 200 },
       }),
   });
+  const { data, isLoading } = applicantsQ;
 
   const stages = data?.stages ?? [];
   const stageMap = useMemo(() => {
@@ -136,16 +141,11 @@ function ApplicantsPage() {
       <PageBody>
         <PageHeader
           title="Applicants"
-          description="Recruiting pipeline"
+          description="Every recruit you're working, from first application through licensing."
           actions={
-            <>
-              <Button variant="secondary" size="sm" onClick={() => setAddAgentOpen(true)}>
-                + Add Agent
-              </Button>
-              <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
-                + Add Applicant
-              </Button>
-            </>
+            <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
+              <Plus size={14} aria-hidden /> Add Applicant
+            </Button>
           }
         />
 
@@ -174,7 +174,15 @@ function ApplicantsPage() {
           />
         </div>
 
-        {activeTab === "list" ? (
+        {applicantsQ.isError ? (
+          <Panel>
+            <ErrorState
+              title="Couldn't load applicants"
+              description="Your pipeline didn't load. Check your connection and try again."
+              onRetry={() => applicantsQ.refetch()}
+            />
+          </Panel>
+        ) : activeTab === "list" ? (
           <ListView
             data={data}
             isLoading={isLoading}
@@ -190,6 +198,7 @@ function ApplicantsPage() {
             nextStageOf={nextStageOf}
             moveNext={moveNext}
             onOpen={setOpenId}
+            onAdd={() => setAddOpen(true)}
           />
         ) : (
           <PipelineView
@@ -222,22 +231,6 @@ function ApplicantsPage() {
           }}
         />
       )}
-      {addAgentOpen && (
-        <AddAgentModal
-          onClose={() => setAddAgentOpen(false)}
-          onSubmit={async (fields) => {
-            const res = await addAgentFn({ data: fields });
-            setAddAgentOpen(false);
-            qc.invalidateQueries({ queryKey: ["applicants"] });
-            toast.success("Agent added — onboarding invite sent.", {
-              action: {
-                label: "View record",
-                onClick: () => setOpenId(res.id),
-              },
-            });
-          }}
-        />
-      )}
     </PortalShell>
   );
 }
@@ -257,7 +250,31 @@ function ListView({
   nextStageOf,
   moveNext,
   onOpen,
+  onAdd,
 }: any) {
+  const emptyState =
+    view === "pre_licensing" ? (
+      <EmptyState
+        title="No pre-licensing follow-ups"
+        description="Applicants who are hired but not yet licensed show up here so nobody stalls out. Nothing is waiting on you right now."
+      />
+    ) : (
+      <EmptyState
+        title="No applicants match these filters"
+        description="Applicants arrive from your recruiting link, or you can add one by hand. Widen the scope to see the whole organization."
+        action={
+          <>
+            <Button size="sm" variant="secondary" onClick={() => setScope("all")}>
+              View all scopes
+            </Button>
+            <Button size="sm" variant="primary" onClick={onAdd}>
+              <Plus size={14} aria-hidden /> Add Applicant
+            </Button>
+          </>
+        }
+      />
+    );
+
   return (
     <>
       <Toolbar className="mb-3">
@@ -276,17 +293,16 @@ function ListView({
             ))}
           </Select>
         )}
-        <div className="ml-auto">
-          <SegmentedControl
-            size="sm"
-            value={view}
-            onChange={setView}
-            options={[
-              { value: "all", label: "All applicants" },
-              { value: "pre_licensing", label: "Pre-Licensing" },
-            ]}
-          />
-        </div>
+        <ToolbarSpacer />
+        <SegmentedControl
+          size="sm"
+          value={view}
+          onChange={setView}
+          options={[
+            { value: "all", label: "All applicants" },
+            { value: "pre_licensing", label: "Pre-Licensing" },
+          ]}
+        />
       </Toolbar>
 
       {view === "pre_licensing" && (
@@ -299,28 +315,11 @@ function ListView({
       {/* Mobile: stacked cards (the 6-column table is too wide for phones). */}
       <div className="flex flex-col gap-2.5 sm:hidden">
         {isLoading ? (
-          <div className="p-panel p-4 text-center">
-            <span className="p-muted">Loading…</span>
+          <div className="p-panel p-4">
+            <ListSkeleton rows={4} />
           </div>
         ) : (data?.applicants ?? []).length === 0 ? (
-          <div className="p-panel p-2">
-            <EmptyState
-              title="No applicants found"
-              description={
-                view === "pre_licensing" ? (
-                  "No hired-but-unlicensed applicants right now."
-                ) : (
-                  <>
-                    No applicants match the filters. Try switching scope to{" "}
-                    <button className="underline" style={{ color: "var(--p-gold)" }} onClick={() => setScope("all")}>
-                      All
-                    </button>
-                    .
-                  </>
-                )
-              }
-            />
-          </div>
+          <div className="p-panel">{emptyState}</div>
         ) : (
           (data?.applicants ?? []).map((a: any) => {
             const s = a.current_stage_id ? stageMap[a.current_stage_id] : null;
@@ -338,15 +337,7 @@ function ListView({
                       {a.state ? `, ${a.state}` : ""}
                     </div>
                   </button>
-                  {s ? (
-                    <span
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-0.5 text-[12px] font-medium whitespace-nowrap"
-                      style={{ color: s.color, background: `${s.color}18` }}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
-                      {s.name}
-                    </span>
-                  ) : null}
+                  {s ? <StageChip stage={s} /> : null}
                 </div>
 
                 <div className="p-muted mt-2 truncate text-[12.5px]">
@@ -369,7 +360,7 @@ function ListView({
                   {a.hired_at && <Badge tone="green">Hired</Badge>}
                   {!a.hired_at && a.evaluation_completed_at && <Badge>Evaluated</Badge>}
                   {a.calendly_scheduled_at && <Badge>Scheduled</Badge>}
-                  {a.discord_confirmed && <Badge tone="green">Discord ✓</Badge>}
+                  {a.discord_confirmed && <Badge tone="green" dot>Discord</Badge>}
                 </div>
 
                 {view === "pre_licensing" &&
@@ -393,11 +384,16 @@ function ListView({
                     Applied {shortDate(a.created_at)} · Active {relative(a.updated_at)}
                   </span>
                   {next && (
-                    <Button size="sm" variant="ghost" onClick={() => moveNext(a.id, a.current_stage_id)}>
-                      Next →
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-11"
+                      onClick={() => moveNext(a.id, a.current_stage_id)}
+                    >
+                      {next.name} <ChevronRight size={14} aria-hidden />
                     </Button>
                   )}
-                  <Button size="sm" variant="secondary" onClick={() => onOpen(a.id)}>
+                  <Button size="sm" variant="secondary" className="min-h-11" onClick={() => onOpen(a.id)}>
                     Open
                   </Button>
                 </div>
@@ -419,35 +415,18 @@ function ListView({
           </THead>
           <tbody>
             {isLoading ? (
-              <TR>
-                <TD colSpan={6}>
-                  <div className="p-body py-4 text-center">Loading…</div>
-                </TD>
-              </TR>
+              Array.from({ length: 6 }).map((_, i) => (
+                <TR key={i}>
+                  {Array.from({ length: 6 }).map((__, c) => (
+                    <TD key={c}>
+                      <Skeleton className="h-3" style={{ maxWidth: c === 0 ? 160 : 110 }} />
+                    </TD>
+                  ))}
+                </TR>
+              ))
             ) : (data?.applicants ?? []).length === 0 ? (
               <TR>
-                <TD colSpan={6}>
-                  <EmptyState
-                    title="No applicants found"
-                    description={
-                      view === "pre_licensing" ? (
-                        "No hired-but-unlicensed applicants right now."
-                      ) : (
-                        <>
-                          No applicants match the filters. Try switching scope to{" "}
-                          <button
-                            className="underline"
-                            style={{ color: "var(--p-gold)" }}
-                            onClick={() => setScope("all")}
-                          >
-                            All
-                          </button>
-                          .
-                        </>
-                      )
-                    }
-                  />
-                </TD>
+                <TD colSpan={6}>{emptyState}</TD>
               </TR>
             ) : (
               (data?.applicants ?? []).map((a: any) => {
@@ -474,13 +453,7 @@ function ListView({
                     </TD>
                     <TD>
                       {s ? (
-                        <span
-                          className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[12px] font-medium whitespace-nowrap"
-                          style={{ color: s.color, background: `${s.color}18` }}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
-                          {s.name}
-                        </span>
+                        <StageChip stage={s} />
                       ) : (
                         <span className="p-muted">—</span>
                       )}
@@ -503,7 +476,7 @@ function ListView({
                         {a.hired_at && <Badge tone="green">Hired</Badge>}
                         {!a.hired_at && a.evaluation_completed_at && <Badge>Evaluated</Badge>}
                         {a.calendly_scheduled_at && <Badge>Scheduled</Badge>}
-                        {a.discord_confirmed && <Badge tone="green">Discord ✓</Badge>}
+                        {a.discord_confirmed && <Badge tone="green" dot>Discord</Badge>}
                       </div>
                     </TD>
                     <TD>
@@ -527,9 +500,13 @@ function ListView({
                     <TD align="right">
                       <div className="flex items-center justify-end gap-1.5">
                         {next && (
-                          <Button size="sm" variant="ghost" onClick={() => moveNext(a.id, a.current_stage_id)} title={`Move to ${next.name}`}>
-                            Next →
-                          </Button>
+                          <IconButton
+                            size="sm"
+                            label={`Move to ${next.name}`}
+                            onClick={() => moveNext(a.id, a.current_stage_id)}
+                          >
+                            <ChevronRight size={15} aria-hidden />
+                          </IconButton>
                         )}
                         <Button size="sm" variant="secondary" onClick={() => onOpen(a.id)}>Open</Button>
                       </div>
@@ -560,10 +537,38 @@ function PipelineView({
 }) {
   if (isLoading)
     return (
+      <div className="flex gap-3 overflow-x-auto pb-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="min-w-[240px] flex-1">
+            <div
+              className="mb-2 rounded-[10px] border px-2.5 py-2.5"
+              style={{ background: "var(--p-raised)", borderColor: "var(--p-border)" }}
+            >
+              <Skeleton className="h-2.5 w-24" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {Array.from({ length: 3 }).map((__, r) => (
+                <div key={r} className="p-panel px-2.5 py-3">
+                  <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="mt-2 h-2.5 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+
+  if (stages.length === 0)
+    return (
       <Panel>
-        <div className="p-body py-6 text-center">Loading…</div>
+        <EmptyState
+          title="No pipeline stages yet"
+          description="Stages define how a recruit moves from application to licensed agent. An admin can set them up under Admin → Pipeline stages."
+        />
       </Panel>
     );
+
   return (
     <div className="flex gap-3 overflow-x-auto pb-4">
       {stages.map((s: any) => {
@@ -582,14 +587,14 @@ function PipelineView({
                 <span className="p-label truncate">{s.name}</span>
                 <span className="p-muted shrink-0">({items.length})</span>
               </div>
-              <button
+              <IconButton
+                size="sm"
+                label={`Add applicant to ${s.name}`}
                 onClick={() => onAdd(s.id)}
-                title={`Add applicant to ${s.name}`}
-                className="p-focus grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[12px] transition hover:opacity-80"
-                style={{ borderColor: "var(--p-border)", color: "var(--p-text-2)" }}
+                className="h-7 w-7"
               >
-                +
-              </button>
+                <Plus size={14} aria-hidden />
+              </IconButton>
             </div>
             <div className="flex flex-col gap-1.5">
               {items.map((a: any) => (
@@ -611,10 +616,10 @@ function PipelineView({
               ))}
               <button
                 onClick={() => onAdd(s.id)}
-                className="p-focus rounded-[10px] border border-dashed p-2 text-center transition hover:opacity-80"
+                className="p-focus flex items-center justify-center gap-1 rounded-[10px] border border-dashed py-2 text-[12.5px] transition hover:bg-[var(--p-hover)]"
                 style={{ borderColor: "var(--p-border)", color: "var(--p-text-3)" }}
               >
-                <span className="p-muted">+ Add applicant</span>
+                <Plus size={13} aria-hidden /> Add applicant
               </button>
             </div>
           </div>
@@ -638,4 +643,18 @@ function relative(iso: string) {
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h`;
   return `${Math.floor(h / 24)}d`;
+}
+
+/** Pipeline stage pill. Stage colors are admin-configured, so they stay inline. */
+function StageChip({ stage }: { stage: { name: string; color: string } }) {
+  const color = stage.color || "var(--p-gold)";
+  return (
+    <span
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-0.5 text-[12px] font-medium whitespace-nowrap"
+      style={{ color, background: `color-mix(in oklab, ${color} 14%, transparent)` }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} aria-hidden />
+      {stage.name}
+    </span>
+  );
 }

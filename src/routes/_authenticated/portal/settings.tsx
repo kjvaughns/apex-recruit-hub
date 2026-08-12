@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import {
   PageHeader,
@@ -18,6 +17,13 @@ import {
   Badge,
   Avatar,
   btnClass,
+  SectionNav,
+  Tabs,
+  Toggle,
+  TextSkeleton,
+  ListSkeleton,
+  ErrorState,
+  notify,
 } from "@/components/portal/ui";
 import {
   getMe,
@@ -51,54 +57,41 @@ const SECTIONS: { key: Section; label: string }[] = [
 function PortalSettingsPage() {
   const [section, setSection] = useState<Section>("profile");
 
+  const content = (
+    <>
+      {section === "profile" && <ProfileSection />}
+      {section === "security" && <SecuritySection />}
+      {section === "notifications" && <NotificationsSection />}
+      {section === "appearance" && <AppearanceSection />}
+      {section === "recruiting" && <RecruitingSection />}
+    </>
+  );
+
   return (
     <PortalShell>
       <PageBody>
         <PageHeader title="Settings" description="Manage your profile, security, and preferences." />
 
-        <div className="sm:hidden mb-4">
-          <Select value={section} onChange={(e) => setSection(e.target.value as Section)}>
-            {SECTIONS.map((s) => (
-              <option key={s.key} value={s.key}>
-                {s.label}
-              </option>
-            ))}
-          </Select>
+        <div className="mb-4 sm:hidden">
+          <Tabs
+            tabs={SECTIONS.map((s) => ({ value: s.key, label: s.label }))}
+            value={section}
+            onChange={setSection}
+          />
         </div>
 
         <div className="hidden gap-4 sm:grid sm:grid-cols-[200px_minmax(0,1fr)] sm:items-start">
-          <nav className="p-panel flex flex-col gap-0.5 p-1.5">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.key}
-                onClick={() => setSection(s.key)}
-                className="p-focus rounded-[8px] px-3 py-2 text-left text-[13.5px] font-medium transition"
-                style={
-                  section === s.key
-                    ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" }
-                    : { color: "var(--p-text-2)" }
-                }
-              >
-                {s.label}
-              </button>
-            ))}
-          </nav>
-          <div className="min-w-0 space-y-4">
-            {section === "profile" && <ProfileSection />}
-            {section === "security" && <SecuritySection />}
-            {section === "notifications" && <NotificationsSection />}
-            {section === "appearance" && <AppearanceSection />}
-            {section === "recruiting" && <RecruitingSection />}
+          <div className="p-panel p-1.5">
+            <SectionNav
+              items={SECTIONS.map((s) => ({ value: s.key, label: s.label }))}
+              value={section}
+              onChange={setSection}
+            />
           </div>
+          <div className="min-w-0 space-y-4">{content}</div>
         </div>
 
-        <div className="space-y-4 sm:hidden">
-          {section === "profile" && <ProfileSection />}
-          {section === "security" && <SecuritySection />}
-          {section === "notifications" && <NotificationsSection />}
-          {section === "appearance" && <AppearanceSection />}
-          {section === "recruiting" && <RecruitingSection />}
-        </div>
+        <div className="space-y-4 sm:hidden">{content}</div>
       </PageBody>
     </PortalShell>
   );
@@ -148,9 +141,9 @@ function ProfileSection() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Profile saved.");
+      notify.success("Profile saved.");
     },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not save profile."),
+    onError: () => notify.error("Could not save your profile.", "Please try again."),
   });
 
   async function onAvatar(file: File) {
@@ -168,12 +161,28 @@ function ProfileSection() {
       await saveFn({ data: { avatar_url: url } });
       setAvatarUrl(url);
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Photo updated.");
-    } catch (e) {
-      toast.error((e as Error).message || "Upload failed.");
+      notify.success("Photo updated.");
+    } catch {
+      notify.error("Could not upload your photo.", "Please try a different image.");
     } finally {
       setUploading(false);
     }
+  }
+
+  if (meQ.isError) {
+    return (
+      <Panel title="Profile">
+        <ErrorState description="We couldn't load your profile." onRetry={() => meQ.refetch()} />
+      </Panel>
+    );
+  }
+
+  if (meQ.isLoading) {
+    return (
+      <Panel title="Profile">
+        <TextSkeleton lines={5} />
+      </Panel>
+    );
   }
 
   return (
@@ -216,8 +225,8 @@ function ProfileSection() {
         </Field>
       </FormGrid>
 
-      <Button variant="primary" className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
-        {save.isPending ? "Saving…" : "Save profile"}
+      <Button variant="primary" className="mt-5" loading={save.isPending} onClick={() => save.mutate()}>
+        Save profile
       </Button>
     </Panel>
   );
@@ -254,9 +263,9 @@ function SecuritySection() {
       setCurrent("");
       setPw("");
       setConfirm("");
-      toast.success("Password updated.");
-    } catch (e) {
-      toast.error((e as Error).message || "Could not update password.");
+      notify.success("Password updated.");
+    } catch {
+      notify.error("Could not update your password.", "Check your current password and try again.");
     } finally {
       setBusy(false);
     }
@@ -264,12 +273,12 @@ function SecuritySection() {
 
   return (
     <div className="space-y-4">
-      <Panel title="Change password">
+      <Panel title="Change password" description="You'll need your current password to set a new one.">
         <div className="grid gap-4">
-          <Field label="Current password">
+          <Field label="Current password" hint="Confirms it's really you before we change anything.">
             <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="Your current password" />
           </Field>
-          <Field label="New password">
+          <Field label="New password" hint="At least 8 characters.">
             <Input
               type="password"
               value={pw}
@@ -277,27 +286,25 @@ function SecuritySection() {
               placeholder="At least 8 characters"
             />
           </Field>
-          <Field label="Confirm new password">
+          <Field
+            label="Confirm new password"
+            error={confirm && pw !== confirm ? "Passwords don't match." : undefined}
+          >
             <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           </Field>
-          {confirm && pw !== confirm && (
-            <p className="text-[13px]" style={{ color: "var(--p-red)" }}>
-              Passwords don't match.
-            </p>
-          )}
-          <Button variant="primary" className="w-fit" onClick={changePassword} disabled={!valid || busy}>
-            {busy ? "Updating…" : "Update password"}
+          <Button variant="primary" className="w-fit" loading={busy} disabled={!valid} onClick={changePassword}>
+            Update password
           </Button>
         </div>
       </Panel>
 
-      <Panel title="Session">
-        <p className="p-secondary">
-          Last sign-in:{" "}
-          <span style={{ color: "var(--p-text)" }}>
+      <Panel title="Session" description="Where you're currently signed in.">
+        <div className="flex items-center justify-between gap-4 py-1">
+          <span className="p-body">Last sign-in</span>
+          <span className="p-secondary" style={{ color: "var(--p-text)" }}>
             {lastSignIn ? new Date(lastSignIn).toLocaleString() : "—"}
           </span>
-        </p>
+        </div>
       </Panel>
     </div>
   );
@@ -333,10 +340,26 @@ function NotificationsSection() {
     mutationFn: () => saveFn({ data: { prefs } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Notification preferences saved.");
+      notify.success("Notification preferences saved.");
     },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not save."),
+    onError: () => notify.error("Could not save your preferences.", "Please try again."),
   });
+
+  if (meQ.isError) {
+    return (
+      <Panel title="Notifications">
+        <ErrorState description="We couldn't load your preferences." onRetry={() => meQ.refetch()} />
+      </Panel>
+    );
+  }
+
+  if (meQ.isLoading) {
+    return (
+      <Panel title="Notifications">
+        <ListSkeleton rows={NOTIF_EVENTS.length} />
+      </Panel>
+    );
+  }
 
   return (
     <Panel
@@ -345,34 +368,19 @@ function NotificationsSection() {
     >
       <div className="flex flex-col divide-y" style={{ borderColor: "var(--p-border)" }}>
         {NOTIF_EVENTS.map((e) => (
-          <div key={e.key} className="flex items-center justify-between gap-4 py-3" style={{ borderColor: "var(--p-border)" }}>
-            <span className="p-body">{e.label}</span>
-            <Toggle on={!!prefs[e.key]} onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))} />
+          <div key={e.key} className="py-3">
+            <Toggle
+              checked={!!prefs[e.key]}
+              onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))}
+              label={e.label}
+            />
           </div>
         ))}
       </div>
-      <Button variant="primary" className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
-        {save.isPending ? "Saving…" : "Save preferences"}
+      <Button variant="primary" className="mt-5" loading={save.isPending} onClick={() => save.mutate()}>
+        Save preferences
       </Button>
     </Panel>
-  );
-}
-
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      onClick={() => onChange(!on)}
-      className="p-focus relative h-6 w-11 flex-none rounded-full border transition-colors"
-      style={{
-        background: on ? "var(--p-gold)" : "var(--p-raised)",
-        borderColor: on ? "var(--p-gold)" : "var(--p-border)",
-      }}
-    >
-      <span
-        className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
-        style={{ transform: on ? "translateX(22px)" : "translateX(2px)" }}
-      />
-    </button>
   );
 }
 
@@ -425,7 +433,9 @@ function RecruitingSection() {
 
       <Panel title="Licensed scheduling">
         {q.isLoading ? (
-          <div className="p-muted">Loading…</div>
+          <TextSkeleton lines={3} />
+        ) : q.isError ? (
+          <ErrorState description="We couldn't load this setting." onRetry={() => q.refetch()} />
         ) : !canEdit ? (
           <p className="p-secondary">
             Your account isn't permitted to schedule licensed applicants. Ask an administrator to

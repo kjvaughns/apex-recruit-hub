@@ -12,11 +12,14 @@ import {
   useContext,
   useEffect,
   type ButtonHTMLAttributes,
+  type CSSProperties,
   type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
+import { toast } from "sonner";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
@@ -38,15 +41,16 @@ export function PageHeader({
 }) {
   return (
     <div className={cn("mb-5", className)}>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="p-title truncate">{title}</h1>
+          <h1 className="p-title">{title}</h1>
           {description && (
             <p className="p-secondary mt-1 max-w-2xl leading-snug">{description}</p>
           )}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
       </div>
+
       {children && <div className="mt-4">{children}</div>}
     </div>
   );
@@ -149,38 +153,99 @@ export function MetricRow({ children, className }: { children: ReactNode; classN
 /* Buttons                                                                    */
 /* -------------------------------------------------------------------------- */
 
-type BtnVariant = "primary" | "secondary" | "ghost" | "destructive";
+type BtnVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive";
 type BtnSize = "sm" | "md";
 
 export function Button({
   variant = "secondary",
   size = "md",
+  loading,
   className,
+  children,
+  disabled,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: BtnVariant; size?: BtnSize }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: BtnVariant;
+  size?: BtnSize;
+  loading?: boolean;
+}) {
   return (
-    <button className={cn(btnClass(variant, size), className)} {...rest} />
+    <button
+      className={cn(btnClass(variant, size), className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...rest}
+    >
+      {loading && <Spinner />}
+      {children}
+    </button>
+  );
+}
+
+/** Small inline spinner used by Button's loading state. */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-[1.5px] border-current border-t-transparent",
+        className,
+      )}
+    />
+  );
+}
+
+/** Icon-only button. `label` is required so it always has an accessible name. */
+export function IconButton({
+  label,
+  variant = "ghost",
+  size = "md",
+  className,
+  children,
+  ...rest
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  label: string;
+  variant?: BtnVariant;
+  size?: BtnSize;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className={cn(
+        btnClass(variant, size),
+        size === "sm" ? "w-8 px-0" : "h-[36px] w-[36px] px-0",
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </button>
   );
 }
 
 export function btnClass(variant: BtnVariant = "secondary", size: BtnSize = "md") {
   const base =
-    "p-focus inline-flex items-center justify-center gap-1.5 rounded-[10px] border font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 whitespace-nowrap";
+    "p-focus inline-flex items-center justify-center gap-1.5 rounded-[10px] border font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100 whitespace-nowrap";
   const sizes = size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-[36px] px-3.5 text-[13.5px]";
   const variants: Record<BtnVariant, string> = {
     primary: "border-transparent text-[#0B0B0C] hover:brightness-[1.06]",
     secondary: "hover:brightness-[1.08]",
+    outline: "bg-transparent hover:bg-[var(--p-hover)]",
     ghost: "border-transparent bg-transparent hover:bg-[var(--p-hover)]",
     destructive: "border-transparent text-white hover:brightness-[1.06]",
   };
   const styleByVariant: Record<BtnVariant, string> = {
     primary: "[background:var(--p-gold)]",
     secondary: "[background:var(--p-raised)] [border-color:var(--p-border)] [color:var(--p-text)]",
+    outline: "[border-color:var(--p-border)] [color:var(--p-text)]",
     ghost: "[color:var(--p-text-2)]",
     destructive: "[background:var(--p-red)]",
   };
   return cn(base, sizes, variants[variant], styleByVariant[variant]);
 }
+
 
 /* -------------------------------------------------------------------------- */
 /* Toolbar                                                                    */
@@ -563,19 +628,19 @@ export function SearchField({
   className?: string;
 }) {
   return (
-    <div className={cn("relative min-w-0 flex-1", className)}>
-      <span
-        className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-[13px]"
+    <div className={cn("relative min-w-0 basis-full sm:min-w-[220px] sm:flex-1 sm:basis-auto", className)}>
+      <Search
+        size={14}
+        className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
         style={{ color: "var(--p-text-3)" }}
         aria-hidden
-      >
-        ⌕
-      </span>
+      />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={cn(controlClass, "h-9 pl-7 text-[13.5px]")}
+        aria-label={placeholder}
+        className={cn(controlClass, "h-9 pl-8 text-[13.5px]")}
       />
     </div>
   );
@@ -697,10 +762,10 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="p-focus grid h-7 w-7 shrink-0 place-items-center rounded-md text-[14px] hover:bg-[var(--p-hover)]"
+              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
               style={{ color: "var(--p-text-2)" }}
             >
-              ✕
+              <X size={15} aria-hidden />
             </button>
           </header>
           <div className={cn("min-h-0 flex-1 overflow-y-auto p-4", bodyClassName)}>{children}</div>
@@ -734,3 +799,394 @@ export function Stack({ children, className }: { children: ReactNode; className?
 export function PageBody({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn("p-4 md:p-6", className)}>{children}</div>;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Skeletons                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/** Base shimmer block. Give it a width/height via className. */
+export function Skeleton({ className, style }: { className?: string; style?: CSSProperties }) {
+  return (
+    <span
+      aria-hidden
+      className={cn("block animate-pulse rounded-[6px]", className)}
+      style={{ background: "var(--p-hover)", ...style }}
+    />
+  );
+}
+
+export function TextSkeleton({ lines = 3, className }: { lines?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-2", className)}>
+      {Array.from({ length: lines }).map((_, i) => (
+        <Skeleton key={i} className="h-3" style={{ width: i === lines - 1 ? "60%" : "100%" }} />
+      ))}
+    </div>
+  );
+}
+
+export function MetricSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <MetricRow>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="p-panel px-4 py-3">
+          <Skeleton className="h-2.5 w-20" />
+          <Skeleton className="mt-3 h-6 w-14" />
+          <Skeleton className="mt-2.5 h-2.5 w-24" />
+        </div>
+      ))}
+    </MetricRow>
+  );
+}
+
+export function CardSkeleton({ lines = 3, className }: { lines?: number; className?: string }) {
+  return (
+    <div className={cn("p-panel p-4", className)}>
+      <Skeleton className="h-3 w-32" />
+      <div className="mt-4">
+        <TextSkeleton lines={lines} />
+      </div>
+    </div>
+  );
+}
+
+/** Rows sized to a compact table, rendered inside the standard table surface. */
+export function TableSkeleton({ rows = 6, cols = 4 }: { rows?: number; cols?: number }) {
+  return (
+    <TableWrap>
+      <div className="px-3 py-2.5" style={{ background: "var(--p-hover)" }}>
+        <Skeleton className="h-2.5 w-24" />
+      </div>
+      <div>
+        {Array.from({ length: rows }).map((_, r) => (
+          <div
+            key={r}
+            className="flex items-center gap-4 border-b px-3 py-3 last:border-b-0"
+            style={{ borderColor: "var(--p-border)" }}
+          >
+            {Array.from({ length: cols }).map((_, c) => (
+              <Skeleton
+                key={c}
+                className="h-3 flex-1"
+                style={{ maxWidth: c === 0 ? 180 : 120, opacity: 1 - c * 0.12 }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </TableWrap>
+  );
+}
+
+/** List/feed skeleton for panels that render stacked rows rather than a table. */
+export function ListSkeleton({ rows = 5, className }: { rows?: number; className?: string }) {
+  return (
+    <div className={cn("space-y-3", className)}>
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-3 w-1/3" />
+            <Skeleton className="h-2.5 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Error state                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Friendly failure state. Raw backend messages are never shown — pass a plain
+ * sentence and, where the caller has a query, an `onRetry`.
+ */
+export function ErrorState({
+  title = "Something went wrong",
+  description = "We couldn't load this right now. Please try again.",
+  onRetry,
+  className,
+}: {
+  title?: string;
+  description?: ReactNode;
+  onRetry?: () => void;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn("flex flex-col items-center justify-center px-6 py-10 text-center", className)}
+      role="alert"
+    >
+      <div
+        className="mb-3 grid h-9 w-9 place-items-center rounded-[10px] text-[15px]"
+        style={{ background: "rgba(220,106,98,0.12)", color: "var(--p-red)" }}
+        aria-hidden
+      >
+        !
+      </div>
+      <div className="p-card-title">{title}</div>
+      <p className="p-secondary mt-1 max-w-sm leading-snug">{description}</p>
+      {onRetry && (
+        <Button variant="secondary" size="sm" className="mt-3" onClick={onRetry}>
+          Try again
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Drawer (right side on desktop, bottom sheet on mobile)                     */
+/* -------------------------------------------------------------------------- */
+
+export function Drawer({
+  title,
+  description,
+  onClose,
+  footer,
+  children,
+  width = 520,
+  bodyClassName,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  onClose: () => void;
+  footer?: ReactNode;
+  children: ReactNode;
+  width?: number;
+  bodyClassName?: string;
+}) {
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+
+  return (
+    <ModalCtx.Provider value={{ close: onClose }}>
+      <div className="fixed inset-0 z-[80] flex items-end sm:items-stretch sm:justify-end">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} aria-hidden />
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="p-panel relative z-10 flex max-h-[92vh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[var(--drawer-w)] sm:rounded-none sm:border-y-0 sm:border-r-0"
+          style={{ "--drawer-w": `${width}px` } as CSSProperties}
+        >
+          <header
+            className="flex items-start justify-between gap-3 border-b px-4 py-3"
+            style={{ borderColor: "var(--p-border)" }}
+          >
+            <div className="min-w-0">
+              <h2 className="p-section-title truncate">{title}</h2>
+              {description && <p className="p-secondary mt-0.5 leading-snug">{description}</p>}
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
+              style={{ color: "var(--p-text-2)" }}
+            >
+              <X size={15} aria-hidden />
+            </button>
+          </header>
+          <div className={cn("min-h-0 flex-1 overflow-y-auto p-4", bodyClassName)}>{children}</div>
+          {footer && (
+            <footer
+              className="flex flex-wrap items-center justify-end gap-2 border-t px-4 py-3"
+              style={{ borderColor: "var(--p-border)" }}
+            >
+              {footer}
+            </footer>
+          )}
+        </div>
+      </div>
+    </ModalCtx.Provider>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Toggle / checkbox / radio                                                  */
+/* -------------------------------------------------------------------------- */
+
+export function Toggle({
+  checked,
+  onChange,
+  label,
+  description,
+  disabled,
+  className,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label?: ReactNode;
+  description?: ReactNode;
+  disabled?: boolean;
+  className?: string;
+}) {
+  const control = (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={typeof label === "string" ? label : undefined}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "p-focus relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-45",
+      )}
+      style={{
+        background: checked ? "var(--p-gold)" : "var(--p-hover)",
+        borderColor: checked ? "var(--p-gold)" : "var(--p-border)",
+      }}
+    >
+      <span
+        className="ml-[2px] h-[16px] w-[16px] rounded-full transition-transform"
+        style={{
+          background: checked ? "#0B0B0C" : "var(--p-text-2)",
+          transform: checked ? "translateX(16px)" : "translateX(0)",
+        }}
+        aria-hidden
+      />
+    </button>
+  );
+  if (!label) return <span className={className}>{control}</span>;
+  return (
+    <div className={cn("flex items-start justify-between gap-4", className)}>
+      <div className="min-w-0">
+        <div className="text-[13.5px] font-medium">{label}</div>
+        {description && <div className="p-muted mt-0.5 leading-snug">{description}</div>}
+      </div>
+      {control}
+    </div>
+  );
+}
+
+export function Checkbox({
+  checked,
+  onChange,
+  label,
+  disabled,
+  className,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label?: ReactNode;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <label className={cn("inline-flex cursor-pointer items-center gap-2 text-[13.5px]", className)}>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="p-focus h-4 w-4 shrink-0 cursor-pointer rounded-[4px] border accent-[var(--p-gold)] disabled:cursor-not-allowed"
+        style={{ borderColor: "var(--p-border)" }}
+      />
+      {label}
+    </label>
+  );
+}
+
+export function Radio({
+  checked,
+  onChange,
+  label,
+  name,
+  disabled,
+  className,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label?: ReactNode;
+  name?: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <label className={cn("inline-flex cursor-pointer items-center gap-2 text-[13.5px]", className)}>
+      <input
+        type="radio"
+        name={name}
+        checked={checked}
+        disabled={disabled}
+        onChange={onChange}
+        className="p-focus h-4 w-4 shrink-0 cursor-pointer accent-[var(--p-gold)] disabled:cursor-not-allowed"
+      />
+      {label}
+    </label>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Section nav (settings / admin sub-navigation)                              */
+/* -------------------------------------------------------------------------- */
+
+export function SectionNav<T extends string>({
+  items,
+  value,
+  onChange,
+  className,
+}: {
+  items: { value: T; label: ReactNode; hint?: ReactNode }[];
+  value: T;
+  onChange: (v: T) => void;
+  className?: string;
+}) {
+  return (
+    <nav className={cn("flex flex-col gap-0.5", className)} aria-label="Sections">
+      {items.map((it) => {
+        const active = it.value === value;
+        return (
+          <button
+            key={it.value}
+            type="button"
+            aria-current={active ? "page" : undefined}
+            onClick={() => onChange(it.value)}
+            className="p-focus flex min-h-[38px] w-full items-center rounded-[10px] px-3 text-left text-[13.5px] font-medium transition"
+            style={
+              active
+                ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+                : { color: "var(--p-text-2)" }
+            }
+          >
+            {it.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Notifications                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Single toast vocabulary for the portal. Errors never surface raw backend
+ * text — callers pass a plain sentence; unknown errors fall back to a generic
+ * message.
+ */
+type NotifyAction = { label: string; onClick: () => void };
+
+export const notify = {
+  success: (message: string, description?: string, action?: NotifyAction) =>
+    toast.success(message, { description, action }),
+  info: (message: string, description?: string, action?: NotifyAction) =>
+    toast(message, { description, action }),
+  warning: (message: string, description?: string, action?: NotifyAction) =>
+    toast.warning(message, { description, action }),
+  error: (message = "Something went wrong", description?: string, action?: NotifyAction) =>
+    toast.error(message, { description, action }),
+};

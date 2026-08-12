@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 import { Badge as UiBadge, type BadgeTone } from "@/components/portal/ui";
 
 export const TYPE_META: Record<string, { label: string; color: string; icon: string; tone: BadgeTone }> = {
-  video:    { label: "Video",    color: "#E5484D", icon: "▶", tone: "red" },
-  pdf:      { label: "PDF",      color: "#4C7DF0", icon: "▤", tone: "blue" },
-  training: { label: "Training", color: "#C9A84C", icon: "★", tone: "gold" },
-  guide:    { label: "Guide",    color: "#46A758", icon: "▦", tone: "green" },
-  course:   { label: "Course",   color: "#C9A84C", icon: "◈", tone: "gold" },
+  video:    { label: "Video",    color: "var(--p-red)",   icon: "▶", tone: "red" },
+  pdf:      { label: "PDF",      color: "var(--p-blue)",  icon: "▤", tone: "blue" },
+  training: { label: "Training", color: "var(--p-gold)",  icon: "★", tone: "gold" },
+  guide:    { label: "Guide",    color: "var(--p-green)", icon: "▦", tone: "green" },
+  course:   { label: "Course",   color: "var(--p-gold)",  icon: "◈", tone: "gold" },
 };
 
 export function formatDisplayDate(d?: string | null) {

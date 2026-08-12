@@ -2,9 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { ChevronDown, ChevronRight, Users } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getOrganizationTree, type OrgNode } from "@/lib/portal.functions";
-import { PageHeader, PageBody, Panel, Avatar, Badge, EmptyState, type BadgeTone } from "@/components/portal/ui";
+import {
+  PageHeader,
+  PageBody,
+  Panel,
+  Avatar,
+  Badge,
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+  IconButton,
+  type BadgeTone,
+} from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/organization")({
   head: () => ({
@@ -48,13 +60,21 @@ function OrganizationPage() {
     <PortalShell>
       <PageBody>
         <PageHeader title="Organization" description="Your reporting hierarchy and downline." />
-        {q.isLoading ? (
-          <Panel bodyClassName="py-10">
-            <div className="p-secondary text-center">Loading…</div>
+        {q.isError ? (
+          <Panel>
+            <ErrorState description="We couldn't load your organization right now." onRetry={() => q.refetch()} />
+          </Panel>
+        ) : q.isLoading ? (
+          <Panel bodyClassName="p-4">
+            <ListSkeleton rows={6} />
           </Panel>
         ) : nodes.length === 0 ? (
           <Panel>
-            <EmptyState title="No downline yet" description="Agents you recruit or manage will appear here." />
+            <EmptyState
+              icon={<Users size={16} />}
+              title="No downline yet"
+              description="Agents you recruit or manage will appear here, organized by reporting line, as soon as they join."
+            />
           </Panel>
         ) : (
           <Panel
@@ -85,6 +105,8 @@ function TreeNode({
 }) {
   const kids = childrenOf[node.id] ?? [];
   const [open, setOpen] = useState(depth < 2);
+  const isLeaderRole = node.role === "manager" || node.role === "leader" || node.role === "admin";
+  const active = (node as any).active !== false;
   return (
     <div>
       <div
@@ -93,24 +115,27 @@ function TreeNode({
       >
         <div className="flex min-w-0 items-center gap-2">
           {kids.length > 0 ? (
-            <button
+            <IconButton
+              label={open ? "Collapse" : "Expand"}
+              size="sm"
+              className="h-5 w-5"
               onClick={() => setOpen((v) => !v)}
-              className="p-focus grid h-5 w-5 flex-none place-items-center rounded text-[12px]"
-              style={{ color: "var(--p-text-3)" }}
-              aria-label={open ? "Collapse" : "Expand"}
             >
-              {open ? "▾" : "▸"}
-            </button>
+              {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+            </IconButton>
           ) : (
             <span className="w-5 flex-none text-center" style={{ color: "var(--p-text-3)" }}>
               ·
             </span>
           )}
           <Avatar name={node.name} size={26} />
-          <span className="truncate text-[13.5px]">{node.name}</span>
+          <span className={`truncate text-[13.5px] ${isLeaderRole ? "font-semibold" : ""}`}>{node.name}</span>
           <Badge tone={ROLE_TONE[node.role ?? ""] ?? "neutral"} className="capitalize shrink-0">
             {node.role ?? "—"}
           </Badge>
+          {!active && (
+            <Badge tone="neutral" className="shrink-0">Inactive</Badge>
+          )}
           {node.team_name && (
             <span className="p-muted hidden truncate sm:inline">· {node.team_name}</span>
           )}

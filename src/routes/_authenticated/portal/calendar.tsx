@@ -2,8 +2,22 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { PageHeader, PageBody, Toolbar, ToolbarSpacer, SegmentedControl, Button, Badge, Modal } from "@/components/portal/ui";
+import {
+  PageHeader,
+  PageBody,
+  Toolbar,
+  ToolbarSpacer,
+  SegmentedControl,
+  Button,
+  IconButton,
+  Badge,
+  Modal,
+  ErrorState,
+  EmptyState,
+  Skeleton,
+} from "@/components/portal/ui";
 import { getCalendar, toggleTask, deleteTask } from "@/lib/portal.functions";
 
 export const Route = createFileRoute("/_authenticated/portal/calendar")({
@@ -120,11 +134,15 @@ function CalendarPage() {
             onChange={(v) => setScope(v as Scope)}
           />
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={() => shift(-1)}>←</Button>
+            <IconButton label="Previous" size="sm" onClick={() => shift(-1)}>
+              <ChevronLeft size={16} />
+            </IconButton>
             <Button variant="ghost" size="sm" onClick={() => setCursor(new Date())}>Today</Button>
-            <Button variant="ghost" size="sm" onClick={() => shift(1)}>→</Button>
+            <IconButton label="Next" size="sm" onClick={() => shift(1)}>
+              <ChevronRight size={16} />
+            </IconButton>
           </div>
-          <span className="p-card-title ml-2">{rangeLabel}</span>
+          <span className="p-card-title ml-1 truncate">{rangeLabel}</span>
           <ToolbarSpacer />
           <div className="p-muted flex items-center gap-3 text-[11.5px]">
             <span className="inline-flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--p-gold)" }} /> Appointments</span>
@@ -132,15 +150,49 @@ function CalendarPage() {
           </div>
         </Toolbar>
 
-        {view === "month" && <MonthView cursor={cursor} byDay={byDay} onSelect={setSelected} />}
-        {view === "week" && <WeekView cursor={cursor} byDay={byDay} onSelect={setSelected} />}
-        {view === "day" && <DayView cursor={cursor} byDay={byDay} onSelect={setSelected} />}
-
-        {q.isLoading && <div className="p-muted mt-4 text-center">Loading…</div>}
+        {q.isError ? (
+          <div className="p-panel">
+            <ErrorState description="We couldn't load your calendar right now." onRetry={() => q.refetch()} />
+          </div>
+        ) : q.isLoading ? (
+          <CalendarSkeleton view={view} />
+        ) : (
+          <>
+            {view === "month" && <MonthView cursor={cursor} byDay={byDay} onSelect={setSelected} hasAny={events.length > 0} />}
+            {view === "week" && <WeekView cursor={cursor} byDay={byDay} onSelect={setSelected} />}
+            {view === "day" && <DayView cursor={cursor} byDay={byDay} onSelect={setSelected} />}
+          </>
+        )}
       </PageBody>
 
       {selected && <EventModal event={selected} onClose={() => setSelected(null)} />}
     </PortalShell>
+  );
+}
+
+function CalendarSkeleton({ view }: { view: View }) {
+  if (view === "day") {
+    return (
+      <div className="p-panel p-4 space-y-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-9 w-full" />
+        ))}
+      </div>
+    );
+  }
+  const cols = view === "week" ? 7 : 7;
+  const rows = view === "week" ? 1 : 5;
+  return (
+    <div className="min-w-[640px] overflow-x-auto sm:min-w-0">
+      <div className="grid gap-px overflow-hidden rounded-[10px] border" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))`, borderColor: "var(--p-border)", background: "var(--p-border)" }}>
+        {Array.from({ length: cols * rows }).map((_, i) => (
+          <div key={i} className="min-h-[100px] space-y-1.5 p-2" style={{ background: "var(--p-panel)" }}>
+            <Skeleton className="h-2.5 w-6" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -157,7 +209,7 @@ function Chip({ e, onSelect, compact }: { e: CalEvent; onSelect: (e: CalEvent) =
   );
 }
 
-function MonthView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<string, CalEvent[]>; onSelect: (e: CalEvent) => void }) {
+function MonthView({ cursor, byDay, onSelect, hasAny }: { cursor: Date; byDay: Record<string, CalEvent[]>; onSelect: (e: CalEvent) => void; hasAny: boolean }) {
   const today = new Date().toDateString();
   const days = useMemo(() => {
     const first = startOfMonth(cursor);
@@ -170,43 +222,53 @@ function MonthView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<st
     return cells;
   }, [cursor]);
 
+  if (!hasAny) {
+    return (
+      <div className="p-panel">
+        <EmptyState
+          icon={<CalendarDays size={16} />}
+          title="Nothing scheduled this month"
+          description="Appointments booked with applicants and tasks with due dates will show up here automatically."
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Mobile agenda */}
       <div className="space-y-2 sm:hidden">
-        {days.filter((d): d is Date => !!d && (byDay[d.toDateString()]?.length ?? 0) > 0).length === 0 ? (
-          <div className="p-panel p-6 text-center"><span className="p-muted">No appointments or tasks this month.</span></div>
-        ) : (
-          days.filter((d): d is Date => !!d && (byDay[d.toDateString()]?.length ?? 0) > 0).map((d) => (
-            <div key={d.toISOString()} className="p-panel p-3">
-              <div className="mb-2 text-[14px] font-semibold" style={{ color: d.toDateString() === today ? "var(--p-gold)" : "var(--p-text)" }}>
-                {d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-              </div>
-              <div className="space-y-1.5">{(byDay[d.toDateString()] ?? []).map((e) => <Chip key={e.key} e={e} onSelect={onSelect} />)}</div>
+        {days.filter((d): d is Date => !!d && (byDay[d.toDateString()]?.length ?? 0) > 0).map((d) => (
+          <div key={d.toISOString()} className="p-panel p-3">
+            <div className="mb-2 text-[14px] font-semibold" style={{ color: d.toDateString() === today ? "var(--p-gold)" : "var(--p-text)" }}>
+              {d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
             </div>
-          ))
-        )}
+            <div className="space-y-1.5">{(byDay[d.toDateString()] ?? []).map((e) => <Chip key={e.key} e={e} onSelect={onSelect} />)}</div>
+          </div>
+        ))}
       </div>
 
       {/* Desktop grid */}
-      <div className="hidden grid-cols-7 gap-px overflow-hidden rounded-[10px] border sm:grid" style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}>
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} className="p-label px-2 py-2 uppercase tracking-[0.08em]" style={{ background: "var(--p-hover)" }}>{d}</div>
-        ))}
-        {days.map((d, i) => {
-          if (!d) return <div key={i} className="min-h-[110px]" style={{ background: "var(--p-panel)" }} />;
-          const events = byDay[d.toDateString()] ?? [];
-          const isToday = d.toDateString() === today;
-          return (
-            <div key={i} className="min-h-[110px] p-2" style={{ background: "var(--p-panel)", boxShadow: isToday ? "inset 0 0 0 1px var(--p-gold)" : undefined }}>
-              <div className="text-[12px] font-semibold" style={{ color: isToday ? "var(--p-gold)" : "var(--p-text)" }}>{d.getDate()}</div>
-              <div className="mt-1 space-y-1">
-                {events.slice(0, 3).map((e) => <Chip key={e.key} e={e} onSelect={onSelect} compact />)}
-                {events.length > 3 && <div className="p-muted text-[10px]">+{events.length - 3} more</div>}
+      <div className="hidden overflow-x-auto sm:block">
+        <div className="grid min-w-[720px] grid-cols-7 gap-px overflow-hidden rounded-[10px] border" style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}>
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            <div key={d} className="p-label px-2 py-2 uppercase tracking-[0.08em]" style={{ background: "var(--p-hover)" }}>{d}</div>
+          ))}
+          {days.map((d, i) => {
+            if (!d) return <div key={i} className="min-h-[110px]" style={{ background: "var(--p-panel)" }} />;
+            const events = byDay[d.toDateString()] ?? [];
+            const isToday = d.toDateString() === today;
+            return (
+              <div key={i} className="min-h-[110px] p-2" style={{ background: "var(--p-panel)", boxShadow: isToday ? "inset 0 0 0 1px var(--p-gold)" : undefined }}>
+                <div className="text-[12px] font-semibold" style={{ color: isToday ? "var(--p-gold)" : "var(--p-text)" }}>{d.getDate()}</div>
+                <div className="mt-1 space-y-1">
+                  {events.slice(0, 3).map((e) => <Chip key={e.key} e={e} onSelect={onSelect} compact />)}
+                  {events.length > 3 && <div className="p-muted text-[10px]">+{events.length - 3} more</div>}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </>
   );
@@ -216,22 +278,32 @@ function WeekView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<str
   const today = new Date().toDateString();
   const start = startOfWeek(cursor);
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  const hasAny = days.some((d) => (byDay[d.toDateString()]?.length ?? 0) > 0);
+  if (!hasAny) {
+    return (
+      <div className="p-panel">
+        <EmptyState icon={<CalendarDays size={16} />} title="Nothing scheduled this week" description="Appointments and tasks due this week will appear here." />
+      </div>
+    );
+  }
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-7 sm:gap-px sm:overflow-hidden sm:rounded-[10px] sm:border" style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}>
-      {days.map((d) => {
-        const events = byDay[d.toDateString()] ?? [];
-        const isToday = d.toDateString() === today;
-        return (
-          <div key={d.toISOString()} className="p-panel min-h-[160px] p-2 sm:rounded-none sm:border-0">
-            <div className="mb-1.5 text-[12px] font-semibold" style={{ color: isToday ? "var(--p-gold)" : "var(--p-text)" }}>
-              {d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" })}
+    <div className="overflow-x-auto">
+      <div className="grid min-w-[720px] grid-cols-7 gap-px overflow-hidden rounded-[10px] border sm:min-w-0" style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}>
+        {days.map((d) => {
+          const events = byDay[d.toDateString()] ?? [];
+          const isToday = d.toDateString() === today;
+          return (
+            <div key={d.toISOString()} className="min-h-[160px] p-2" style={{ background: "var(--p-panel)" }}>
+              <div className="mb-1.5 text-[12px] font-semibold" style={{ color: isToday ? "var(--p-gold)" : "var(--p-text)" }}>
+                {d.toLocaleDateString(undefined, { weekday: "short", day: "numeric" })}
+              </div>
+              <div className="space-y-1">
+                {events.length === 0 ? <div className="p-muted text-[11px]">—</div> : events.map((e) => <Chip key={e.key} e={e} onSelect={onSelect} compact />)}
+              </div>
             </div>
-            <div className="space-y-1">
-              {events.length === 0 ? <div className="p-muted text-[11px]">—</div> : events.map((e) => <Chip key={e.key} e={e} onSelect={onSelect} compact />)}
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -241,7 +313,7 @@ function DayView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<stri
   return (
     <div className="p-panel p-4">
       {events.length === 0 ? (
-        <div className="p-muted py-6 text-center">Nothing scheduled for this day.</div>
+        <EmptyState icon={<CalendarDays size={16} />} title="Nothing scheduled for this day" description="Appointments and tasks due today will appear here." />
       ) : (
         <div className="space-y-2">{events.map((e) => <Chip key={e.key} e={e} onSelect={onSelect} />)}</div>
       )}
@@ -282,7 +354,7 @@ function EventModal({ event, onClose }: { event: CalEvent; onClose: () => void }
             <Button variant="ghost" onClick={onClose}>Close</Button>
             {event.applicantId && (
               <Button variant="primary" onClick={() => { onClose(); navigate({ to: "/portal/applicants", search: { open: event.applicantId } }); }}>
-                Open applicant →
+                Open applicant
               </Button>
             )}
           </>
