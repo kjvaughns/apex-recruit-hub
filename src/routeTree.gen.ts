@@ -43,6 +43,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
+import { Route as ApiPublicHooksEmailDispatchRouteImport } from './routes/api/public/hooks/email-dispatch'
 import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
 import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
 import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
@@ -250,6 +251,12 @@ const ApiPublicWebhooksCalendlyRoute =
     path: '/api/public/webhooks/calendly',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEmailDispatchRoute =
+  ApiPublicHooksEmailDispatchRouteImport.update({
+    id: '/api/public/hooks/email-dispatch',
+    path: '/api/public/hooks/email-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPortalResourcesPresentationsRoute =
   AuthenticatedPortalResourcesPresentationsRouteImport.update({
     id: '/presentations',
@@ -364,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -405,6 +413,7 @@ export interface FileRoutesByTo {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -455,6 +464,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -505,6 +515,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -546,6 +557,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -595,6 +607,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/admin'
     | '/_authenticated/portal/resources/library'
     | '/_authenticated/portal/resources/presentations'
+    | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -618,6 +631,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ScheduleRoute: typeof ScheduleRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
+  ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -862,6 +876,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/webhooks/calendly'
       fullPath: '/api/public/webhooks/calendly'
       preLoaderRoute: typeof ApiPublicWebhooksCalendlyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/email-dispatch': {
+      id: '/api/public/hooks/email-dispatch'
+      path: '/api/public/hooks/email-dispatch'
+      fullPath: '/api/public/hooks/email-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksEmailDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal/resources/presentations': {
@@ -1157,6 +1178,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ScheduleRoute: ScheduleRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
+  ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
@@ -1165,13 +1187,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
