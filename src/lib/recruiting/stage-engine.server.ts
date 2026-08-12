@@ -620,12 +620,24 @@ export async function applyStage(args: ApplyStageArgs): Promise<ApplyStageResult
 
   const template = STAGE_EMAIL[args.stage];
   if (changed && template && !args.skipEmail) {
+    // Onboarding is the portal handoff: point every CTA at account setup.
+    let stageContext: EmailContext = { ...(args.context ?? {}) };
+    if (args.stage === "onboarding") {
+      const link = await onboardingAccountLink(fresh);
+      stageContext = {
+        onboarding_link: link,
+        invitation_link: link,
+        portal_link: link,
+        ...stageContext,
+      };
+    }
     await sendApplicantEmail(fresh, template, {
-      context: args.context,
+      context: stageContext,
       sendKey: args.sendKey ?? `stage:${args.stage}:${args.applicantId}`,
       actorId: args.actorId ?? null,
     });
   }
+
 
   // The recruiting agent gets their own notification on every real move.
   if (changed) await notifyRecruiterStage(fresh, args.stage, fromSlug);
