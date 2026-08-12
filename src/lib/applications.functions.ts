@@ -184,34 +184,36 @@ export const submitEvaluation = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const res = result as { id: string; matched: boolean; hired: boolean; licensed: boolean };
 
-    // Trigger: welcome / auto-hire email (branches on licensing). Only fires on
-    // the first hire. The recruiting agent is copied.
+    // Trigger: conditional hire. Route through the stage engine so the record,
+    // timeline, sequences, and the Selected email (with the single-use
+    // "I've purchased my course" link) all stay in sync.
     if (res.hired) {
-      const fullName = (data.answers?.full_name as string | undefined) ?? "";
-      let copyTo: { email: string; name: string | null } | null = null;
-      if (data.applicant_id) {
-        try {
-          const { data: r } = await (supabase as any).rpc("get_recruiter_for_applicant", {
-            _applicant_id: data.applicant_id,
+      try {
+        const engine = await import("@/lib/recruiting/stage-engine.server");
+        const applicant =
+          (data.applicant_id ? await engine.loadApplicant(data.applicant_id) : null) ??
+          (await engine.findApplicant(data.email));
+        if (applicant) {
+          await engine.logActivity(
+            applicant.id,
+            "evaluation_completed",
+            "Evaluation Completed",
+            { evaluation_id: res.id },
+          );
+          await engine.stopSequence(applicant.id, "interview_reminders", "evaluation_completed");
+          await engine.applyStage({
+            applicantId: applicant.id,
+            stage: "interview-completed",
+            reason: "evaluation_completed",
+            patch: { evaluation_completed_at: new Date().toISOString() },
+            sendKey: `hired:${applicant.id}`,
           });
-          if (r?.found && r.recruiter_email) {
-            copyTo = { email: r.recruiter_email, name: r.recruiter_name ?? null };
-          }
-        } catch {
-          /* best-effort */
+          await engine.logActivity(applicant.id, "hired", "Conditionally Hired", {});
         }
+      } catch (e) {
+        console.error("evaluation hire automation failed", e);
       }
-      await queueEmail(supabase as never, {
-        to: data.email,
-        toName: fullName || undefined,
-        applicantId: data.applicant_id || null,
-        template: "welcome_hired",
-        params: { firstName: fullName.split(/\s+/)[0] || "", licensed: res.licensed },
-        copyTo,
-        copyForName: fullName || data.email,
-      });
     }
-
 
     return res;
   });

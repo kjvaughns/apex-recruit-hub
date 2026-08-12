@@ -17,6 +17,7 @@ export interface GenericEmailProps {
   footerNote?: string
   prefsUrl?: string
   copyFor?: string
+  hideSocial?: boolean
 }
 
 const detailRow: React.CSSProperties = {
@@ -63,6 +64,7 @@ export function GenericEmail({
   footerNote,
   prefsUrl,
   copyFor,
+  hideSocial,
 }: GenericEmailProps) {
   return (
     <Shell
@@ -71,6 +73,7 @@ export function GenericEmail({
       footerNote={footerNote}
       prefsUrl={prefsUrl}
       copyFor={copyFor}
+      hideSocial={hideSocial}
     >
       {intro ? <Text style={paragraph}>{intro}</Text> : null}
       {(lines ?? []).map((line, i) => (

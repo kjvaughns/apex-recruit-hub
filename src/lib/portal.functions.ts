@@ -413,6 +413,22 @@ type OnboardingResult = {
 
 /** After the RPC updates steps, send the completion email once (best-effort). */
 async function afterOnboardingUpdate(supabase: any, res: OnboardingResult) {
+  // Final requirement checked ⇒ onboarding complete, agent moves to Training.
+  if (res.just_completed && res.applicant_id) {
+    try {
+      const engine = await import("@/lib/recruiting/stage-engine.server");
+      await engine.logActivity(res.applicant_id, "onboarding_completed", "Onboarding Completed");
+      await engine.applyStage({
+        applicantId: res.applicant_id,
+        stage: "training",
+        reason: "onboarding_completed",
+        sendKey: `training:${res.applicant_id}`,
+      });
+      await engine.logActivity(res.applicant_id, "training_started", "Training Started");
+    } catch (e) {
+      console.error("training handoff failed", e);
+    }
+  }
   if (res.just_completed && res.email) {
     const applicantName = `${res.first_name ?? ""} ${res.last_name ?? ""}`.trim() || undefined;
     await queueEmail(supabase, {
@@ -548,34 +564,35 @@ export const updateApplicantStage = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase
-      .from("applicants")
-      .update({ current_stage_id: data.stage_id, stage_entered_at: new Date().toISOString() })
-      .eq("id", data.id);
-    if (error) throw new Error(error.message);
-    await supabase.from("applicant_activities").insert({
-      applicant_id: data.id,
-      event_type: "stage_changed",
-      summary: "Stage updated",
-      actor_id: userId,
-      data: { stage_id: data.stage_id },
-    });
-
-    // If they just landed on Onboarding, send the welcome email (the DB trigger
-    // has already initialized their onboarding_steps). Best-effort.
     const { data: stage } = await supabase
       .from("pipeline_stages")
       .select("slug")
       .eq("id", data.stage_id)
       .maybeSingle();
-    if (stage?.slug === "onboarding") {
+    const slug = stage?.slug as string | undefined;
+    if (!slug) throw new Error("Unknown stage");
+
+    // Onboarding is a handoff: make sure there's exactly one account-setup
+    // invitation and hand its link to the onboarding email.
+    let inviteLink: string | undefined;
+    if (slug === "onboarding") {
       const { data: a } = await supabase
         .from("applicants")
         .select("id, email, first_name, last_name, portal_profile_id")
         .eq("id", data.id)
         .maybeSingle();
-      if (a) await enqueueWelcomeOnboarding(supabase, a as OnboardingApplicant);
+      if (a) inviteLink = await resolveOnboardingPortalLink(supabase, a as OnboardingApplicant);
     }
+
+    const engine = await import("@/lib/recruiting/stage-engine.server");
+    const res = await engine.applyStage({
+      applicantId: data.id,
+      stage: slug as never,
+      actorId: userId,
+      reason: "manual",
+      context: inviteLink ? { invitation_link: inviteLink, portal_link: inviteLink } : undefined,
+    });
+    if (!res.ok) throw new Error("Could not update the stage");
     return { ok: true };
   });
 
@@ -760,6 +777,32 @@ export const updateApplicant = createServerFn({ method: "POST" })
 
     const { error } = await supabase.from("applicants").update(patch as never).eq("id", id);
     if (error) throw new Error(error.message);
+
+    // Status side effects: No Show / Follow Up start the capped follow-up
+    // series; a closed-out status stops every active sequence.
+    if (data.recruiting_status) {
+      try {
+        const engine = await import("@/lib/recruiting/stage-engine.server");
+        if (data.recruiting_status === "no_show" || data.recruiting_status === "follow_up") {
+          await engine.startSequence(id, "no_show_followup", new Date().toISOString());
+          await engine.logActivity(
+            id,
+            data.recruiting_status === "no_show" ? "no_show" : "follow_up_started",
+            data.recruiting_status === "no_show" ? "Marked No Show — follow up started" : "Follow up started",
+            {},
+            userId,
+          );
+        } else if (
+          ["not_interested", "not_qualified", "declined", "terminated", "inactive"].includes(
+            data.recruiting_status,
+          )
+        ) {
+          await engine.stopAllSequences(id, `status:${data.recruiting_status}`);
+        }
+      } catch (e) {
+        console.error("status automation failed", e);
+      }
+    }
 
     const changed = Object.keys(patch).filter((k) => k !== "updated_at");
     await supabase.from("applicant_activities").insert({
@@ -1977,4 +2020,100 @@ export const getAuditLogs = createServerFn({ method: "POST" })
     const { data: logs, error } = await q;
     if (error) throw new Error(error.message);
     return { logs: logs ?? [] };
+  });
+
+/* ------------------------------------------------------------------ */
+/* State exam                                                          */
+/* ------------------------------------------------------------------ */
+
+/** Recruiter sets the state exam details — moves the applicant to State Exam,
+ *  puts the exam on the recruiting calendar, and starts exam reminders. */
+export const setApplicantExam = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        exam_date: z.string().min(10).max(40),
+        exam_provider: z.string().trim().max(120).optional().or(z.literal("")),
+        exam_notes: z.string().trim().max(1000).optional().or(z.literal("")),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { userId } = context;
+    const engine = await import("@/lib/recruiting/stage-engine.server");
+    const iso = new Date(data.exam_date).toISOString();
+    const res = await engine.applyStage({
+      applicantId: data.id,
+      stage: "state-exam",
+      actorId: userId,
+      reason: "exam_scheduled",
+      patch: {
+        exam_date: iso,
+        exam_provider: data.exam_provider || null,
+        exam_notes: data.exam_notes || null,
+        exam_result: null,
+      },
+      sendKey: `exam:${data.id}:${iso}`,
+    });
+    await engine.logActivity(
+      data.id,
+      "exam_scheduled",
+      "State Exam Scheduled",
+      { exam_date: iso, provider: data.exam_provider || null },
+      userId,
+    );
+    // Re-anchor reminders whenever the date moves.
+    await engine.startSequence(data.id, "exam_reminders", iso);
+    if (!res.ok) throw new Error("Could not save the exam");
+    return { ok: true as const };
+  });
+
+/** Recruiter marks the exam passed — moves the applicant to Licensing. */
+export const markExamResult = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), result: z.enum(["passed", "failed"]) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { userId, supabase } = context;
+    const engine = await import("@/lib/recruiting/stage-engine.server");
+    const now = new Date().toISOString();
+    if (data.result === "failed") {
+      await supabase
+        .from("applicants")
+        .update({ exam_result: "failed" } as never)
+        .eq("id", data.id);
+      await engine.logActivity(data.id, "exam_failed", "State Exam Not Passed", {}, userId);
+      return { ok: true as const };
+    }
+    await engine.stopSequence(data.id, "exam_reminders", "exam_passed");
+    const res = await engine.applyStage({
+      applicantId: data.id,
+      stage: "licensing",
+      actorId: userId,
+      reason: "exam_passed",
+      patch: { exam_result: "passed", exam_passed_at: now },
+      sendKey: `licensing:${data.id}`,
+    });
+    await engine.logActivity(data.id, "exam_passed", "State Exam Passed", { at: now }, userId);
+    if (!res.ok) throw new Error("Could not update the record");
+    return { ok: true as const };
+  });
+
+/** Quick action: start (or restart) the capped follow-up series. */
+export const startApplicantFollowUp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { userId, supabase } = context;
+    const engine = await import("@/lib/recruiting/stage-engine.server");
+    await supabase
+      .from("applicants")
+      .update({ recruiting_status: "follow_up" } as never)
+      .eq("id", data.id);
+    await engine.startSequence(data.id, "no_show_followup", new Date().toISOString());
+    await engine.logActivity(data.id, "follow_up_started", "Follow up started", {}, userId);
+    return { ok: true as const };
   });
