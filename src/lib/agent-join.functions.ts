@@ -76,7 +76,7 @@ export const registerAgentViaLink = createServerFn({ method: "POST" })
     const { data: existing } = await admin
       .from("profiles")
       .select("id")
-      .eq("email", email)
+      .ilike("email", email)
       .maybeSingle();
     if (existing) throw new Error("An account already exists for that email. Please sign in.");
 
@@ -88,13 +88,21 @@ export const registerAgentViaLink = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!stage?.id) throw new Error("Onboarding stage is not configured.");
 
+    // If they already applied, match that record instead of creating a second
+    // one — their history, recruiter and referral attribution are preserved.
     const { data: applicant, error: appErr } = await admin
       .from("applicants")
-      .select("id")
-      .eq("email", email)
+      .select(
+        "id, first_name, last_name, phone, state, resident_state, assigned_recruiter_id, original_recruiter_id, referred_by_profile_id",
+      )
+      .ilike("email", email)
+      .is("archived_at", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
-    let applicantId: string | null = applicant?.id ?? null;
     if (appErr) throw new Error(appErr.message);
+    let applicantId: string | null = applicant?.id ?? null;
+    const matchedExisting = !!applicantId;
 
     if (!applicantId) {
       const { data: created, error } = await admin
@@ -130,6 +138,17 @@ export const registerAgentViaLink = createServerFn({ method: "POST" })
           licensed: true,
           licensing_status: "licensed",
           npn: data.npn,
+          // Fill in anything the original application was missing; never
+          // overwrite the recruiter/referral attribution already on file.
+          first_name: applicant.first_name || data.first_name,
+          last_name: applicant.last_name || data.last_name,
+          phone: applicant.phone || data.phone,
+          state: applicant.state || data.state,
+          resident_state: applicant.resident_state || data.state,
+          assigned_recruiter_id: applicant.assigned_recruiter_id ?? recruiter.id,
+          original_recruiter_id: applicant.original_recruiter_id ?? recruiter.id,
+          referred_by_profile_id: applicant.referred_by_profile_id ?? recruiter.id,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", applicantId);
     }
@@ -191,7 +210,9 @@ export const registerAgentViaLink = createServerFn({ method: "POST" })
     await admin.from("applicant_activities").insert({
       applicant_id: applicantId,
       event_type: "agent_self_registered",
-      summary: "Agent registered through invite link — sent to onboarding",
+      summary: matchedExisting
+        ? "Existing applicant registered through invite link — matched to their record and sent to onboarding"
+        : "Agent registered through invite link — sent to onboarding",
       actor_id: recruiter.id,
     });
 
