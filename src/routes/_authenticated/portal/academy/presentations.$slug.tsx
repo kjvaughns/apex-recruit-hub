@@ -142,7 +142,7 @@ function RecordingPage() {
               <Tabs<"notes" | "transcript">
                 value={tab}
                 onChange={setTab}
-                items={[
+                tabs={[
                   { value: "notes", label: "AI notes" },
                   { value: "transcript", label: "Transcript" },
                 ]}
