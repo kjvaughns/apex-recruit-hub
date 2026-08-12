@@ -70,6 +70,8 @@ export const adminUpsertCourse = createServerFn({ method: "POST" })
         long_description: z.string().max(6000).optional().or(z.literal("")),
         instructor_name: z.string().max(160).optional().or(z.literal("")),
         instructor_role: z.string().max(160).optional().or(z.literal("")),
+        thumbnail_url: z.string().trim().max(2000).optional().or(z.literal("")),
+        outcomes: z.array(z.string().trim().max(300)).max(20).optional(),
         is_required: z.boolean().optional(),
         status: z.enum(["draft", "published"]).optional(),
       })
@@ -85,6 +87,8 @@ export const adminUpsertCourse = createServerFn({ method: "POST" })
       long_description: data.long_description || null,
       instructor_name: data.instructor_name || null,
       instructor_role: data.instructor_role || null,
+      thumbnail_url: data.thumbnail_url || null,
+      outcomes: (data.outcomes ?? []).filter(Boolean),
       is_required: data.is_required ?? false,
       status: data.status ?? "draft",
     };
@@ -98,6 +102,7 @@ export const adminUpsertCourse = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { id: created.id as string };
   });
+
 
 export const adminDeleteCourse = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
