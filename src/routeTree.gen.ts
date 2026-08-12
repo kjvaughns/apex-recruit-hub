@@ -54,6 +54,7 @@ import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_au
 import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
 import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
 import { Route as AuthenticatedPortalAcademyAdminRouteImport } from './routes/_authenticated/portal/academy/admin'
+import { Route as AuthenticatedPortalAdminUsersUserIdRouteImport } from './routes/_authenticated/portal/admin/users.$userId'
 import { Route as AuthenticatedPortalAcademyLibrarySlugRouteImport } from './routes/_authenticated/portal/academy/library.$slug'
 import { Route as AuthenticatedPortalAcademyCoursesSlugRouteImport } from './routes/_authenticated/portal/academy/courses.$slug'
 
@@ -316,6 +317,12 @@ const AuthenticatedPortalAcademyAdminRoute =
     path: '/admin',
     getParentRoute: () => AuthenticatedPortalAcademyRouteRoute,
   } as any)
+const AuthenticatedPortalAdminUsersUserIdRoute =
+  AuthenticatedPortalAdminUsersUserIdRouteImport.update({
+    id: '/$userId',
+    path: '/$userId',
+    getParentRoute: () => AuthenticatedPortalAdminUsersRoute,
+  } as any)
 const AuthenticatedPortalAcademyLibrarySlugRoute =
   AuthenticatedPortalAcademyLibrarySlugRouteImport.update({
     id: '/library/$slug',
@@ -359,7 +366,7 @@ export interface FileRoutesByFullPath {
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
-  '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
+  '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
   '/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
   '/portal/academy/library/$slug': typeof AuthenticatedPortalAcademyLibrarySlugRoute
+  '/portal/admin/users/$userId': typeof AuthenticatedPortalAdminUsersUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -400,7 +408,7 @@ export interface FileRoutesByTo {
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
-  '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
+  '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
   '/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
@@ -417,6 +425,7 @@ export interface FileRoutesByTo {
   '/portal/resources': typeof AuthenticatedPortalResourcesIndexRoute
   '/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
   '/portal/academy/library/$slug': typeof AuthenticatedPortalAcademyLibrarySlugRoute
+  '/portal/admin/users/$userId': typeof AuthenticatedPortalAdminUsersUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -450,7 +459,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
-  '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRoute
+  '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
   '/_authenticated/portal/applicants/$applicantId': typeof AuthenticatedPortalApplicantsApplicantIdRoute
   '/_authenticated/portal/crm/$applicantId': typeof AuthenticatedPortalCrmApplicantIdRoute
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
@@ -467,6 +476,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
   '/_authenticated/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
   '/_authenticated/portal/academy/library/$slug': typeof AuthenticatedPortalAcademyLibrarySlugRoute
+  '/_authenticated/portal/admin/users/$userId': typeof AuthenticatedPortalAdminUsersUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/portal/resources/'
     | '/portal/academy/courses/$slug'
     | '/portal/academy/library/$slug'
+    | '/portal/admin/users/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -558,6 +569,7 @@ export interface FileRouteTypes {
     | '/portal/resources'
     | '/portal/academy/courses/$slug'
     | '/portal/academy/library/$slug'
+    | '/portal/admin/users/$userId'
   id:
     | '__root__'
     | '/'
@@ -607,6 +619,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/'
     | '/_authenticated/portal/academy/courses/$slug'
     | '/_authenticated/portal/academy/library/$slug'
+    | '/_authenticated/portal/admin/users/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -941,6 +954,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalAcademyAdminRouteImport
       parentRoute: typeof AuthenticatedPortalAcademyRouteRoute
     }
+    '/_authenticated/portal/admin/users/$userId': {
+      id: '/_authenticated/portal/admin/users/$userId'
+      path: '/$userId'
+      fullPath: '/portal/admin/users/$userId'
+      preLoaderRoute: typeof AuthenticatedPortalAdminUsersUserIdRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminUsersRoute
+    }
     '/_authenticated/portal/academy/library/$slug': {
       id: '/_authenticated/portal/academy/library/$slug'
       path: '/library/$slug'
@@ -980,11 +1000,26 @@ const AuthenticatedPortalAcademyRouteRouteWithChildren =
     AuthenticatedPortalAcademyRouteRouteChildren,
   )
 
+interface AuthenticatedPortalAdminUsersRouteChildren {
+  AuthenticatedPortalAdminUsersUserIdRoute: typeof AuthenticatedPortalAdminUsersUserIdRoute
+}
+
+const AuthenticatedPortalAdminUsersRouteChildren: AuthenticatedPortalAdminUsersRouteChildren =
+  {
+    AuthenticatedPortalAdminUsersUserIdRoute:
+      AuthenticatedPortalAdminUsersUserIdRoute,
+  }
+
+const AuthenticatedPortalAdminUsersRouteWithChildren =
+  AuthenticatedPortalAdminUsersRoute._addFileChildren(
+    AuthenticatedPortalAdminUsersRouteChildren,
+  )
+
 interface AuthenticatedPortalAdminRouteRouteChildren {
   AuthenticatedPortalAdminAuditRoute: typeof AuthenticatedPortalAdminAuditRoute
   AuthenticatedPortalAdminSettingsRoute: typeof AuthenticatedPortalAdminSettingsRoute
   AuthenticatedPortalAdminStagesRoute: typeof AuthenticatedPortalAdminStagesRoute
-  AuthenticatedPortalAdminUsersRoute: typeof AuthenticatedPortalAdminUsersRoute
+  AuthenticatedPortalAdminUsersRoute: typeof AuthenticatedPortalAdminUsersRouteWithChildren
   AuthenticatedPortalAdminIndexRoute: typeof AuthenticatedPortalAdminIndexRoute
 }
 
@@ -994,7 +1029,8 @@ const AuthenticatedPortalAdminRouteRouteChildren: AuthenticatedPortalAdminRouteR
     AuthenticatedPortalAdminSettingsRoute:
       AuthenticatedPortalAdminSettingsRoute,
     AuthenticatedPortalAdminStagesRoute: AuthenticatedPortalAdminStagesRoute,
-    AuthenticatedPortalAdminUsersRoute: AuthenticatedPortalAdminUsersRoute,
+    AuthenticatedPortalAdminUsersRoute:
+      AuthenticatedPortalAdminUsersRouteWithChildren,
     AuthenticatedPortalAdminIndexRoute: AuthenticatedPortalAdminIndexRoute,
   }
 
@@ -1151,3 +1187,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

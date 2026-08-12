@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { getDashboard, getMyOnboarding } from "@/lib/portal.functions";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
+import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
 import {
   PageHeader,
   PageBody,
@@ -40,7 +41,7 @@ function DashboardPage() {
   // discriminated-union narrowing that a closure would lose.
   const onb = onbQ.data;
   const onbDone = onb?.hasOnboarding ? onb.done ?? 0 : 0;
-  const onbTotal = onb?.hasOnboarding ? onb.total ?? 4 : 4;
+  const onbTotal = onb?.hasOnboarding ? onb.total ?? ONBOARDING_STEP_ORDER.length : ONBOARDING_STEP_ORDER.length;
   const onbComplete = onb?.hasOnboarding ? !!onb.complete : false;
   const onbPct = Math.round((onbDone / onbTotal) * 100);
 
