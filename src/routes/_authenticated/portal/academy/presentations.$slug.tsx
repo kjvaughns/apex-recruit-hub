@@ -139,7 +139,7 @@ function RecordingPage() {
 
           <Panel title="Training notes" padded={false}>
             <div className="px-4 pt-3">
-              <Tabs
+              <Tabs<"notes" | "transcript">
                 value={tab}
                 onChange={setTab}
                 items={[

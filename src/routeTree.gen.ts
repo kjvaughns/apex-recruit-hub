@@ -56,6 +56,7 @@ import { Route as AuthenticatedPortalAdminEmailsRouteImport } from './routes/_au
 import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
 import { Route as AuthenticatedPortalAcademyAdminRouteImport } from './routes/_authenticated/portal/academy/admin'
 import { Route as AuthenticatedPortalAdminUsersUserIdRouteImport } from './routes/_authenticated/portal/admin/users.$userId'
+import { Route as AuthenticatedPortalAcademyPresentationsSlugRouteImport } from './routes/_authenticated/portal/academy/presentations.$slug'
 import { Route as AuthenticatedPortalAcademyLibrarySlugRouteImport } from './routes/_authenticated/portal/academy/library.$slug'
 import { Route as AuthenticatedPortalAcademyCoursesSlugRouteImport } from './routes/_authenticated/portal/academy/courses.$slug'
 
@@ -330,6 +331,12 @@ const AuthenticatedPortalAdminUsersUserIdRoute =
     path: '/$userId',
     getParentRoute: () => AuthenticatedPortalAdminUsersRoute,
   } as any)
+const AuthenticatedPortalAcademyPresentationsSlugRoute =
+  AuthenticatedPortalAcademyPresentationsSlugRouteImport.update({
+    id: '/presentations/$slug',
+    path: '/presentations/$slug',
+    getParentRoute: () => AuthenticatedPortalAcademyRouteRoute,
+  } as any)
 const AuthenticatedPortalAcademyLibrarySlugRoute =
   AuthenticatedPortalAcademyLibrarySlugRouteImport.update({
     id: '/library/$slug',
@@ -391,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
   '/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
   '/portal/academy/library/$slug': typeof AuthenticatedPortalAcademyLibrarySlugRoute
+  '/portal/academy/presentations/$slug': typeof AuthenticatedPortalAcademyPresentationsSlugRoute
   '/portal/admin/users/$userId': typeof AuthenticatedPortalAdminUsersUserIdRoute
 }
 export interface FileRoutesByTo {
@@ -434,6 +442,7 @@ export interface FileRoutesByTo {
   '/portal/resources': typeof AuthenticatedPortalResourcesIndexRoute
   '/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
   '/portal/academy/library/$slug': typeof AuthenticatedPortalAcademyLibrarySlugRoute
+  '/portal/academy/presentations/$slug': typeof AuthenticatedPortalAcademyPresentationsSlugRoute
   '/portal/admin/users/$userId': typeof AuthenticatedPortalAdminUsersUserIdRoute
 }
 export interface FileRoutesById {
@@ -486,6 +495,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/': typeof AuthenticatedPortalResourcesIndexRoute
   '/_authenticated/portal/academy/courses/$slug': typeof AuthenticatedPortalAcademyCoursesSlugRoute
   '/_authenticated/portal/academy/library/$slug': typeof AuthenticatedPortalAcademyLibrarySlugRoute
+  '/_authenticated/portal/academy/presentations/$slug': typeof AuthenticatedPortalAcademyPresentationsSlugRoute
   '/_authenticated/portal/admin/users/$userId': typeof AuthenticatedPortalAdminUsersUserIdRoute
 }
 export interface FileRouteTypes {
@@ -538,6 +548,7 @@ export interface FileRouteTypes {
     | '/portal/resources/'
     | '/portal/academy/courses/$slug'
     | '/portal/academy/library/$slug'
+    | '/portal/academy/presentations/$slug'
     | '/portal/admin/users/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -581,6 +592,7 @@ export interface FileRouteTypes {
     | '/portal/resources'
     | '/portal/academy/courses/$slug'
     | '/portal/academy/library/$slug'
+    | '/portal/academy/presentations/$slug'
     | '/portal/admin/users/$userId'
   id:
     | '__root__'
@@ -632,6 +644,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/'
     | '/_authenticated/portal/academy/courses/$slug'
     | '/_authenticated/portal/academy/library/$slug'
+    | '/_authenticated/portal/academy/presentations/$slug'
     | '/_authenticated/portal/admin/users/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -982,6 +995,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalAdminUsersUserIdRouteImport
       parentRoute: typeof AuthenticatedPortalAdminUsersRoute
     }
+    '/_authenticated/portal/academy/presentations/$slug': {
+      id: '/_authenticated/portal/academy/presentations/$slug'
+      path: '/presentations/$slug'
+      fullPath: '/portal/academy/presentations/$slug'
+      preLoaderRoute: typeof AuthenticatedPortalAcademyPresentationsSlugRouteImport
+      parentRoute: typeof AuthenticatedPortalAcademyRouteRoute
+    }
     '/_authenticated/portal/academy/library/$slug': {
       id: '/_authenticated/portal/academy/library/$slug'
       path: '/library/$slug'
@@ -1004,6 +1024,7 @@ interface AuthenticatedPortalAcademyRouteRouteChildren {
   AuthenticatedPortalAcademyIndexRoute: typeof AuthenticatedPortalAcademyIndexRoute
   AuthenticatedPortalAcademyCoursesSlugRoute: typeof AuthenticatedPortalAcademyCoursesSlugRoute
   AuthenticatedPortalAcademyLibrarySlugRoute: typeof AuthenticatedPortalAcademyLibrarySlugRoute
+  AuthenticatedPortalAcademyPresentationsSlugRoute: typeof AuthenticatedPortalAcademyPresentationsSlugRoute
 }
 
 const AuthenticatedPortalAcademyRouteRouteChildren: AuthenticatedPortalAcademyRouteRouteChildren =
@@ -1014,6 +1035,8 @@ const AuthenticatedPortalAcademyRouteRouteChildren: AuthenticatedPortalAcademyRo
       AuthenticatedPortalAcademyCoursesSlugRoute,
     AuthenticatedPortalAcademyLibrarySlugRoute:
       AuthenticatedPortalAcademyLibrarySlugRoute,
+    AuthenticatedPortalAcademyPresentationsSlugRoute:
+      AuthenticatedPortalAcademyPresentationsSlugRoute,
   }
 
 const AuthenticatedPortalAcademyRouteRouteWithChildren =
