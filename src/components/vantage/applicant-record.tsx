@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
+import { Check, ChevronLeft, Mail, MessageSquare, Phone, ClipboardList } from "lucide-react";
 import {
   getApplicant,
   updateApplicant,
@@ -37,6 +37,13 @@ import {
   Input,
   Field,
   Modal,
+  Tabs,
+  Checkbox,
+  Skeleton,
+  CardSkeleton,
+  ErrorState,
+  EmptyState,
+  notify,
 } from "@/components/portal/ui";
 
 /* -------------------------------------------------------------------------- */
@@ -118,10 +125,11 @@ export function ApplicantRecord({
   const setOverview = useServerFn(setOverviewStatus);
   const usersFn = useServerFn(listAssignableUsers);
 
-  const { data, isLoading } = useQuery({
+  const recordQ = useQuery({
     queryKey: ["applicant", applicantId],
     queryFn: () => fetchOne({ data: { id: applicantId } }),
   });
+  const { data, isLoading } = recordQ;
   const usersQ = useQuery({ queryKey: ["assignable-users"], queryFn: () => usersFn() });
 
   const a = data?.applicant as any;
@@ -138,7 +146,7 @@ export function ApplicantRecord({
       await saveFn({ data: { id: applicantId, ...(patch as any) } });
       invalidate();
     } catch (e) {
-      toast.error((e as Error).message || "Could not save.");
+      notify.error("Couldn't save that change", "Please check the value and try again.");
     }
   }
 
@@ -153,7 +161,7 @@ export function ApplicantRecord({
       await changeStage({ data: { id: applicantId, stage_id: stageId } });
       invalidate();
     } catch (e) {
-      toast.error((e as Error).message || "Could not change stage.");
+      notify.error("Couldn't move them to that stage", "Please try again in a moment.");
     }
   }
   async function onOverview(field: "scheduled" | "completed", value: boolean) {
@@ -173,11 +181,33 @@ export function ApplicantRecord({
   }
 
   const Wrapper = variant === "drawer" ? DrawerShell : PageShell;
+  const [tab, setTab] = useState<"overview" | "activity" | "evaluation">("overview");
+
+  if (recordQ.isError) {
+    return (
+      <Wrapper onClose={onClose} title="Applicant">
+        <ErrorState
+          title="Couldn't load this applicant"
+          description="Their record didn't load. Check your connection and try again."
+          onRetry={() => recordQ.refetch()}
+        />
+      </Wrapper>
+    );
+  }
 
   if (isLoading || !a) {
     return (
-      <Wrapper onClose={onClose} title="Loading…">
-        <div className="p-body py-10 text-center">Loading applicant…</div>
+      <Wrapper onClose={onClose} title="Loading applicant">
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-40" />
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-20" />
+            <Skeleton className="h-8 w-24" />
+          </div>
+          <CardSkeleton lines={5} />
+          <CardSkeleton lines={3} />
+        </div>
       </Wrapper>
     );
   }
@@ -207,9 +237,16 @@ export function ApplicantRecord({
           {currentStage && (
             <span
               className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-semibold"
-              style={{ background: `${currentStage.color}18`, color: currentStage.color }}
+              style={{
+                background: `color-mix(in oklab, ${currentStage.color || "var(--p-gold)"} 14%, transparent)`,
+                color: currentStage.color || "var(--p-gold)",
+              }}
             >
-              <span className="h-2 w-2 rounded-full" style={{ background: currentStage.color }} />
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: currentStage.color || "var(--p-gold)" }}
+                aria-hidden
+              />
               {currentStage.name}
             </span>
           )}
@@ -220,16 +257,28 @@ export function ApplicantRecord({
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-1.5">
-          <QuickAction href={a.phone ? `tel:${a.phone}` : undefined} label="Call" />
-          <QuickAction href={a.phone ? `sms:${a.phone}` : undefined} label="Text" />
+          <QuickAction href={a.phone ? `tel:${a.phone}` : undefined} label="Call" icon={<Phone size={14} aria-hidden />} />
+          <QuickAction href={a.phone ? `sms:${a.phone}` : undefined} label="Text" icon={<MessageSquare size={14} aria-hidden />} />
           <Button variant="secondary" size="sm" onClick={() => setEmailOpen(true)} disabled={!a.email}>
-            Send Email
+            <Mail size={14} aria-hidden /> Email
           </Button>
           <Button variant="secondary" size="sm" onClick={() => setLogOpen(true)}>
-            Log Activity
+            <ClipboardList size={14} aria-hidden /> Log activity
           </Button>
         </div>
 
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { value: "overview", label: "Overview" },
+            { value: "activity", label: "Activity", count: (data?.activities ?? []).length },
+            { value: "evaluation", label: "Evaluation", count: (data?.evaluations ?? []).length },
+          ]}
+        />
+
+        {tab === "overview" && (
+        <div className="space-y-4">
         {/* Editable contact + licensing */}
         <Panel title="Contact & licensing">
           <div key={a.updated_at} className="grid gap-3 sm:grid-cols-2">
@@ -309,7 +358,38 @@ export function ApplicantRecord({
 
         <FollowUpCard applicantId={applicantId} onSent={invalidate} />
 
+        {/* Add note */}
+        <Panel title="Add a note">
+          <Textarea
+            rows={3}
+            placeholder="What happened on the last touchpoint?"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <Button
+            variant="primary"
+            className="mt-3 w-full"
+            onClick={onAddNote}
+            loading={savingNote}
+            disabled={!note.trim()}
+          >
+            Add note
+          </Button>
+        </Panel>
+        </div>
+        )}
+
         {/* Evaluation results (View Evaluation) */}
+        {tab === "evaluation" && (
+        <div className="space-y-4">
+        {(data?.evaluations ?? []).length === 0 && (
+          <Panel>
+            <EmptyState
+              title="No evaluation yet"
+              description="Once they complete the Vantage evaluation, their answers and guidance score appear here."
+            />
+          </Panel>
+        )}
         {(data?.evaluations ?? []).length > 0 &&
           data!.evaluations.map((ev: any) => (
             <Panel
@@ -337,37 +417,55 @@ export function ApplicantRecord({
               <p className="p-muted mt-3 text-[11.5px]">Internal score is guidance only — it never approves or rejects anyone.</p>
             </Panel>
           ))}
-
-        {/* Add note */}
-        <Panel title="Add a note">
-          <Textarea
-            rows={3}
-            placeholder="What happened on the last touchpoint?"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-          <Button variant="primary" className="mt-3 w-full" onClick={onAddNote} disabled={savingNote || !note.trim()}>
-            {savingNote ? "Saving…" : "Add note"}
-          </Button>
-        </Panel>
+        </div>
+        )}
 
         {/* Activity timeline */}
+        {tab === "activity" && (
         <Panel
           title="Activity timeline"
           actions={<Button variant="secondary" size="sm" onClick={() => setLogOpen(true)}>Log activity</Button>}
+          bodyClassName={(data?.activities ?? []).length === 0 ? undefined : "p-0"}
         >
-          <div className="flex flex-col gap-3">
-            {(data?.activities ?? []).map((act: any) => (
-              <div key={act.id} className="border-b pb-3 last:border-0" style={{ borderColor: "var(--p-border)" }}>
-                <div className="p-secondary" style={{ color: "var(--p-gold)" }}>{eventLabel(act.event_type)}</div>
-                {act.summary && <div className="p-body mt-1">{act.summary}</div>}
-                {act.data?.notes && <div className="p-secondary mt-1 whitespace-pre-wrap">{act.data.notes}</div>}
-                <div className="p-muted mt-1">{new Date(act.created_at).toLocaleString()}</div>
-              </div>
-            ))}
-            {(data?.activities ?? []).length === 0 && <div className="p-muted">No activity yet.</div>}
-          </div>
+          {(data?.activities ?? []).length === 0 ? (
+            <EmptyState
+              title="No activity yet"
+              description="Calls, texts, emails, stage changes and notes all land here so the whole history stays in one place."
+              action={
+                <Button size="sm" variant="secondary" onClick={() => setLogOpen(true)}>
+                  Log activity
+                </Button>
+              }
+            />
+          ) : (
+            <div>
+              {(data?.activities ?? []).map((act: any) => (
+                <div
+                  key={act.id}
+                  className="flex gap-3 border-b px-4 py-3 last:border-b-0"
+                  style={{ borderColor: "var(--p-border)" }}
+                >
+                  <span
+                    className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ background: "var(--p-gold)" }}
+                    aria-hidden
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="p-body font-medium">{eventLabel(act.event_type)}</div>
+                    {act.summary && <div className="p-secondary mt-0.5">{act.summary}</div>}
+                    {act.data?.notes && (
+                      <div className="p-secondary mt-0.5 whitespace-pre-wrap">{act.data.notes}</div>
+                    )}
+                    <div className="p-muted mt-1 text-[11.5px]">
+                      {new Date(act.created_at).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Panel>
+        )}
       </div>
 
       {promoteOpen && (
@@ -426,25 +524,28 @@ function DrawerShell({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[70]">
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-stretch sm:justify-end">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
-        className="p-panel absolute inset-y-0 right-0 flex w-full max-w-[560px] flex-col"
-        style={{ borderRadius: 0 }}
+        className="p-panel relative z-10 flex max-h-[92vh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[560px] sm:rounded-none sm:border-y-0 sm:border-r-0"
       >
-        <header className="flex items-center justify-between gap-3 border-b px-4 py-3" style={{ borderColor: "var(--p-border)" }}>
-          <h2 className="p-section-title truncate">{title}</h2>
+        <header
+          className="flex items-center justify-between gap-3 border-b px-4 py-3"
+          style={{ borderColor: "var(--p-border)" }}
+        >
+          <h2 className="p-section-title min-w-0 truncate">{title}</h2>
           <div className="flex shrink-0 items-center gap-2">
             {headerRight}
             <button
+              type="button"
               onClick={onClose}
               aria-label="Close"
-              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md text-[15px] hover:bg-[var(--p-hover)]"
+              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
               style={{ color: "var(--p-text-2)" }}
             >
-              ✕
+              <X size={15} aria-hidden />
             </button>
           </div>
         </header>
@@ -469,7 +570,9 @@ function PageShell({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link to="/portal/applicants">
-            <Button variant="ghost" size="sm">← Back</Button>
+            <Button variant="ghost" size="sm">
+              <ChevronLeft size={15} aria-hidden /> Back
+            </Button>
           </Link>
           <h1 className="p-title">{title}</h1>
         </div>
@@ -551,17 +654,21 @@ function EditDateTimeField({
   );
 }
 
-function QuickAction({ href, label }: { href?: string; label: string }) {
+function QuickAction({ href, label, icon }: { href?: string; label: string; icon?: React.ReactNode }) {
   if (!href) {
     return (
-      <Button variant="secondary" size="sm" disabled>
+      <Button variant="secondary" size="sm" disabled title={`No phone number on file`}>
+        {icon}
         {label}
       </Button>
     );
   }
   return (
-    <a href={href}>
-      <Button variant="secondary" size="sm">{label}</Button>
+    <a href={href} className="p-focus rounded-[10px]">
+      <Button variant="secondary" size="sm" tabIndex={-1}>
+        {icon}
+        {label}
+      </Button>
     </a>
   );
 }
@@ -599,10 +706,10 @@ function LogActivityModal({
         },
       }),
     onSuccess: () => {
-      toast.success("Activity logged.");
+      notify.success("Activity logged");
       onLogged();
     },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not log activity."),
+    onError: () => notify.error("Couldn't log that activity", "Please try again in a moment."),
   });
 
   const canSubmit = !mut.isPending && (!isFollowUp || (!!followUpAt && !!notes.trim()));
@@ -614,8 +721,8 @@ function LogActivityModal({
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={() => mut.mutate()} disabled={!canSubmit}>
-            {mut.isPending ? "Saving…" : "Log activity"}
+          <Button variant="primary" onClick={() => mut.mutate()} loading={mut.isPending} disabled={!canSubmit}>
+            Log activity
           </Button>
         </>
       }
@@ -683,10 +790,10 @@ function EmailComposerModal({
   const mut = useMutation({
     mutationFn: () => sendFn({ data: { id: applicant.id, subject: subject.trim(), body: body.trim() } }),
     onSuccess: (res: any) => {
-      toast.success(res?.status === "sent" ? "Email sent." : "Email queued.");
+      notify.success(res?.status === "sent" ? "Email sent" : "Email queued for delivery");
       onSent();
     },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not send email."),
+    onError: () => notify.error("Couldn't send that email", "Please try again in a moment."),
   });
 
   return (
@@ -698,8 +805,13 @@ function EmailComposerModal({
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={() => mut.mutate()} disabled={mut.isPending || !subject.trim() || !body.trim()}>
-            {mut.isPending ? "Sending…" : "Send email"}
+          <Button
+            variant="primary"
+            onClick={() => mut.mutate()}
+            loading={mut.isPending}
+            disabled={!subject.trim() || !body.trim()}
+          >
+            Send email
           </Button>
         </>
       }
@@ -829,10 +941,7 @@ function PromoteModal({ applicant, onClose, onDone }: { applicant: any; onClose:
           </Field>
           <Field label="Email"><Input value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
           <Field label="Phone"><Input value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
-          <label className="inline-flex items-center gap-2 text-[13px]" style={{ color: "var(--p-text-2)" }}>
-            <input type="checkbox" checked={licensed} onChange={(e) => setLicensed(e.target.checked)} />
-            Currently licensed
-          </label>
+          <Checkbox checked={licensed} onChange={setLicensed} label="Currently licensed" />
           {error && (
             <div className="rounded-[10px] border p-3 text-[13px]" style={{ borderColor: "var(--p-red)", background: "rgba(220,106,98,0.1)", color: "var(--p-red)" }}>
               {error}
@@ -840,8 +949,14 @@ function PromoteModal({ applicant, onClose, onDone }: { applicant: any; onClose:
           )}
           <div className="mt-1 flex gap-3">
             <Button variant="ghost" className="flex-1" onClick={onClose}>Cancel</Button>
-            <Button variant="primary" className="flex-1" onClick={() => mut.mutate()} disabled={mut.isPending || !email.trim()}>
-              {mut.isPending ? "Promoting…" : "Confirm & create invitation"}
+            <Button
+              variant="primary"
+              className="flex-1"
+              onClick={() => mut.mutate()}
+              loading={mut.isPending}
+              disabled={!email.trim()}
+            >
+              Confirm & create invitation
             </Button>
           </div>
         </div>
@@ -864,8 +979,9 @@ function DiscordCard({ applicantId, confirmed, onChange }: { applicantId: string
   }
   return (
     <Panel title="Discord confirmation" description={`Confirm once you've seen their course-post screenshot in #unlicensed.`}>
-      <Button variant={confirmed ? "secondary" : "ghost"} onClick={toggle} disabled={busy}>
-        {confirmed ? "✓ Course post confirmed" : "Mark course post confirmed"}
+      <Button variant={confirmed ? "secondary" : "outline"} onClick={toggle} loading={busy}>
+        {confirmed && <Check size={14} aria-hidden />}
+        {confirmed ? "Course post confirmed" : "Mark course post confirmed"}
       </Button>
     </Panel>
   );
@@ -892,10 +1008,15 @@ function FollowUpCard({ applicantId, onSent }: { applicantId: string; onSent: ()
   }
   return (
     <Panel title="Pre-licensing follow-up" description="Sends the weekly check-in template and logs it on the timeline.">
-      <Button variant="ghost" onClick={onSend} disabled={sending}>
-        {sending ? "Sending…" : sent ? "✓ Follow-up sent" : "Send follow-up email"}
+      <Button variant="outline" onClick={onSend} loading={sending}>
+        {sent && <Check size={14} aria-hidden />}
+        {sent ? "Follow-up sent" : "Send follow-up email"}
       </Button>
-      {error && <p className="p-muted mt-2" style={{ color: "var(--p-red)" }}>{error}</p>}
+      {error && (
+        <p className="mt-2 text-[12.5px]" style={{ color: "var(--p-red)" }}>
+          We couldn't send that follow-up. Please try again in a moment.
+        </p>
+      )}
     </Panel>
   );
 }
@@ -929,17 +1050,34 @@ function OnboardingProgressCard({ steps }: { steps: unknown }) {
   const { done, total } = onboardingProgress(steps);
   const s = (steps ?? {}) as Record<string, { completed?: boolean }>;
   return (
-    <Panel title="Recruiting progress — onboarding" actions={<Badge tone={done === total ? "green" : "gold"}>{done}/{total}</Badge>}>
+    <Panel
+      title="Onboarding progress"
+      actions={<Badge tone={done === total ? "green" : "gold"}>{done}/{total}</Badge>}
+    >
+      <div className="mb-3 h-1.5 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
+        <div
+          className="h-full rounded-full transition-all"
+          style={{
+            width: `${Math.max(4, Math.round((done / Math.max(1, total)) * 100))}%`,
+            background: "var(--p-gold)",
+          }}
+        />
+      </div>
       <div className="flex flex-col gap-2">
         {ONBOARDING_STEP_ORDER.map((k) => {
           const stepDone = s[k]?.completed === true;
           return (
             <div key={k} className="flex items-center gap-2.5 text-[13px]">
               <span
-                className="flex h-4 w-4 flex-none items-center justify-center rounded-full border text-[10px]"
-                style={stepDone ? { borderColor: "var(--p-green)", background: "var(--p-green)", color: "#0B0B0C" } : { borderColor: "var(--p-border-strong)", color: "transparent" }}
+                className="flex h-4 w-4 flex-none items-center justify-center rounded-full border"
+                style={
+                  stepDone
+                    ? { borderColor: "var(--p-green)", background: "var(--p-green)", color: "var(--p-bg)" }
+                    : { borderColor: "var(--p-border-strong)", color: "transparent" }
+                }
+                aria-hidden
               >
-                ✓
+                <Check size={10} strokeWidth={3} />
               </span>
               <span className={stepDone ? "p-body" : "p-secondary"}>{ONBOARDING_STEP_LABELS[k]}</span>
             </div>
@@ -952,12 +1090,22 @@ function OnboardingProgressCard({ steps }: { steps: unknown }) {
 
 function OverviewToggle({ label, active, onToggle }: { label: string; active: boolean; onToggle: (v: boolean) => void }) {
   return (
-    <Button variant={active ? "secondary" : "ghost"} size="sm" onClick={() => onToggle(!active)}>
+    <Button
+      variant={active ? "secondary" : "outline"}
+      size="sm"
+      aria-pressed={active}
+      onClick={() => onToggle(!active)}
+    >
       <span
-        className="flex h-4 w-4 items-center justify-center rounded-full border text-[10px]"
-        style={active ? { borderColor: "var(--p-green)", background: "var(--p-green)", color: "#0B0B0C" } : { borderColor: "var(--p-border-strong)" }}
+        className="flex h-4 w-4 items-center justify-center rounded-full border"
+        style={
+          active
+            ? { borderColor: "var(--p-green)", background: "var(--p-green)", color: "var(--p-bg)" }
+            : { borderColor: "var(--p-border-strong)", color: "transparent" }
+        }
+        aria-hidden
       >
-        {active ? "✓" : ""}
+        <Check size={10} strokeWidth={3} />
       </span>
       {label}
     </Button>
