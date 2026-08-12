@@ -594,7 +594,7 @@ function QuestionsEditor({ lessonId, questions }: { lessonId: string; questions:
         <Input placeholder="Question text" value={text} onChange={(e) => setText(e.target.value)} />
         {opts.map((o, i) => (
           <div key={i} className="flex items-center gap-2">
-            <Radio name="correct" checked={correct === i} onChange={() => setCorrect(i)} label="" aria-label={`Mark option ${i + 1} correct`} />
+            <Radio name="correct" checked={correct === i} onChange={() => setCorrect(i)} label={<span className="sr-only">{`Mark option ${i + 1} correct`}</span>} />
             <Input placeholder={`Option ${i + 1}`} value={o} onChange={(e) => setOpts(opts.map((x, xi) => (xi === i ? e.target.value : x)))} />
           </div>
         ))}
@@ -619,9 +619,13 @@ function LibraryBuilder() {
 
   async function del(id: string) {
     if (!confirm("Delete this resource?")) return;
-    await delFn({ data: { id } });
-    qc.invalidateQueries({ queryKey: ["academy", "library"] });
-    notify.success("Resource deleted.");
+    try {
+      await delFn({ data: { id } });
+      qc.invalidateQueries({ queryKey: ["academy", "library"] });
+      notify.success("Resource deleted.");
+    } catch {
+      notify.error("Couldn't delete this resource. Please try again.");
+    }
   }
 
   return (
@@ -631,7 +635,11 @@ function LibraryBuilder() {
         actions={<Button variant="primary" size="sm" onClick={() => setEdit({})}><Plus size={14} /> New</Button>}
         padded={false}
       >
-        {resources.length === 0 ? (
+        {q.isError ? (
+          <ErrorState description="Couldn't load library resources. Please try again." onRetry={() => q.refetch()} />
+        ) : q.isLoading ? (
+          <TableSkeleton rows={4} cols={3} />
+        ) : resources.length === 0 ? (
           <EmptyState title="No resources yet" description="Add your first library resource." />
         ) : (
           <TableWrap className="border-0">
@@ -729,7 +737,7 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
       title={resource ? "Edit resource" : "New resource"}
       width={560}
       onClose={onClose}
-      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={busy || !f.title.trim()}>{busy ? "Saving…" : "Save"}</Button></>}
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!f.title.trim()} loading={busy}>Save</Button></>}
     >
       <div className="space-y-4">
         <Field label="Title" required><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} /></Field>
@@ -744,9 +752,7 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
             </Select>
           </Field>
           <Field label="Required">
-            <label className="mt-2 inline-flex items-center gap-2 text-[13.5px]" style={{ color: "var(--p-text)" }}>
-              <input type="checkbox" checked={f.is_required} onChange={(e) => setF({ ...f, is_required: e.target.checked })} /> Required
-            </label>
+            <Checkbox checked={f.is_required} onChange={(v) => setF({ ...f, is_required: v })} label="Required" className="mt-2" />
           </Field>
         </FormGrid>
         <Field label={f.type === "link" ? "URL" : "URL (or upload below)"}>
