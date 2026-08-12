@@ -19,6 +19,7 @@ import {
   type TextareaHTMLAttributes,
 } from "react";
 import { toast } from "sonner";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
