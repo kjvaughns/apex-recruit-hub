@@ -56,10 +56,15 @@ function LoginPage() {
               {busy ? "Signing in…" : "Sign in →"}
             </button>
           </form>
-          <div className="mt-6 flex items-center justify-between text-[13px] text-vantage-faint">
-            <Link to="/" className="hover:text-vantage-gold">← Back to Vantage</Link>
-            <span>Portal launches in the next release.</span>
+          <div className="mt-6 rounded-[10px] border border-white/8 bg-white/[0.02] p-3.5 text-[13px] leading-relaxed text-vantage-muted">
+            New agent? You don't have a password yet — use the{" "}
+            <span className="text-vantage-fog">“Set up your account”</span> link in your onboarding
+            email to create one. If you can't find it, ask your recruiter to resend your invitation.
           </div>
+          <div className="mt-5 flex items-center justify-between text-[13px] text-vantage-faint">
+            <Link to="/" className="hover:text-vantage-gold">← Back to Vantage</Link>
+          </div>
+
         </div>
       </div>
     </PublicShell>
