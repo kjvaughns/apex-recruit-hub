@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { PortalShell } from "@/components/vantage/portal-shell";
 import { PageHeader, PageBody, Panel, Button, Badge } from "@/components/portal/ui";
-import { getMyOnboarding, completeOnboardingStep } from "@/lib/portal.functions";
+import { getMyOnboarding, completeOnboardingStep, notifyOnboarding } from "@/lib/portal.functions";
 import {
   ONBOARDING_STEP_ORDER,
   type OnboardingStepKey,
@@ -20,6 +21,9 @@ export const Route = createFileRoute("/_authenticated/portal/onboarding")({
 
 const AGENCY_CODE = "AEFS-AVLX-A7FY-9Z9L";
 const AGENTSPACE_URL = "https://app.useagentspace.com/register";
+const DISCORD_INVITE = "https://discord.gg/HhFwYbjyt2";
+
+type SelfCheckStep = Exclude<OnboardingStepKey, never>;
 
 function stepState(
   steps: Record<string, OnboardingStepState> | undefined,
@@ -32,6 +36,7 @@ function OnboardingPage() {
   const qc = useQueryClient();
   const fetchOnboarding = useServerFn(getMyOnboarding);
   const completeStep = useServerFn(completeOnboardingStep);
+  const notify = useServerFn(notifyOnboarding);
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-onboarding"],
@@ -39,19 +44,17 @@ function OnboardingPage() {
   });
 
   const mut = useMutation({
-    mutationFn: (
-      step:
-        | "agentspace_contracting"
-        | "discord_role_update"
-        | "expectations_reviewed"
-        | "complete_vantage_closer_course",
-    ) => completeStep({ data: { step } }),
+    mutationFn: (step: SelfCheckStep) => completeStep({ data: { step } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-onboarding"] });
       qc.invalidateQueries({ queryKey: ["applicants"] });
       qc.invalidateQueries({ queryKey: ["applicant"] });
     },
   });
+
+  const notifyContracting = () => {
+    notify({ data: { kind: "contracting_done" } }).catch(() => {});
+  };
 
   if (isLoading) {
     return (
@@ -65,8 +68,6 @@ function OnboardingPage() {
   }
 
   if (!data?.hasOnboarding) {
-    // Accounts not tied to a recruited applicant (e.g. owners/admins) have no live
-    // checklist — show the standard steps as a read-only preview instead of an empty page.
     return (
       <PortalShell>
         <PageBody>
@@ -110,50 +111,69 @@ function OnboardingPage() {
             </div>
           </Panel>
 
-          {allDone && (
-            <Panel className="text-center">
-              <div
-                className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full text-[22px]"
-                style={{ background: "var(--p-gold)", color: "#0B0B0C" }}
-              >
-                ✓
-              </div>
-              <h2 className="p-card-title">You're fully onboarded.</h2>
-              <p className="p-secondary mx-auto mt-2 max-w-[420px]">
-                Every step is done — welcome to the team. Your training path will be available in the
-                portal shortly.
-              </p>
-              <Link to="/portal">
-                <Button variant="secondary" className="mt-4">
-                  Go to your dashboard →
-                </Button>
-              </Link>
-            </Panel>
-          )}
+          {allDone && <CompletionPanel />}
 
-          <StepList steps={steps} onComplete={(s) => mut.mutate(s)} pending={mut.isPending} />
+          <StepList
+            steps={steps}
+            onComplete={(s) => mut.mutate(s)}
+            onCompleteContracting={() => {
+              mut.mutate("agentspace_contracting");
+              notifyContracting();
+            }}
+            pending={mut.isPending}
+          />
         </div>
       </PageBody>
     </PortalShell>
   );
 }
 
-/** The onboarding steps. Shared by the live agent checklist and the read-only
- *  preview shown to accounts without an assigned checklist. */
+function CompletionPanel() {
+  const notify = useServerFn(notifyOnboarding);
+  const [sent, setSent] = useState(false);
+  const mut = useMutation({
+    mutationFn: () => notify({ data: { kind: "trainer" } }),
+    onSuccess: () => {
+      setSent(true);
+      toast.success("Your trainer has been notified.");
+    },
+    onError: (e: unknown) => toast.error((e as Error).message || "Could not notify trainer."),
+  });
+  return (
+    <Panel className="text-center">
+      <div
+        className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full text-[22px]"
+        style={{ background: "var(--p-gold)", color: "#0B0B0C" }}
+      >
+        ✓
+      </div>
+      <h2 className="p-card-title">Onboarding complete</h2>
+      <p className="p-secondary mx-auto mt-2 max-w-[460px]">
+        You are ready for New Agent Training. Notify your trainer that you have completed onboarding.
+      </p>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        <Button variant="primary" onClick={() => mut.mutate()} disabled={mut.isPending || sent}>
+          {sent ? "✓ Trainer notified" : mut.isPending ? "Notifying…" : "Notify Trainer"}
+        </Button>
+        <Link to="/portal">
+          <Button variant="secondary">Go to your dashboard →</Button>
+        </Link>
+      </div>
+    </Panel>
+  );
+}
+
+/** The onboarding steps. Shared by the live agent checklist and the read-only preview. */
 function StepList({
   steps,
   onComplete,
+  onCompleteContracting,
   pending,
   preview,
 }: {
   steps?: Record<string, OnboardingStepState>;
-  onComplete?: (
-    step:
-      | "agentspace_contracting"
-      | "discord_role_update"
-      | "expectations_reviewed"
-      | "complete_vantage_closer_course",
-  ) => void;
+  onComplete?: (step: SelfCheckStep) => void;
+  onCompleteContracting?: () => void;
   pending?: boolean;
   preview?: boolean;
 }) {
@@ -161,16 +181,21 @@ function StepList({
     <>
       <StepCard
         n={1}
-        title="AgentSpace contracting"
+        title="AgentSpace Contracting"
         state={stepState(steps, "agentspace_contracting")}
-        onComplete={() => onComplete?.("agentspace_contracting")}
+        onComplete={() => (onCompleteContracting ? onCompleteContracting() : onComplete?.("agentspace_contracting"))}
         pending={pending}
         preview={preview}
-        actionLabel="I've completed this"
+        actionLabel="I Completed Contracting"
       >
         <p className="p-secondary">
-          Click the link below, select <strong style={{ color: "var(--p-text)" }}>"Join Agency,"</strong>{" "}
-          and paste in the agency code.
+          Create your AgentSpace account and enter the Vantage Financial agency code when prompted
+          (select <strong style={{ color: "var(--p-text)" }}>"Join Agency"</strong>). Then verify your
+          licensing using your NPN.
+        </p>
+        <p className="p-muted mt-2">
+          Note: AgentSpace occasionally doesn't recognize licensing info right away — refreshing the
+          page often updates it.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <a href={AGENTSPACE_URL} target="_blank" rel="noreferrer noopener">
@@ -178,43 +203,98 @@ function StepList({
           </a>
           <CopyCode code={AGENCY_CODE} />
         </div>
+        <div className="mt-4 rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
+          <div className="p-label mb-1">Training video</div>
+          <p className="p-secondary">
+            Watch the contracting walkthrough covering SureLC setup, creating your required accounts,
+            requesting carrier contracts, and completing AgentSpace onboarding. Work through
+            everything until you reach the <strong style={{ color: "var(--p-text)" }}>Pending contracting</strong> screen,
+            then mark this step complete below.
+          </p>
+        </div>
       </StepCard>
 
       <StepCard
         n={2}
-        title="Discord role update"
+        title="Update Discord Role"
         state={stepState(steps, "discord_role_update")}
         onComplete={() => onComplete?.("discord_role_update")}
         pending={pending}
         preview={preview}
-        actionLabel="I've completed this"
+        actionLabel="Mark Complete"
       >
         <p className="p-secondary">
-          Follow these steps in our Discord server to get your Licensed Agent role.{" "}
-          <span className="p-muted">(Exact instructions coming soon.)</span>
+          Once you're licensed, update your Discord access so the licensed-agent channels unlock:
         </p>
+        <ol className="p-secondary mt-2 ml-4 list-decimal space-y-1">
+          <li>Open the <strong style={{ color: "var(--p-text)" }}>Start Here</strong> channel.</li>
+          <li>Click <strong style={{ color: "var(--p-text)" }}>New App</strong>.</li>
+          <li>Register as a <strong style={{ color: "var(--p-text)" }}>Licensed Agent</strong>.</li>
+        </ol>
+        <p className="p-muted mt-2">
+          If you're already in the server, this updates your access from Unlicensed to Licensed. If you
+          haven't joined Discord yet, use the invite below.
+        </p>
+        <div className="mt-3">
+          <a href={DISCORD_INVITE} target="_blank" rel="noreferrer noopener">
+            <Button variant="secondary" size="sm">Join the Discord →</Button>
+          </a>
+        </div>
       </StepCard>
 
-      <StepCard n={3} title="Portal account setup" state={stepState(steps, "portal_account_setup")} auto preview={preview}>
+      <StepCard
+        n={3}
+        title="Read the Vantage Financial Agent Playbook"
+        state={stepState(steps, "read_agent_playbook")}
+        onComplete={() => onComplete?.("read_agent_playbook")}
+        pending={pending}
+        preview={preview}
+        actionLabel="I Have Read the Playbook"
+      >
         <p className="p-secondary">
-          Done automatically — you're logged into the portal right now, which is all this step
-          needs.
+          Read the Agent Playbook end to end — it covers how we sell, our systems, and what's expected
+          of every Vantage agent.
         </p>
+        <div className="mt-3">
+          <Link to="/portal/academy/library/$slug" params={{ slug: "agent-playbook" }}>
+            <Button variant="secondary" size="sm">Open Agent Playbook →</Button>
+          </Link>
+        </div>
       </StepCard>
 
       <StepCard
         n={4}
-        title="Expectations reviewed"
-        state={stepState(steps, "expectations_reviewed")}
-        onComplete={() => onComplete?.("expectations_reviewed")}
+        title="Agent Expectations & Schedule"
+        state={stepState(steps, "agent_expectations_schedule")}
+        onComplete={() => onComplete?.("agent_expectations_schedule")}
         pending={pending}
         preview={preview}
-        actionLabel="I've reviewed this"
+        actionLabel="I understand and agree"
+        requireAgree="I understand and agree to the Vantage Financial standards and schedule."
       >
-        <p className="p-secondary">
-          Review our hours, standing meetings, and team standards so you know how we operate.{" "}
-          <span className="p-muted">(Full expectations copy coming soon.)</span>
-        </p>
+        <div className="p-label mb-1">Weekly schedule (CST)</div>
+        <ul className="p-secondary space-y-1">
+          <li><strong style={{ color: "var(--p-text)" }}>Mandatory Team Meeting</strong> — Monday 9:30 AM</li>
+          <li><strong style={{ color: "var(--p-text)" }}>Company Overview</strong> — Monday 7:00 PM</li>
+          <li><strong style={{ color: "var(--p-text)" }}>New Agent Live Training</strong> — Monday ~10:30 AM (Training Room Discord voice channel)</li>
+          <li><strong style={{ color: "var(--p-text)" }}>Agency Training</strong> — Wednesday 10:30 AM</li>
+          <li><strong style={{ color: "var(--p-text)" }}>Film Review</strong> — Tuesday & Thursday 6:00 PM</li>
+          <li><strong style={{ color: "var(--p-text)" }}>Live Dials</strong> — 10:00 AM to 6:00 PM daily</li>
+        </ul>
+        <p className="p-muted mt-2">Encouraged to start earlier and continue calling later when possible.</p>
+
+        <div className="p-label mt-4 mb-1">Standards & expectations</div>
+        <ul className="p-secondary ml-4 list-disc space-y-1">
+          <li>Cameras must be on while calling.</li>
+          <li>Stay unmuted while calling unless operationally necessary.</li>
+          <li>Do not be late to meetings.</li>
+          <li>$5,000 weekly and $20,000 monthly personal production is the Vantage standard.</li>
+          <li>Closing business consistently is a normal expectation of the sales role.</li>
+          <li>Agents below standard may be assigned additional training.</li>
+          <li>Consistently falling below production standards may result in loss of free lead eligibility and possible termination.</li>
+          <li>New Agent Training begins Mondays; the Monday Team Meeting is mandatory.</li>
+          <li>Missing required meetings without prior communication may result in termination — communicate beforehand, not after.</li>
+        </ul>
       </StepCard>
 
       <StepCard
@@ -224,15 +304,16 @@ function StepList({
         onComplete={() => onComplete?.("complete_vantage_closer_course")}
         pending={pending}
         preview={preview}
-        actionLabel="I've completed this"
+        actionLabel="I've completed the course"
       >
         <p className="p-secondary">
-          Work through the Vantage Closer Course in the Academy — the initial training every new agent
-          completes. Come back and check this off once you've finished.
+          The Vantage Closer Course is the required pre-training course covering the Vantage sales
+          process, sales psychology, mindset, and fundamentals you'll need before live training.
         </p>
+        <p className="p-muted mt-2">This step completes automatically once you finish the course.</p>
         <div className="mt-3">
           <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-closer" }}>
-            <Button variant="secondary" size="sm">Go to Vantage Closer Course →</Button>
+            <Button variant="secondary" size="sm">Start Vantage Closer Course →</Button>
           </Link>
         </div>
       </StepCard>
@@ -246,9 +327,9 @@ function StepCard({
   state,
   onComplete,
   actionLabel,
-  auto,
   pending,
   preview,
+  requireAgree,
   children,
 }: {
   n: number;
@@ -256,12 +337,13 @@ function StepCard({
   state: OnboardingStepState;
   onComplete?: () => void;
   actionLabel?: string;
-  auto?: boolean;
   pending?: boolean;
   preview?: boolean;
+  requireAgree?: string;
   children: React.ReactNode;
 }) {
   const done = state.completed;
+  const [agreed, setAgreed] = useState(false);
   return (
     <Panel>
       <div className="flex items-start gap-3">
@@ -278,9 +360,16 @@ function StepCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="p-card-title">{title}</h3>
-            <Badge tone={done ? "green" : "neutral"}>{done ? "Done" : auto ? "Automatic" : "Not started"}</Badge>
+            <Badge tone={done ? "green" : "neutral"}>{done ? "Done" : "Not started"}</Badge>
           </div>
           <div className="mt-1.5">{children}</div>
+
+          {!preview && !done && requireAgree && (
+            <label className="mt-3 flex items-start gap-2 text-[13px]" style={{ color: "var(--p-text-2)" }}>
+              <input type="checkbox" className="mt-0.5" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+              <span>{requireAgree}</span>
+            </label>
+          )}
 
           {!preview && (
             <div className="mt-3">
@@ -289,8 +378,13 @@ function StepCard({
                   Completed
                   {state.completed_at ? ` · ${new Date(state.completed_at).toLocaleDateString()}` : ""}
                 </div>
-              ) : auto ? null : (
-                <Button variant="primary" size="sm" onClick={onComplete} disabled={pending}>
+              ) : (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={onComplete}
+                  disabled={pending || (!!requireAgree && !agreed)}
+                >
                   {actionLabel ?? "Mark complete"}
                 </Button>
               )}

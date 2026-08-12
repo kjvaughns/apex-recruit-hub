@@ -435,8 +435,9 @@ export const getMyOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = context;
+    // Empty step: just fetch/recompute state (account setup is no longer a step).
     const { data, error } = await (supabase as any).rpc("update_onboarding", {
-      _step: "portal_account_setup",
+      _step: "",
     });
     if (error) throw new Error(error.message);
     const res = (data ?? { found: false }) as OnboardingResult;
@@ -460,7 +461,8 @@ export const completeOnboardingStep = createServerFn({ method: "POST" })
         step: z.enum([
           "agentspace_contracting",
           "discord_role_update",
-          "expectations_reviewed",
+          "read_agent_playbook",
+          "agent_expectations_schedule",
           "complete_vantage_closer_course",
         ]),
       })
@@ -481,6 +483,62 @@ export const completeOnboardingStep = createServerFn({ method: "POST" })
       total: r.total ?? ONBOARDING_STEP_ORDER.length,
       complete: !!r.complete,
     };
+  });
+
+/** Onboarding notifications the agent triggers from their checklist: reaching
+ *  pending contracting (notify leadership) and completion (notify trainer).
+ *  Logs an activity on the agent's applicant record and emails their recruiter
+ *  (best-effort). */
+export const notifyOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ kind: z.enum(["contracting_done", "trainer"]) }).parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { data: app } = await supabase
+      .from("applicants")
+      .select("id, first_name, last_name, email")
+      .eq("portal_profile_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!app) return { ok: false as const };
+
+    const name = `${app.first_name ?? ""} ${app.last_name ?? ""}`.trim() || "An agent";
+    const isContracting = data.kind === "contracting_done";
+    const summary = isContracting
+      ? "Reached pending contracting (agent-reported)"
+      : "Onboarding complete — trainer notified";
+
+    await supabase.from("applicant_activities").insert({
+      applicant_id: app.id,
+      event_type: isContracting ? "contracting_reported" : "trainer_notified",
+      summary,
+      actor_id: userId,
+    } as never);
+
+    const copy = await recruiterCopy(supabase, app.id);
+    if (copy?.email) {
+      try {
+        const { sendRawEmail } = await import("@/lib/email-templates/send-email");
+        const subject = isContracting
+          ? `${name} reached pending contracting`
+          : `${name} completed onboarding`;
+        const line = isContracting
+          ? `${name} has completed AgentSpace contracting and reached the pending contracting stage.`
+          : `${name} has completed onboarding and is ready for New Agent Training.`;
+        await sendRawEmail(
+          copy.email,
+          subject,
+          `<div style="font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#111">${line}</div>`,
+          { idempotencyKey: `onb-${data.kind}-${app.id}` },
+        );
+      } catch {
+        /* best-effort */
+      }
+    }
+    return { ok: true as const };
   });
 
 export const updateApplicantStage = createServerFn({ method: "POST" })
@@ -856,6 +914,32 @@ export const sendApplicantEmail = createServerFn({ method: "POST" })
       .eq("id", data.id);
 
     return { ok: true, status };
+  });
+
+/** Admin: a single agent's profile + roles + their onboarding progress. */
+export const adminGetAgentProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const [{ data: profile }, { data: roles }, { data: applicant }] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", data.user_id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", data.user_id),
+      supabase
+        .from("applicants")
+        .select("id, onboarding_steps, onboarding_completed_at, current_stage_id, recruiting_status")
+        .eq("portal_profile_id", data.user_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+    if (!profile) throw new Error("User not found");
+    return {
+      profile,
+      roles: (roles ?? []).map((r: { role: string }) => r.role),
+      applicant: applicant ?? null,
+    };
   });
 
 /** Active profiles the caller can assign as recruiter/manager (RLS scopes it). */

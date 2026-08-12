@@ -540,6 +540,15 @@ async function recomputeCompletion(s: any, enrollmentId: string, courseId: strin
     const scores = (prog ?? []).filter((p: any) => p.quiz_score != null).map((p: any) => Number(p.quiz_score));
     const final = scores.length ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : null;
     await s.from("enrollments").update({ completed_at: new Date().toISOString(), final_score: final }).eq("id", enrollmentId);
+    // Finishing the Vantage Closer Course auto-completes that onboarding step.
+    try {
+      const { data: c } = await s.from("courses").select("slug").eq("id", courseId).maybeSingle();
+      if (c?.slug === "vantage-closer") {
+        await s.rpc("update_onboarding", { _step: "complete_vantage_closer_course" });
+      }
+    } catch {
+      /* best-effort */
+    }
   } else if (!allDone && enr?.completed_at) {
     await s.from("enrollments").update({ completed_at: null, final_score: null }).eq("id", enrollmentId);
   }

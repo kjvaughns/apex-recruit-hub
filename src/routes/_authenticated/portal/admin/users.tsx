@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
@@ -71,9 +71,13 @@ function UsersPage() {
                 {users.map((u: any) => (
                   <TR key={u.id} className="align-top">
                     <TD>
-                      <div className="p-card-title">
+                      <Link
+                        to="/portal/admin/users/$userId"
+                        params={{ userId: u.id }}
+                        className="p-card-title hover:underline"
+                      >
                         {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
-                      </div>
+                      </Link>
                       <div className="p-muted">{u.email}</div>
                       {u.roles.includes("super_admin") && (
                         <Badge tone="gold" className="mt-1">Owner</Badge>
