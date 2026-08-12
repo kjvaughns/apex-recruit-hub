@@ -2,9 +2,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { toast } from "sonner";
 import { PortalShell } from "@/components/vantage/portal-shell";
-import { PageBody, Panel, Button, Badge, EmptyState } from "@/components/portal/ui";
+import {
+  PageBody,
+  Panel,
+  Button,
+  Badge,
+  EmptyState,
+  ErrorState,
+  CardSkeleton,
+  ListSkeleton,
+  Field,
+  Radio,
+  notify,
+} from "@/components/portal/ui";
 import { getCourseLearner, markLessonComplete, submitQuiz } from "@/lib/academy.functions";
 import { ChevronLeft, CheckCircle2, Circle, Lock, HelpCircle, Trophy } from "lucide-react";
 
@@ -46,13 +57,33 @@ function CoursePlayer() {
 
   const done = ordered.filter((r) => r.completed).length;
   const total = ordered.length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
   const firstOpen = ordered.find((r) => !r.completed && !r.locked)?.lesson.id ?? ordered[0]?.lesson.id ?? null;
   const currentId = selected ?? firstOpen;
   const current = ordered.find((r) => r.lesson.id === currentId);
   const modulesOpen = openModules ?? (data ? (data.modules as any[]).map((m) => m.id) : []);
 
+  if (q.isError) {
+    return (
+      <PortalShell>
+        <PageBody>
+          <ErrorState description="We couldn't load this course right now. Please try again." onRetry={() => q.refetch()} />
+        </PageBody>
+      </PortalShell>
+    );
+  }
+
   if (q.isLoading) {
-    return <PortalShell><PageBody><div className="p-secondary">Loading…</div></PageBody></PortalShell>;
+    return (
+      <PortalShell>
+        <PageBody>
+          <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+            <div className="p-panel p-4"><ListSkeleton rows={5} /></div>
+            <CardSkeleton lines={5} />
+          </div>
+        </PageBody>
+      </PortalShell>
+    );
   }
   if (!data) {
     return (
@@ -69,11 +100,16 @@ function CoursePlayer() {
   return (
     <PortalShell>
       <PageBody>
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <Link to="/portal/academy" className="p-focus inline-flex items-center gap-1 text-[13px]" style={{ color: "var(--p-text-2)" }}>
-            <ChevronLeft size={15} /> Academy
+        <div className="mb-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <Link to="/portal/academy" className="p-focus inline-flex min-w-0 items-center gap-1 text-[13px]" style={{ color: "var(--p-text-2)" }}>
+            <ChevronLeft size={15} className="shrink-0" /> <span className="truncate">Academy</span>
           </Link>
-          <span className="p-muted">{done} of {total} complete</span>
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="h-1.5 w-24 overflow-hidden rounded-full" style={{ background: "var(--p-hover)" }}>
+              <div className="h-full rounded-full" style={{ width: `${Math.max(3, pct)}%`, background: "var(--p-gold)" }} />
+            </div>
+            <span className="p-muted whitespace-nowrap">{pct}% · {done}/{total}</span>
+          </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
@@ -114,7 +150,7 @@ function CoursePlayer() {
                         key={l.id}
                         disabled={locked}
                         onClick={() => { setSelected(l.id); setOutlineOpen(false); }}
-                        className="p-focus flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13.5px] transition disabled:cursor-not-allowed"
+                        className="p-focus flex min-h-11 w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13.5px] transition disabled:cursor-not-allowed"
                         style={{
                           background: currentId === l.id ? "var(--p-gold-soft)" : "transparent",
                           color: locked ? "var(--p-text-3)" : currentId === l.id ? "var(--p-gold)" : "var(--p-text)",
@@ -164,7 +200,7 @@ function CoursePlayer() {
                 onComplete={() => qc.invalidateQueries({ queryKey: ["academy", "learn", slug] })}
               />
             ) : (
-              <Panel><EmptyState title="No lessons yet" description="This course has no content." /></Panel>
+              <Panel><EmptyState title="No lessons yet" description="This course has no content yet." /></Panel>
             )}
           </div>
         </div>
@@ -177,8 +213,8 @@ function LessonView({ lesson, completed, onComplete }: { lesson: any; completed:
   const markFn = useServerFn(markLessonComplete);
   const mut = useMutation({
     mutationFn: () => markFn({ data: { lesson_id: lesson.id } }),
-    onSuccess: () => { toast.success("Lesson complete."); onComplete(); },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not update."),
+    onSuccess: () => { notify.success("Lesson complete."); onComplete(); },
+    onError: () => notify.error("Couldn't mark this lesson complete. Please try again."),
   });
 
   return (
@@ -190,7 +226,7 @@ function LessonView({ lesson, completed, onComplete }: { lesson: any; completed:
       ) : (
         <div className="p-panel overflow-hidden">
           {lesson.video_url ? (
-            <video controls src={lesson.video_url} className="aspect-video w-full bg-black" />
+            <video controls src={lesson.video_url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} />
           ) : (
             <div className="grid aspect-video w-full place-items-center" style={{ background: "var(--p-raised)", color: "var(--p-text-3)" }}>No media attached</div>
           )}
@@ -199,8 +235,8 @@ function LessonView({ lesson, completed, onComplete }: { lesson: any; completed:
       <Panel title={lesson.title}>
         {lesson.blurb && <p className="p-secondary leading-relaxed whitespace-pre-wrap">{lesson.blurb}</p>}
         <div className="mt-4">
-          <Button variant="primary" size="sm" onClick={() => mut.mutate()} disabled={mut.isPending || completed}>
-            {completed ? "✓ Completed" : mut.isPending ? "Saving…" : "Mark complete"}
+          <Button variant="primary" size="sm" onClick={() => mut.mutate()} disabled={completed} loading={mut.isPending}>
+            {completed ? "✓ Completed" : "Mark complete"}
           </Button>
         </div>
       </Panel>
@@ -217,9 +253,9 @@ function QuizView({ lesson, questions, onDone }: { lesson: any; questions: any[]
     onSuccess: (res) => {
       setResult(res);
       onDone();
-      if (res.passed) toast.success("Passed! Next lesson unlocked.");
+      if (res.passed) notify.success("Passed! Next lesson unlocked.");
     },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not submit."),
+    onError: () => notify.error("Couldn't submit your quiz. Please try again."),
   });
 
   const allAnswered = questions.length > 0 && questions.every((_, i) => answers[i] != null);
@@ -231,17 +267,19 @@ function QuizView({ lesson, questions, onDone }: { lesson: any; questions: any[]
       ) : (
         <div className="space-y-5">
           {questions.map((qq, i) => (
-            <div key={qq.id}>
-              <div className="mb-2 text-[14px] font-medium">{i + 1}. {qq.question_text}</div>
+            <Field key={qq.id} label={`${i + 1}. ${qq.question_text}`}>
               <div className="space-y-1.5">
                 {(qq.options ?? []).map((o: string, oi: number) => (
-                  <label key={oi} className="flex cursor-pointer items-center gap-2 rounded-[8px] px-2.5 py-2 text-[13.5px]" style={{ background: answers[i] === oi ? "var(--p-gold-soft)" : "var(--p-hover)", color: answers[i] === oi ? "var(--p-gold)" : "var(--p-text)" }}>
-                    <input type="radio" name={`q-${qq.id}`} checked={answers[i] === oi} onChange={() => setAnswers((p) => ({ ...p, [i]: oi }))} />
-                    {o}
-                  </label>
+                  <div
+                    key={oi}
+                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[8px] px-2.5 py-2 text-[13.5px]"
+                    style={{ background: answers[i] === oi ? "var(--p-gold-soft)" : "var(--p-hover)", color: answers[i] === oi ? "var(--p-gold)" : "var(--p-text)" }}
+                  >
+                    <Radio name={`q-${qq.id}`} checked={answers[i] === oi} onChange={() => setAnswers((p) => ({ ...p, [i]: oi }))} label={o} className="w-full" />
+                  </div>
                 ))}
               </div>
-            </div>
+            </Field>
           ))}
 
           {result && (
@@ -251,8 +289,8 @@ function QuizView({ lesson, questions, onDone }: { lesson: any; questions: any[]
             </div>
           )}
 
-          <Button variant="primary" size="sm" onClick={() => mut.mutate()} disabled={mut.isPending || !allAnswered}>
-            {mut.isPending ? "Submitting…" : result && !result.passed ? "Retake" : "Submit quiz"}
+          <Button variant="primary" size="sm" onClick={() => mut.mutate()} disabled={!allAnswered} loading={mut.isPending}>
+            {result && !result.passed ? "Retake" : "Submit quiz"}
           </Button>
         </div>
       )}
