@@ -144,6 +144,12 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const fetchOnboarding = useServerFn(getMyOnboarding);
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => fetchMe() });
   const onboardingQ = useQuery({ queryKey: ["my-onboarding"], queryFn: () => fetchOnboarding() });
+  const fetchMyLink = useServerFn(getMyRecruitingLink);
+  const myLinkQ = useQuery({ queryKey: ["my-recruiting-link"], queryFn: () => fetchMyLink() });
+  const agentInviteLink =
+    myLinkQ.data?.recruiting_slug && typeof window !== "undefined"
+      ? `${window.location.origin}/join/${myLinkQ.data.recruiting_slug}`
+      : null;
   const onb = onboardingQ.data;
   const onbInProgress = !!onb?.hasOnboarding && !onb.complete;
   const onboardingBadge = onb?.hasOnboarding ? (
