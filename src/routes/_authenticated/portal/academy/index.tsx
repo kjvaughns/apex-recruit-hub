@@ -41,8 +41,10 @@ function typeIcon(type: string, size: number) {
 function AcademyHome() {
   const { section } = Route.useSearch();
   const homeFn = useServerFn(getAcademyHome);
+  const recFn = useServerFn(listRecordingsLearner);
   const meFn = useServerFn(getMe);
   const q = useQuery({ queryKey: ["academy", "home"], queryFn: () => homeFn() });
+  const recQ = useQuery({ queryKey: ["academy", "recordings"], queryFn: () => recFn() });
   const meQ = useQuery({ queryKey: ["me"], queryFn: () => meFn() });
   const canManage =
     (meQ.data?.roles ?? []).some((r) => r === "admin" || r === "super_admin") ||
@@ -50,8 +52,9 @@ function AcademyHome() {
 
   const courses = (q.data?.courses ?? []) as any[];
   const resources = (q.data?.resources ?? []) as any[];
-  const presentations = resources.filter((r) => r.section === "presentation");
-  const library = resources.filter((r) => r.section !== "presentation");
+  const presentations = (recQ.data?.recordings ?? []) as any[];
+  const library = resources.filter((r) => r.section !== "presentation" && (r.status ?? "published") !== "draft");
+
 
   const manageBtn = canManage ? (
     <Link to="/portal/academy/admin"><Button variant="secondary" size="sm">Manage Academy</Button></Link>
