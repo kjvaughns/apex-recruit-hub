@@ -422,8 +422,12 @@ export async function applicantContext(
     ...emailLinks(),
     first_name: a.first_name ?? undefined,
     last_name: a.last_name ?? undefined,
+  const onboardingLink = a.portal_profile_id ? undefined : await onboardingAccountLink(a);
     full_name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
     applicant_name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || undefined,
+    onboarding_link: onboardingLink || undefined,
+    invitation_link: onboardingLink || undefined,
+    portal_link: a.portal_profile_id ? `${SITE_URL}/portal` : (onboardingLink || undefined),
     email: a.email ?? undefined,
     phone: a.phone ?? undefined,
     state: a.resident_state ?? a.state ?? undefined,
