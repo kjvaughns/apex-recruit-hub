@@ -13,6 +13,8 @@ export interface GenericEmailProps {
   details?: Array<{ label: string; value: string }>
   ctaLabel?: string
   ctaUrl?: string
+  secondaryCtaLabel?: string
+  secondaryCtaUrl?: string
   note?: string
   footerNote?: string
   prefsUrl?: string
@@ -60,6 +62,8 @@ export function GenericEmail({
   details,
   ctaLabel,
   ctaUrl,
+  secondaryCtaLabel,
+  secondaryCtaUrl,
   note,
   footerNote,
   prefsUrl,
@@ -97,6 +101,9 @@ export function GenericEmail({
         </Text>
       ))}
       {ctaLabel && ctaUrl ? <GoldButton href={ctaUrl} label={ctaLabel} /> : null}
+      {secondaryCtaLabel && secondaryCtaUrl ? (
+        <GoldButton href={secondaryCtaUrl} label={secondaryCtaLabel} />
+      ) : null}
       {note ? <Text style={noteStyle}>{note}</Text> : null}
     </Shell>
   )
