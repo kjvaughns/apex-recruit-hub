@@ -728,14 +728,16 @@ export const submitQuiz = createServerFn({ method: "POST" })
     if (!info) throw new Error("Quiz not found");
     const { data: questions } = await s
       .from("quiz_questions")
-      .select("id, correct_index, position")
+      .select("id, correct_index, explanation, position")
       .eq("lesson_id", data.lesson_id)
       .order("position");
     const qs = questions ?? [];
     if (qs.length === 0) throw new Error("This quiz has no questions yet.");
     let correct = 0;
-    qs.forEach((qq: any, i: number) => {
-      if (data.answers[i] === qq.correct_index) correct += 1;
+    const results = qs.map((qq: any, i: number) => {
+      const ok = data.answers[i] === qq.correct_index;
+      if (ok) correct += 1;
+      return { id: qq.id as string, correct: ok, correct_index: qq.correct_index as number, explanation: (qq.explanation ?? null) as string | null };
     });
     const score = correct / qs.length;
     const passed = score >= info.threshold;
@@ -754,5 +756,6 @@ export const submitQuiz = createServerFn({ method: "POST" })
         { onConflict: "enrollment_id,lesson_id" },
       );
     await recomputeCompletion(s, enrollmentId, info.courseId);
-    return { passed, score, threshold: info.threshold };
+    return { passed, score, threshold: info.threshold, results };
   });
+
