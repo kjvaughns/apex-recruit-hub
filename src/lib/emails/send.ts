@@ -1,9 +1,8 @@
-// Email delivery. Sends through Lovable's managed email API and records the
-// outcome in the email_outbox log (status = sent | failed | skipped) so
-// managers can inspect what went out. Best-effort: a delivery failure never
-// breaks an application submission or an auto-hire.
+// Legacy email entry point, now a thin adapter over the unified email system
+// in `src/lib/email/`. Existing triggers keep calling `queueEmail`; delivery,
+// preference gating, dedupe, and outbox logging all happen in the dispatcher.
 
-import { render, resolveLinks, type TemplateKey, type TemplateParams } from "./templates";
+import type { TemplateKey, TemplateParams } from "./templates";
 
 type MinimalClient = {
   rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
@@ -24,7 +23,7 @@ export type QueueEmailArgs = {
   copyForName?: string | null;
 };
 
-/** Internal template key -> registered React Email template name. */
+/** Internal template key -> unified catalog template name. */
 const TEMPLATE_NAMES: Record<TemplateKey, string> = {
   application_licensed: "application-licensed",
   application_unlicensed: "application-unlicensed",
@@ -34,115 +33,38 @@ const TEMPLATE_NAMES: Record<TemplateKey, string> = {
   onboarding_complete: "onboarding-complete",
 };
 
-/** Log a send outcome to the outbox. Never throws. */
-async function logOutbox(
-  supabase: MinimalClient,
-  payload: Record<string, unknown>,
-  label: string,
-): Promise<void> {
-  try {
-    const { error } = await supabase.rpc("enqueue_email", { payload });
-    if (error) {
-      // eslint-disable-next-line no-console
-      console.warn(`[email] outbox log failed for ${label}:`, error);
-    }
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn(`[email] unexpected error logging ${label}:`, e);
-  }
-}
-
-type SendOutcome = { status: "sent" | "failed" | "skipped"; error: string | null };
-
-/** Fire one registered template at one address. Never throws. */
-async function deliver(
-  templateName: string,
-  email: string,
-  templateData: Record<string, unknown>,
-  idempotencyKey: string,
-): Promise<SendOutcome> {
-  try {
-    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const result = await sendTemplateEmail(templateName, email, { templateData, idempotencyKey });
-    return { status: result.sent ? "sent" : "skipped", error: result.sent ? null : result.reason };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    // eslint-disable-next-line no-console
-    console.warn(`[email] send failed for ${templateName} -> ${email}:`, msg);
-    return { status: "failed", error: msg };
-  }
-}
-
 /**
  * Send a branded Vantage email and log the outcome. When `copyTo` names a
  * recruiting agent, the same email is delivered to them with a banner marking
  * it as their copy. Never throws into the caller's flow.
  */
 export async function queueEmail(
-  supabase: MinimalClient,
+  _supabase: MinimalClient,
   { to, toName, applicantId, template, params, copyTo, copyForName }: QueueEmailArgs,
 ): Promise<void> {
   const email = to?.trim().toLowerCase();
   if (!email) return;
 
-  const links = resolveLinks();
-  const rendered = render(template, { ...params, links });
-  const templateName = TEMPLATE_NAMES[template];
-  const templateData = {
-    firstName: params?.firstName,
-    licensed: params?.licensed,
-    portalLink: params?.portalLink,
-    ...links,
-  };
-
-  const primary = await deliver(
-    templateName,
-    email,
-    templateData,
-    `${template}-${applicantId ?? email}`,
-  );
-
-  await logOutbox(
-    supabase,
-    {
-      to_email: email,
-      to_name: toName ?? null,
-      subject: rendered.subject,
-      html: rendered.html,
-      template_key: template,
-      applicant_id: applicantId ?? null,
-      status: primary.status,
-      error: primary.error,
-    },
-    `${template} -> ${email}`,
-  );
-
-  // Recruiting agent's copy — same content, banner naming the applicant.
-  const agentEmail = copyTo?.email?.trim().toLowerCase();
-  if (!agentEmail || agentEmail === email) return;
-
-  const copyFor = (copyForName ?? toName ?? params?.firstName ?? email)?.toString().trim();
-  const copy = await deliver(
-    templateName,
-    agentEmail,
-    { ...templateData, firstName: firstNameFrom(copyTo?.name), copyFor },
-    `${template}-copy-${applicantId ?? email}`,
-  );
-
-  await logOutbox(
-    supabase,
-    {
-      to_email: agentEmail,
-      to_name: copyTo?.name ?? null,
-      subject: `Copy: ${rendered.subject}`,
-      html: rendered.html,
-      template_key: `${template}_agent_copy`,
-      applicant_id: applicantId ?? null,
-      status: copy.status,
-      error: copy.error,
-    },
-    `${template} copy -> ${agentEmail}`,
-  );
+  try {
+    const { sendWithAgentCopy } = await import("@/lib/email/dispatch.server");
+    await sendWithAgentCopy({
+      template: TEMPLATE_NAMES[template],
+      to: email,
+      toName: toName ?? null,
+      applicantId: applicantId ?? null,
+      sendKey: `${template}-${applicantId ?? email}`,
+      copyFor: copyForName ?? toName ?? null,
+      agent: copyTo ?? null,
+      context: {
+        first_name: params?.firstName || undefined,
+        full_name: toName || undefined,
+        email,
+        portal_link: params?.portalLink || undefined,
+      },
+    });
+  } catch (e) {
+    console.warn(`[email] ${template} -> ${email} failed:`, e);
+  }
 }
 
 /** Details rendered in the agent's new-applicant alert. */
@@ -188,29 +110,43 @@ export async function sendAgentNewApplicant(
     applicantUrl: alert.applicantUrl,
   };
 
-  const outcome = await deliver(
-    "agent-new-applicant",
-    agentEmail,
-    templateData,
-    `agent-new-applicant-${alert.applicantId ?? alert.applicantEmail ?? agentEmail}`,
-  );
+  let status: "sent" | "failed" | "skipped" = "sent";
+  let error: string | null = null;
+  try {
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const result = await sendTemplateEmail("agent-new-applicant", agentEmail, {
+      templateData,
+      idempotencyKey: `agent-new-applicant-${alert.applicantId ?? alert.applicantEmail ?? agentEmail}`,
+    });
+    if (!result.sent) {
+      status = "skipped";
+      error = result.reason;
+    }
+  } catch (e) {
+    status = "failed";
+    error = e instanceof Error ? e.message : String(e);
+    console.warn(`[email] agent-new-applicant -> ${agentEmail} failed:`, error);
+  }
 
-  await logOutbox(
-    supabase,
-    {
-      to_email: agentEmail,
-      to_name: alert.agentName ?? null,
-      subject: `New applicant: ${alert.applicantName || "someone just applied"}`,
-      html: "",
-      template_key: "agent_new_applicant",
-      applicant_id: alert.applicantId ?? null,
-      status: outcome.status,
-      error: outcome.error,
-    },
-    `agent_new_applicant -> ${agentEmail}`,
-  );
+  try {
+    await supabase.rpc("enqueue_email", {
+      payload: {
+        to_email: agentEmail,
+        to_name: alert.agentName ?? null,
+        subject: `New applicant: ${alert.applicantName || "someone just applied"}`,
+        html: "",
+        template_key: "agent_new_applicant",
+        template_name: "agent-new-applicant",
+        category: "recruiting",
+        applicant_id: alert.applicantId ?? null,
+        status,
+        error,
+      },
+    });
+  } catch {
+    /* logging is best-effort */
+  }
 }
-
 
 export function firstNameFrom(fullName?: string | null, fallback?: string | null): string {
   const n = (fullName ?? "").trim();

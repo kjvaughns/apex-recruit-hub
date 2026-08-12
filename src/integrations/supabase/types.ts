@@ -581,45 +581,185 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaign_subscriptions: {
+        Row: {
+          campaign_slug: string
+          created_at: string
+          id: string
+          subscribed: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_slug: string
+          created_at?: string
+          id?: string
+          subscribed?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_slug?: string
+          created_at?: string
+          id?: string
+          subscribed?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          audience: string
+          cadence: string
+          content: Json
+          created_at: string
+          description: string | null
+          enabled: boolean
+          id: string
+          last_sent_at: string | null
+          name: string
+          next_send_at: string | null
+          optional: boolean
+          schedule_label: string | null
+          slug: string
+          target_profile_id: string | null
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          cadence?: string
+          content?: Json
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          last_sent_at?: string | null
+          name: string
+          next_send_at?: string | null
+          optional?: boolean
+          schedule_label?: string | null
+          slug: string
+          target_profile_id?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          cadence?: string
+          content?: Json
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          last_sent_at?: string | null
+          name?: string
+          next_send_at?: string | null
+          optional?: boolean
+          schedule_label?: string | null
+          slug?: string
+          target_profile_id?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_outbox: {
         Row: {
           applicant_id: string | null
+          automated: boolean
+          campaign_slug: string | null
+          category: string
           created_at: string
+          cta_url: string | null
+          delivered_at: string | null
           error: string | null
           html: string
           id: string
+          meta: Json
+          profile_id: string | null
+          provider_message_id: string | null
           sent_at: string | null
+          sent_by: string | null
           status: string
           subject: string
           template_key: string
+          template_name: string | null
           to_email: string
           to_name: string | null
+          updated_at: string
         }
         Insert: {
           applicant_id?: string | null
+          automated?: boolean
+          campaign_slug?: string | null
+          category?: string
           created_at?: string
+          cta_url?: string | null
+          delivered_at?: string | null
           error?: string | null
           html: string
           id?: string
+          meta?: Json
+          profile_id?: string | null
+          provider_message_id?: string | null
           sent_at?: string | null
+          sent_by?: string | null
           status?: string
           subject: string
           template_key: string
+          template_name?: string | null
           to_email: string
           to_name?: string | null
+          updated_at?: string
         }
         Update: {
           applicant_id?: string | null
+          automated?: boolean
+          campaign_slug?: string | null
+          category?: string
           created_at?: string
+          cta_url?: string | null
+          delivered_at?: string | null
           error?: string | null
           html?: string
           id?: string
+          meta?: Json
+          profile_id?: string | null
+          provider_message_id?: string | null
           sent_at?: string | null
+          sent_by?: string | null
           status?: string
           subject?: string
           template_key?: string
+          template_name?: string | null
           to_email?: string
           to_name?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -627,6 +767,76 @@ export type Database = {
             columns: ["applicant_id"]
             isOneToOne: false
             referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_outbox_sent_by_fkey"
+            columns: ["sent_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_send_keys: {
+        Row: {
+          created_at: string
+          send_key: string
+        }
+        Insert: {
+          created_at?: string
+          send_key: string
+        }
+        Update: {
+          created_at?: string
+          send_key?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body_override: Json | null
+          created_at: string
+          enabled: boolean
+          id: string
+          subject_override: string | null
+          template_name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body_override?: Json | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          subject_override?: string | null
+          template_name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body_override?: Json | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          subject_override?: string | null
+          template_name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1537,6 +1747,7 @@ export type Database = {
           id: string
         }[]
       }
+      email_claim_send: { Args: { _key: string }; Returns: boolean }
       enqueue_email: { Args: { payload: Json }; Returns: string }
       finalize_invitation_acceptance: { Args: { payload: Json }; Returns: Json }
       get_applicant_notify_context: { Args: { _token: string }; Returns: Json }

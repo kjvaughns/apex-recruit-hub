@@ -141,6 +141,7 @@ export function Shell({
   title,
   footerNote,
   copyFor,
+  prefsUrl,
   children,
 }: {
   preview: string
@@ -149,6 +150,8 @@ export function Shell({
   footerNote?: string
   /** Recruiting agent's copy — names the applicant this email went to. */
   copyFor?: string
+  /** Optional emails link here so recipients can manage their categories. */
+  prefsUrl?: string
   children: React.ReactNode
 }) {
   return (
@@ -175,6 +178,15 @@ export function Shell({
               (copyFor
                 ? "You're receiving this because you're the recruiting agent on this applicant."
                 : "You're receiving this because you applied to join the Vantage team.")}
+            {prefsUrl ? (
+              <>
+                {' '}
+                <a href={prefsUrl} style={{ color: GOLD, textDecoration: 'underline' }}>
+                  Manage email preferences
+                </a>
+                .
+              </>
+            ) : null}
           </Text>
         </Container>
       </Body>

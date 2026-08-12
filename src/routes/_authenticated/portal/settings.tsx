@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { PortalShell } from "@/components/vantage/portal-shell";
+import { listEmailCampaigns, setCampaignSubscription } from "@/lib/email.functions";
 import {
   PageHeader,
   PageBody,
@@ -362,24 +363,74 @@ function NotificationsSection() {
   }
 
   return (
+    <>
+      <Panel
+        title="Notifications"
+        description="Choose which updates you receive. Preferences are saved to your profile and applied wherever notifications are sent."
+      >
+        <div className="flex flex-col divide-y" style={{ borderColor: "var(--p-border)" }}>
+          {NOTIF_EVENTS.map((e) => (
+            <div key={e.key} className="py-3">
+              <Toggle
+                checked={!!prefs[e.key]}
+                onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))}
+                label={e.label}
+              />
+            </div>
+          ))}
+        </div>
+        <Button variant="primary" className="mt-5" loading={save.isPending} onClick={() => save.mutate()}>
+          Save preferences
+        </Button>
+      </Panel>
+      <CampaignSubscriptions />
+    </>
+  );
+}
+
+/** Opt in or out of the recurring agent emails (daily focus, weekly plan, tips). */
+function CampaignSubscriptions() {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listEmailCampaigns);
+  const setFn = useServerFn(setCampaignSubscription);
+  const q = useQuery({ queryKey: ["email", "campaigns"], queryFn: () => listFn() });
+  const toggle = useMutation({
+    mutationFn: (v: { slug: string; subscribed: boolean }) => setFn({ data: v }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["email", "campaigns"] });
+      notify.success("Subscription updated.");
+    },
+    onError: () => notify.error("Could not update that subscription.", "Please try again."),
+  });
+
+  if (q.isLoading) {
+    return (
+      <Panel title="Recurring emails" className="mt-4">
+        <ListSkeleton rows={3} />
+      </Panel>
+    );
+  }
+  const campaigns = (q.data ?? []).filter((c: any) => c.enabled && c.optional);
+  if (!campaigns.length) return null;
+
+  return (
     <Panel
-      title="Notifications"
-      description="Choose which updates you receive. Preferences are saved to your profile and applied wherever notifications are sent."
+      title="Recurring emails"
+      description="Ongoing team emails you can opt out of at any time."
+      className="mt-4"
     >
       <div className="flex flex-col divide-y" style={{ borderColor: "var(--p-border)" }}>
-        {NOTIF_EVENTS.map((e) => (
-          <div key={e.key} className="py-3">
+        {campaigns.map((c: any) => (
+          <div key={c.slug} className="py-3">
             <Toggle
-              checked={!!prefs[e.key]}
-              onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))}
-              label={e.label}
+              checked={c.subscribed !== false}
+              onChange={(v) => toggle.mutate({ slug: c.slug, subscribed: v })}
+              label={c.name}
+              description={c.schedule_label}
             />
           </div>
         ))}
       </div>
-      <Button variant="primary" className="mt-5" loading={save.isPending} onClick={() => save.mutate()}>
-        Save preferences
-      </Button>
     </Panel>
   );
 }

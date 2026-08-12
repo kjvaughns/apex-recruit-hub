@@ -43,6 +43,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicWebhooksCalendlyRouteImport } from './routes/api/public/webhooks/calendly'
+import { Route as ApiPublicHooksEmailDispatchRouteImport } from './routes/api/public/hooks/email-dispatch'
 import { Route as AuthenticatedPortalResourcesPresentationsRouteImport } from './routes/_authenticated/portal/resources/presentations'
 import { Route as AuthenticatedPortalResourcesLibraryRouteImport } from './routes/_authenticated/portal/resources/library'
 import { Route as AuthenticatedPortalResourcesAdminRouteImport } from './routes/_authenticated/portal/resources/admin'
@@ -51,6 +52,7 @@ import { Route as AuthenticatedPortalApplicantsApplicantIdRouteImport } from './
 import { Route as AuthenticatedPortalAdminUsersRouteImport } from './routes/_authenticated/portal/admin/users'
 import { Route as AuthenticatedPortalAdminStagesRouteImport } from './routes/_authenticated/portal/admin/stages'
 import { Route as AuthenticatedPortalAdminSettingsRouteImport } from './routes/_authenticated/portal/admin/settings'
+import { Route as AuthenticatedPortalAdminEmailsRouteImport } from './routes/_authenticated/portal/admin/emails'
 import { Route as AuthenticatedPortalAdminAuditRouteImport } from './routes/_authenticated/portal/admin/audit'
 import { Route as AuthenticatedPortalAcademyAdminRouteImport } from './routes/_authenticated/portal/academy/admin'
 import { Route as AuthenticatedPortalAdminUsersUserIdRouteImport } from './routes/_authenticated/portal/admin/users.$userId'
@@ -250,6 +252,12 @@ const ApiPublicWebhooksCalendlyRoute =
     path: '/api/public/webhooks/calendly',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEmailDispatchRoute =
+  ApiPublicHooksEmailDispatchRouteImport.update({
+    id: '/api/public/hooks/email-dispatch',
+    path: '/api/public/hooks/email-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedPortalResourcesPresentationsRoute =
   AuthenticatedPortalResourcesPresentationsRouteImport.update({
     id: '/presentations',
@@ -296,6 +304,12 @@ const AuthenticatedPortalAdminSettingsRoute =
   AuthenticatedPortalAdminSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
+  } as any)
+const AuthenticatedPortalAdminEmailsRoute =
+  AuthenticatedPortalAdminEmailsRouteImport.update({
+    id: '/emails',
+    path: '/emails',
     getParentRoute: () => AuthenticatedPortalAdminRouteRoute,
   } as any)
 const AuthenticatedPortalAdminAuditRoute =
@@ -356,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
+  '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -364,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -397,6 +413,7 @@ export interface FileRoutesByTo {
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
+  '/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
   '/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -405,6 +422,7 @@ export interface FileRoutesByTo {
   '/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -447,6 +465,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/portal/academy/admin': typeof AuthenticatedPortalAcademyAdminRoute
   '/_authenticated/portal/admin/audit': typeof AuthenticatedPortalAdminAuditRoute
+  '/_authenticated/portal/admin/emails': typeof AuthenticatedPortalAdminEmailsRoute
   '/_authenticated/portal/admin/settings': typeof AuthenticatedPortalAdminSettingsRoute
   '/_authenticated/portal/admin/stages': typeof AuthenticatedPortalAdminStagesRoute
   '/_authenticated/portal/admin/users': typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -455,6 +474,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/resources/admin': typeof AuthenticatedPortalResourcesAdminRoute
   '/_authenticated/portal/resources/library': typeof AuthenticatedPortalResourcesLibraryRoute
   '/_authenticated/portal/resources/presentations': typeof AuthenticatedPortalResourcesPresentationsRoute
+  '/api/public/hooks/email-dispatch': typeof ApiPublicHooksEmailDispatchRoute
   '/api/public/webhooks/calendly': typeof ApiPublicWebhooksCalendlyRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -497,6 +517,7 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/portal/academy/admin'
     | '/portal/admin/audit'
+    | '/portal/admin/emails'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/users'
@@ -505,6 +526,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -538,6 +560,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/portal/academy/admin'
     | '/portal/admin/audit'
+    | '/portal/admin/emails'
     | '/portal/admin/settings'
     | '/portal/admin/stages'
     | '/portal/admin/users'
@@ -546,6 +569,7 @@ export interface FileRouteTypes {
     | '/portal/resources/admin'
     | '/portal/resources/library'
     | '/portal/resources/presentations'
+    | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -587,6 +611,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/'
     | '/_authenticated/portal/academy/admin'
     | '/_authenticated/portal/admin/audit'
+    | '/_authenticated/portal/admin/emails'
     | '/_authenticated/portal/admin/settings'
     | '/_authenticated/portal/admin/stages'
     | '/_authenticated/portal/admin/users'
@@ -595,6 +620,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/resources/admin'
     | '/_authenticated/portal/resources/library'
     | '/_authenticated/portal/resources/presentations'
+    | '/api/public/hooks/email-dispatch'
     | '/api/public/webhooks/calendly'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -618,6 +644,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ScheduleRoute: typeof ScheduleRoute
   PortalInviteTokenRoute: typeof PortalInviteTokenRoute
+  ApiPublicHooksEmailDispatchRoute: typeof ApiPublicHooksEmailDispatchRoute
   ApiPublicWebhooksCalendlyRoute: typeof ApiPublicWebhooksCalendlyRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -864,6 +891,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksCalendlyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/email-dispatch': {
+      id: '/api/public/hooks/email-dispatch'
+      path: '/api/public/hooks/email-dispatch'
+      fullPath: '/api/public/hooks/email-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksEmailDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/portal/resources/presentations': {
       id: '/_authenticated/portal/resources/presentations'
       path: '/presentations'
@@ -918,6 +952,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/portal/admin/settings'
       preLoaderRoute: typeof AuthenticatedPortalAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedPortalAdminRouteRoute
+    }
+    '/_authenticated/portal/admin/emails': {
+      id: '/_authenticated/portal/admin/emails'
+      path: '/emails'
+      fullPath: '/portal/admin/emails'
+      preLoaderRoute: typeof AuthenticatedPortalAdminEmailsRouteImport
       parentRoute: typeof AuthenticatedPortalAdminRouteRoute
     }
     '/_authenticated/portal/admin/audit': {
@@ -997,6 +1038,7 @@ const AuthenticatedPortalAdminUsersRouteWithChildren =
 
 interface AuthenticatedPortalAdminRouteRouteChildren {
   AuthenticatedPortalAdminAuditRoute: typeof AuthenticatedPortalAdminAuditRoute
+  AuthenticatedPortalAdminEmailsRoute: typeof AuthenticatedPortalAdminEmailsRoute
   AuthenticatedPortalAdminSettingsRoute: typeof AuthenticatedPortalAdminSettingsRoute
   AuthenticatedPortalAdminStagesRoute: typeof AuthenticatedPortalAdminStagesRoute
   AuthenticatedPortalAdminUsersRoute: typeof AuthenticatedPortalAdminUsersRouteWithChildren
@@ -1006,6 +1048,7 @@ interface AuthenticatedPortalAdminRouteRouteChildren {
 const AuthenticatedPortalAdminRouteRouteChildren: AuthenticatedPortalAdminRouteRouteChildren =
   {
     AuthenticatedPortalAdminAuditRoute: AuthenticatedPortalAdminAuditRoute,
+    AuthenticatedPortalAdminEmailsRoute: AuthenticatedPortalAdminEmailsRoute,
     AuthenticatedPortalAdminSettingsRoute:
       AuthenticatedPortalAdminSettingsRoute,
     AuthenticatedPortalAdminStagesRoute: AuthenticatedPortalAdminStagesRoute,
@@ -1157,6 +1200,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ScheduleRoute: ScheduleRoute,
   PortalInviteTokenRoute: PortalInviteTokenRoute,
+  ApiPublicHooksEmailDispatchRoute: ApiPublicHooksEmailDispatchRoute,
   ApiPublicWebhooksCalendlyRoute: ApiPublicWebhooksCalendlyRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
@@ -1165,13 +1209,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
