@@ -75,6 +75,17 @@ function RecordingPage() {
   const transcript = data.transcript as any;
   const media = resolveMedia(rec.video_url);
   const isAudio = rec.format === "audio";
+  const nativeRef = useRef<HTMLMediaElement | null>(null);
+  const frameRef = useRef<HTMLIFrameElement | null>(null);
+  const isNative = isAudio || media.kind === "direct" || (!!rec.video_url && !media.embedUrl);
+  const target = isNative
+    ? ({ kind: "element", ref: nativeRef } as const)
+    : media.kind === "youtube"
+      ? ({ kind: "youtube", ref: frameRef } as const)
+      : media.kind === "vimeo"
+        ? ({ kind: "vimeo", ref: frameRef } as const)
+        : ({ kind: "none" } as const);
+  const { seek, canSeek, currentMs } = useMediaSeek(target);
 
   return (
     <PortalShell>
@@ -93,7 +104,12 @@ function RecordingPage() {
             {isAudio ? (
               <Panel>
                 {rec.video_url ? (
-                  <audio controls src={media.embedUrl ?? rec.video_url} className="w-full" />
+                  <audio
+                    ref={nativeRef as React.RefObject<HTMLAudioElement>}
+                    controls
+                    src={media.embedUrl ?? rec.video_url}
+                    className="w-full"
+                  />
                 ) : (
                   <div className="p-muted">No audio attached yet.</div>
                 )}
@@ -105,9 +121,16 @@ function RecordingPage() {
                     No video attached yet
                   </div>
                 ) : media.kind === "direct" ? (
-                  <video controls src={rec.video_url} className="aspect-video w-full" style={{ background: "var(--p-raised)" }} />
+                  <video
+                    ref={nativeRef as React.RefObject<HTMLVideoElement>}
+                    controls
+                    src={rec.video_url}
+                    className="aspect-video w-full"
+                    style={{ background: "var(--p-raised)" }}
+                  />
                 ) : (
                   <iframe
+                    ref={frameRef}
                     src={media.embedUrl ?? rec.video_url}
                     title={rec.title}
                     allow="autoplay; fullscreen; picture-in-picture"
@@ -151,21 +174,21 @@ function RecordingPage() {
             <div className="p-4">
               {tab === "notes" ? (
                 transcript?.notes ? (
-                  <NotesPreview notes={transcript.notes} />
+                  <NotesPreview notes={transcript.notes} onSeek={canSeek ? seek : undefined} />
                 ) : (
                   <p className="p-muted leading-snug">
                     Training notes appear here once this recording has been transcribed.
                   </p>
                 )
-              ) : transcript?.transcript_text ? (
-                <div
-                  className="p-secondary max-h-[520px] overflow-y-auto whitespace-pre-wrap rounded-[10px] p-3 leading-relaxed"
-                  style={{ background: "var(--p-hover)" }}
-                >
-                  {transcript.transcript_text}
-                </div>
               ) : (
-                <p className="p-muted leading-snug">No transcript for this recording yet.</p>
+                <TranscriptViewer
+                  segments={transcript?.transcript_segments}
+                  fallbackText={transcript?.transcript_text}
+                  speakerNames={transcript?.speaker_names}
+                  onSeek={seek}
+                  canSeek={canSeek}
+                  currentMs={currentMs}
+                />
               )}
             </div>
           </Panel>
@@ -174,3 +197,4 @@ function RecordingPage() {
     </PortalShell>
   );
 }
+
