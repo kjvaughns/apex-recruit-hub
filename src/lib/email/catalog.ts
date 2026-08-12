@@ -343,14 +343,19 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your licensing course is the gate to everything else, so start it today and work it daily.",
+        "Use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       bullets: [
         "Enroll in the licensing course",
         "Study daily — most agents finish in two to three weeks",
+        "Check your state requirements and apply for your license on nipr.com",
+        "Complete fingerprinting and background checks if your state requires them",
         "Tell your recruiter the day you pass",
       ],
       ctaLabel: "Start your course",
       ctaUrl: "{{course_link}}",
+      secondaryCtaLabel: "State requirements",
+      secondaryCtaUrl: "{{state_requirements_link}}",
     },
   }),
   def({
@@ -365,9 +370,12 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Quick nudge on your licensing course. Consistent daily study is what gets people through fast.",
+        "Use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       ctaLabel: "Back to your course",
       ctaUrl: "{{course_link}}",
+      secondaryCtaLabel: "State requirements",
+      secondaryCtaUrl: "{{state_requirements_link}}",
     },
   }),
   def({
