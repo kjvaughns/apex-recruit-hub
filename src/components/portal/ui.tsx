@@ -628,7 +628,7 @@ export function SearchField({
   className?: string;
 }) {
   return (
-    <div className={cn("relative min-w-0 flex-1", className)}>
+    <div className={cn("relative min-w-0 basis-full sm:min-w-[220px] sm:flex-1 sm:basis-auto", className)}>
       <Search
         size={14}
         className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
