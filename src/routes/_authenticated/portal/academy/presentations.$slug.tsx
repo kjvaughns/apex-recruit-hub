@@ -45,7 +45,8 @@ function RecordingPage() {
   const mediaPre = resolveMedia(recPre?.video_url);
   const isAudioPre = recPre?.format === "audio";
   const isNativePre =
-    isAudioPre || mediaPre.kind === "direct" || (!!recPre?.video_url && !mediaPre.embedUrl);
+    (isAudioPre && !mediaPre.embedUrl) || mediaPre.kind === "direct" || (!!recPre?.video_url && !mediaPre.embedUrl);
+
   const target = isNativePre
     ? ({ kind: "element", ref: nativeRef } as const)
     : mediaPre.kind === "youtube"
