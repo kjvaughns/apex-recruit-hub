@@ -39,6 +39,8 @@ export const listEmailTemplates = createServerFn({ method: "GET" })
           note: t.body.note ?? "",
           cta_label: t.body.ctaLabel ?? "",
           cta_url: t.body.ctaUrl ?? "",
+          secondary_cta_label: t.body.secondaryCtaLabel ?? "",
+          secondary_cta_url: t.body.secondaryCtaUrl ?? "",
         },
         override: overrides.get(t.name) ?? null,
       })),
@@ -57,6 +59,8 @@ const overrideSchema = z.object({
       note: z.string().max(500).optional(),
       cta_label: z.string().max(80).optional(),
       cta_url: z.string().max(500).optional(),
+      secondary_cta_label: z.string().max(80).optional(),
+      secondary_cta_url: z.string().max(500).optional(),
     })
     .default({}),
 });
@@ -124,6 +128,8 @@ export const previewEmailTemplate = createServerFn({ method: "POST" })
             note: body["note"] ?? null,
             cta_label: body["cta_label"] ?? null,
             cta_url: body["cta_url"] ?? null,
+            secondary_cta_label: body["secondary_cta_label"] ?? null,
+            secondary_cta_url: body["secondary_cta_url"] ?? null,
           }
         : null,
     });
