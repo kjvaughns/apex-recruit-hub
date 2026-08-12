@@ -17,9 +17,9 @@ export type QueueEmailArgs = {
   applicantId?: string | null;
   template: TemplateKey;
   params?: Omit<TemplateParams, "links">;
-  /** Recruiting agent copied on this email (rendered with a "your copy" banner). */
+  /** @deprecated Agents get their own stage notifications; copies are not sent. */
   copyTo?: EmailCopyTarget | null;
-  /** Name shown in the agent's copy banner. Defaults to the recipient's name. */
+  /** @deprecated No longer used. */
   copyForName?: string | null;
 };
 
@@ -34,27 +34,25 @@ const TEMPLATE_NAMES: Record<TemplateKey, string> = {
 };
 
 /**
- * Send a branded Vantage email and log the outcome. When `copyTo` names a
- * recruiting agent, the same email is delivered to them with a banner marking
- * it as their copy. Never throws into the caller's flow.
+ * Send a branded Vantage email and log the outcome. Recruiting agents are not
+ * copied on applicant email — they get their own stage notifications instead.
+ * Never throws into the caller's flow.
  */
 export async function queueEmail(
   _supabase: MinimalClient,
-  { to, toName, applicantId, template, params, copyTo, copyForName }: QueueEmailArgs,
+  { to, toName, applicantId, template, params }: QueueEmailArgs,
 ): Promise<void> {
   const email = to?.trim().toLowerCase();
   if (!email) return;
 
   try {
-    const { sendWithAgentCopy } = await import("@/lib/email/dispatch.server");
-    await sendWithAgentCopy({
+    const { sendEmail } = await import("@/lib/email/dispatch.server");
+    await sendEmail({
       template: TEMPLATE_NAMES[template],
       to: email,
       toName: toName ?? null,
       applicantId: applicantId ?? null,
       sendKey: `${template}-${applicantId ?? email}`,
-      copyFor: copyForName ?? toName ?? null,
-      agent: copyTo ?? null,
       context: {
         first_name: params?.firstName || undefined,
         full_name: toName || undefined,
