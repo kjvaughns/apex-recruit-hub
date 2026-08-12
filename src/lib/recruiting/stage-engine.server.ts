@@ -105,6 +105,51 @@ export interface ApplicantRow {
 const APPLICANT_COLS =
   "id, first_name, last_name, email, phone, licensed, state, resident_state, npn, recruiting_status, current_stage_id, assigned_recruiter_id, original_recruiter_id, scheduled_event_start, scheduled_event_url, calendly_scheduled_at, requested_overview_at, exam_date, exam_provider, confirmation_token, portal_profile_id";
 
+/**
+ * Account-setup link for an applicant entering Onboarding. New agents have no
+ * portal account yet, so every path into Onboarding must hand them a
+ * single-use invitation link instead of a login wall. Existing accounts keep
+ * going to the portal. Never throws.
+ */
+async function onboardingAccountLink(a: ApplicantRow): Promise<string> {
+  if (a.portal_profile_id) return `${SITE_URL}/login`;
+  if (!a.email) return `${SITE_URL}/login`;
+  try {
+    const supabase = await db();
+    const { data: inv } = await supabase
+      .from("invitations")
+      .select("token")
+      .eq("applicant_id", a.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    let token: string | undefined = inv?.token;
+    if (!token) {
+      const { data: res } = await supabase.rpc("create_invitation", {
+        payload: {
+          email: a.email,
+          first_name: a.first_name ?? "",
+          last_name: a.last_name ?? "",
+          phone: a.phone ?? "",
+          state: a.resident_state ?? a.state ?? "",
+          licensed: true,
+          npn: a.npn ?? "",
+          role: "agent",
+          applicant_id: a.id,
+        },
+      });
+      token = res?.token;
+    }
+    if (token) return `${SITE_URL}/portal-invite/${token}`;
+  } catch (e) {
+    console.warn("[recruiting] onboarding invite link failed:", (e as Error).message);
+  }
+  return `${SITE_URL}/login`;
+}
+
+
+
 export async function loadApplicant(applicantId: string): Promise<ApplicantRow | null> {
   const supabase = await db();
   const { data } = await supabase
