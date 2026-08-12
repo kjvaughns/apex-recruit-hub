@@ -364,7 +364,8 @@ function CourseEditor({ courseId, onEditMeta }: { courseId: string; onEditMeta: 
     invalidate();
   }
 
-  if (q.isLoading) return <Panel><div className="p-secondary">Loading…</div></Panel>;
+  if (q.isError) return <Panel><ErrorState description="Couldn't load this course. Please try again." onRetry={() => q.refetch()} /></Panel>;
+  if (q.isLoading) return <Panel><CardSkeleton lines={5} /></Panel>;
 
   return (
     <Panel
@@ -497,7 +498,7 @@ function LessonModal({ moduleId, lessonId, lesson, questions, onClose, onSaved }
       title={lessonId ? "Edit lesson" : "New lesson"}
       width={620}
       onClose={onClose}
-      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={busy || !f.title.trim()}>{busy ? "Saving…" : "Save"}</Button></>}
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!f.title.trim()} loading={busy}>Save</Button></>}
     >
       <div className="space-y-4">
         <FormGrid>
@@ -593,7 +594,7 @@ function QuestionsEditor({ lessonId, questions }: { lessonId: string; questions:
         <Input placeholder="Question text" value={text} onChange={(e) => setText(e.target.value)} />
         {opts.map((o, i) => (
           <div key={i} className="flex items-center gap-2">
-            <input type="radio" name="correct" checked={correct === i} onChange={() => setCorrect(i)} aria-label={`Mark option ${i + 1} correct`} />
+            <Radio name="correct" checked={correct === i} onChange={() => setCorrect(i)} label="" aria-label={`Mark option ${i + 1} correct`} />
             <Input placeholder={`Option ${i + 1}`} value={o} onChange={(e) => setOpts(opts.map((x, xi) => (xi === i ? e.target.value : x)))} />
           </div>
         ))}

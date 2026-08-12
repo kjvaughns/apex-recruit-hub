@@ -57,54 +57,41 @@ const SECTIONS: { key: Section; label: string }[] = [
 function PortalSettingsPage() {
   const [section, setSection] = useState<Section>("profile");
 
+  const content = (
+    <>
+      {section === "profile" && <ProfileSection />}
+      {section === "security" && <SecuritySection />}
+      {section === "notifications" && <NotificationsSection />}
+      {section === "appearance" && <AppearanceSection />}
+      {section === "recruiting" && <RecruitingSection />}
+    </>
+  );
+
   return (
     <PortalShell>
       <PageBody>
         <PageHeader title="Settings" description="Manage your profile, security, and preferences." />
 
-        <div className="sm:hidden mb-4">
-          <Select value={section} onChange={(e) => setSection(e.target.value as Section)}>
-            {SECTIONS.map((s) => (
-              <option key={s.key} value={s.key}>
-                {s.label}
-              </option>
-            ))}
-          </Select>
+        <div className="mb-4 sm:hidden">
+          <Tabs
+            tabs={SECTIONS.map((s) => ({ value: s.key, label: s.label }))}
+            value={section}
+            onChange={setSection}
+          />
         </div>
 
         <div className="hidden gap-4 sm:grid sm:grid-cols-[200px_minmax(0,1fr)] sm:items-start">
-          <nav className="p-panel flex flex-col gap-0.5 p-1.5">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.key}
-                onClick={() => setSection(s.key)}
-                className="p-focus rounded-[8px] px-3 py-2 text-left text-[13.5px] font-medium transition"
-                style={
-                  section === s.key
-                    ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" }
-                    : { color: "var(--p-text-2)" }
-                }
-              >
-                {s.label}
-              </button>
-            ))}
-          </nav>
-          <div className="min-w-0 space-y-4">
-            {section === "profile" && <ProfileSection />}
-            {section === "security" && <SecuritySection />}
-            {section === "notifications" && <NotificationsSection />}
-            {section === "appearance" && <AppearanceSection />}
-            {section === "recruiting" && <RecruitingSection />}
+          <div className="p-panel p-1.5">
+            <SectionNav
+              items={SECTIONS.map((s) => ({ value: s.key, label: s.label }))}
+              value={section}
+              onChange={setSection}
+            />
           </div>
+          <div className="min-w-0 space-y-4">{content}</div>
         </div>
 
-        <div className="space-y-4 sm:hidden">
-          {section === "profile" && <ProfileSection />}
-          {section === "security" && <SecuritySection />}
-          {section === "notifications" && <NotificationsSection />}
-          {section === "appearance" && <AppearanceSection />}
-          {section === "recruiting" && <RecruitingSection />}
-        </div>
+        <div className="space-y-4 sm:hidden">{content}</div>
       </PageBody>
     </PortalShell>
   );

@@ -1177,10 +1177,15 @@ export function SectionNav<T extends string>({
  * text — callers pass a plain sentence; unknown errors fall back to a generic
  * message.
  */
+type NotifyAction = { label: string; onClick: () => void };
+
 export const notify = {
-  success: (message: string, description?: string) => toast.success(message, { description }),
-  info: (message: string, description?: string) => toast(message, { description }),
-  warning: (message: string, description?: string) => toast.warning(message, { description }),
-  error: (message = "Something went wrong", description?: string) =>
-    toast.error(message, { description }),
+  success: (message: string, description?: string, action?: NotifyAction) =>
+    toast.success(message, { description, action }),
+  info: (message: string, description?: string, action?: NotifyAction) =>
+    toast(message, { description, action }),
+  warning: (message: string, description?: string, action?: NotifyAction) =>
+    toast.warning(message, { description, action }),
+  error: (message = "Something went wrong", description?: string, action?: NotifyAction) =>
+    toast.error(message, { description, action }),
 };
