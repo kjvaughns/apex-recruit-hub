@@ -21,6 +21,7 @@ import {
   UserPlus,
   ShieldCheck,
   ScrollText,
+  Mail,
   PanelLeftClose,
   PanelLeftOpen,
   Sun,
