@@ -761,10 +761,10 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="p-focus grid h-7 w-7 shrink-0 place-items-center rounded-md text-[14px] hover:bg-[var(--p-hover)]"
+              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
               style={{ color: "var(--p-text-2)" }}
             >
-              ✕
+              <X size={15} aria-hidden />
             </button>
           </header>
           <div className={cn("min-h-0 flex-1 overflow-y-auto p-4", bodyClassName)}>{children}</div>
@@ -992,10 +992,10 @@ export function Drawer({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="p-focus grid h-7 w-7 shrink-0 place-items-center rounded-md text-[14px] hover:bg-[var(--p-hover)]"
+              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
               style={{ color: "var(--p-text-2)" }}
             >
-              ✕
+              <X size={15} aria-hidden />
             </button>
           </header>
           <div className={cn("min-h-0 flex-1 overflow-y-auto p-4", bodyClassName)}>{children}</div>
