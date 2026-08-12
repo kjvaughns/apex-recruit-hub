@@ -653,7 +653,8 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
     type: (resource?.type ?? "link") as "file" | "video" | "audio" | "link",
     url: resource?.url ?? "",
     is_required: !!resource?.is_required,
-    tags: (resource?.tags ?? []).join(", ") as string,
+    section: (resource?.section ?? "library") as "library" | "presentation",
+    category: (resource?.category ?? "") as string,
   });
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -691,7 +692,8 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
           type: f.type,
           url: f.url,
           is_required: f.is_required,
-          tags: f.tags.split(",").map((t) => t.trim()).filter(Boolean),
+          section: f.section,
+          category: f.category.trim(),
         },
       });
       toast.success("Resource saved.");
@@ -738,9 +740,17 @@ function ResourceModal({ resource, onClose, onSaved }: { resource?: any; onClose
             <input type="file" className="hidden" disabled={uploading} onChange={(e) => { const file = e.target.files?.[0]; if (file) upload(file); }} />
           </label>
         )}
-        <Field label="Tags" hint="Comma-separated. New tags are created automatically.">
-          <Input value={f.tags} onChange={(e) => setF({ ...f, tags: e.target.value })} placeholder="Objections, Video" />
-        </Field>
+        <FormGrid>
+          <Field label="Section">
+            <Select value={f.section} onChange={(e) => setF({ ...f, section: e.target.value as any })}>
+              <option value="library">Library</option>
+              <option value="presentation">Recorded Presentation</option>
+            </Select>
+          </Field>
+          <Field label="Category" hint="Optional folder, e.g. Scripts, Systems, Carrier Resources.">
+            <Input value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} placeholder="Scripts" />
+          </Field>
+        </FormGrid>
       </div>
     </Modal>
   );
