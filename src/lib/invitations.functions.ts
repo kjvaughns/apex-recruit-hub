@@ -46,11 +46,13 @@ function invitableRoles(
     case "leader": {
       const out: string[] = [];
       if (perms.leaders) out.push("leader");
-      if (perms.agents) out.push("agent");
+      out.push("agent");
       return out;
     }
+    case "agent":
+      return ["agent"];
     default:
-      return [];
+      return ["agent"];
   }
 }
 
