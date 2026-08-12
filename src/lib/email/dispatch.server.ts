@@ -63,6 +63,8 @@ async function loadOverride(templateName: string): Promise<TemplateOverride | nu
       note: body["note"] ?? null,
       cta_label: body["cta_label"] ?? null,
       cta_url: body["cta_url"] ?? null,
+      secondary_cta_label: body["secondary_cta_label"] ?? null,
+      secondary_cta_url: body["secondary_cta_url"] ?? null,
     };
   } catch {
     return null;
