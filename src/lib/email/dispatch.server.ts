@@ -101,7 +101,7 @@ async function claimKey(sendKey?: string | null): Promise<boolean> {
 async function log(payload: Record<string, unknown>): Promise<void> {
   try {
     const db = await admin();
-    await db.rpc("enqueue_email", { payload });
+    await db.rpc("enqueue_email", { payload: payload as never });
   } catch (e) {
     console.warn("[email] outbox log failed:", e);
   }
