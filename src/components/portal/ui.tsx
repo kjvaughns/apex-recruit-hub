@@ -628,18 +628,18 @@ export function SearchField({
 }) {
   return (
     <div className={cn("relative min-w-0 flex-1", className)}>
-      <span
-        className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-[13px]"
+      <Search
+        size={14}
+        className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
         style={{ color: "var(--p-text-3)" }}
         aria-hidden
-      >
-        ⌕
-      </span>
+      />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={cn(controlClass, "h-9 pl-7 text-[13.5px]")}
+        aria-label={placeholder}
+        className={cn(controlClass, "h-9 pl-8 text-[13.5px]")}
       />
     </div>
   );
