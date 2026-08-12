@@ -649,13 +649,23 @@ export const getCourseLearner = createServerFn({ method: "POST" })
       .eq("course_id", course.id)
       .order("position");
     const modIds = (modules ?? []).map((m: any) => m.id);
-    const { data: lessons } = modIds.length
+    const { data: allLessons } = modIds.length
       ? await s.from("course_lessons").select("*").in("module_id", modIds).order("position")
       : { data: [] };
-    const quizIds = (lessons ?? []).filter((l: any) => l.kind === "quiz").map((l: any) => l.id);
+    const lessons = (allLessons ?? []).filter((l: any) => l.is_published !== false);
+    const quizIds = lessons.filter((l: any) => l.kind === "quiz").map((l: any) => l.id);
     const { data: questions } = quizIds.length
       ? await s.from("quiz_questions").select("id, lesson_id, question_text, options, position").in("lesson_id", quizIds).order("position")
       : { data: [] };
+    const mediaIds = lessons.filter((l: any) => l.kind === "video" || l.kind === "audio").map((l: any) => l.id);
+    const { data: transcripts } = mediaIds.length
+      ? await s
+          .from("media_transcripts")
+          .select("owner_id, transcript_text, transcript_segments, notes, status, notes_status")
+          .eq("owner_type", "lesson")
+          .in("owner_id", mediaIds)
+      : { data: [] };
+
     const { data: progress } = await s
       .from("lesson_progress")
       .select("lesson_id, completed_at, quiz_score")
