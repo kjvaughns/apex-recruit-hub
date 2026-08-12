@@ -212,3 +212,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function ReadOnly({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.06em] text-vantage-faint">
+        {label}
+      </span>
+      <span className="block text-[14.5px] text-vantage-fog">{value}</span>
+    </div>
+  );
+}
+
