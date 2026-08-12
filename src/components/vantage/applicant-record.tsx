@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ChevronLeft, Mail, MessageSquare, Phone, ClipboardList } from "lucide-react";
+import { Check, ChevronLeft, Mail, X, MessageSquare, Phone, ClipboardList } from "lucide-react";
 import {
   getApplicant,
   updateApplicant,
