@@ -293,7 +293,7 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={save} disabled={busy || !f.title.trim()}>{busy ? "Saving…" : "Save"}</Button>
+          <Button variant="primary" onClick={save} disabled={!f.title.trim()} loading={busy}>Save</Button>
         </>
       }
     >
@@ -312,10 +312,12 @@ function CourseMetaModal({ courseId, onClose, onSaved }: { courseId?: string; on
             </Select>
           </Field>
           <Field label="Required">
-            <label className="mt-2 inline-flex items-center gap-2 text-[13.5px]" style={{ color: "var(--p-text)" }}>
-              <input type="checkbox" checked={f.is_required} onChange={(e) => setF({ ...f, is_required: e.target.checked })} />
-              Mark this course required
-            </label>
+            <Checkbox
+              checked={f.is_required}
+              onChange={(v) => setF({ ...f, is_required: v })}
+              label="Mark this course required"
+              className="mt-2"
+            />
           </Field>
         </FormGrid>
       </div>
