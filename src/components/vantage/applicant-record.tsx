@@ -768,7 +768,12 @@ function EmailComposerModal({
   onSent: () => void;
 }) {
   const sendFn = useServerFn(sendBrandedApplicantEmail);
-  const catalog = composerTemplates();
+  const catalog = composerTemplates().map((t) => ({
+    name: t.name,
+    label: t.label,
+    subject: t.subject,
+    preview: [t.body.intro ?? "", ...(t.body.lines ?? [])].filter(Boolean).join("\n\n"),
+  }));
   const values: Record<string, string> = {
     first_name: applicant.first_name ?? "",
     last_name: applicant.last_name ?? "",
@@ -792,7 +797,7 @@ function EmailComposerModal({
       }),
     onSuccess: (res: any) => {
       if (res?.status === "skipped") {
-        notify.info?.("Email not delivered", "This address is unsubscribed or bounced previously.");
+        notify.error("Email not delivered", "This address is unsubscribed or bounced previously.");
       } else {
         notify.success("Email sent");
       }
@@ -851,7 +856,7 @@ function EmailComposerModal({
                   {fillTemplate(active.subject, values)}
                 </div>
                 <div className="p-body whitespace-pre-wrap">
-                  {fillTemplate(active.body, values)}
+                  {fillTemplate(active.preview, values)}
                 </div>
               </div>
             ) : null}
