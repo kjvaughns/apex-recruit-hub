@@ -1,10 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { PortalShell } from "@/components/vantage/portal-shell";
+import { ApplicantRecord } from "@/components/vantage/applicant-record";
 import { listApplicants, updateApplicantStage, addAgent } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { AddAgentModal } from "@/components/vantage/add-agent-modal";
@@ -31,6 +32,7 @@ import {
 
 const searchSchema = z.object({
   tab: z.enum(["list", "pipeline"]).optional(),
+  open: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/portal/applicants/")({
@@ -53,8 +55,18 @@ type View = "all" | "pre_licensing";
 function ApplicantsPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { tab } = Route.useSearch();
+  const { tab, open } = Route.useSearch();
   const activeTab: "list" | "pipeline" = tab === "pipeline" ? "pipeline" : "list";
+
+  // Applicant record opens in a side drawer (deep-linkable via ?open=<id>).
+  const [openId, setOpenId] = useState<string | null>(open ?? null);
+  useEffect(() => {
+    setOpenId(open ?? null);
+  }, [open]);
+  const closeDrawer = () => {
+    setOpenId(null);
+    if (open) navigate({ to: "/portal/applicants", search: { tab } });
+  };
 
   const [q, setQ] = useState("");
   const [scope, setScope] = useState<Scope>("mine");
@@ -177,12 +189,14 @@ function ApplicantsPage() {
             onboardingStageIds={onboardingStageIds}
             nextStageOf={nextStageOf}
             moveNext={moveNext}
+            onOpen={setOpenId}
           />
         ) : (
           <PipelineView
             stages={stages}
             applicants={applicants}
             isLoading={isLoading}
+            onOpen={setOpenId}
             onAdd={(stageId) => {
               setAddStageId(stageId);
               setAddOpen(true);
@@ -190,6 +204,8 @@ function ApplicantsPage() {
           />
         )}
       </PageBody>
+
+      {openId && <ApplicantRecord applicantId={openId} variant="drawer" onClose={closeDrawer} />}
 
       {addOpen && (
         <AddApplicantModal
@@ -202,7 +218,7 @@ function ApplicantsPage() {
             setAddOpen(false);
             setAddStageId(null);
             qc.invalidateQueries({ queryKey: ["applicants"] });
-            navigate({ to: "/portal/applicants/$applicantId", params: { applicantId: id } });
+            setOpenId(id);
           }}
         />
       )}
@@ -216,8 +232,7 @@ function ApplicantsPage() {
             toast.success("Agent added — onboarding invite sent.", {
               action: {
                 label: "View record",
-                onClick: () =>
-                  navigate({ to: "/portal/applicants/$applicantId", params: { applicantId: res.id } }),
+                onClick: () => setOpenId(res.id),
               },
             });
           }}
@@ -241,6 +256,7 @@ function ListView({
   onboardingStageIds,
   nextStageOf,
   moveNext,
+  onOpen,
 }: any) {
   return (
     <>
@@ -313,7 +329,7 @@ function ListView({
             return (
               <div key={a.id} className="p-panel p-3.5">
                 <div className="flex items-start justify-between gap-2">
-                  <Link to="/portal/applicants/$applicantId" params={{ applicantId: a.id }} className="min-w-0">
+                  <button onClick={() => onOpen(a.id)} className="min-w-0 text-left">
                     <div className="p-body font-semibold truncate">
                       {a.first_name} {a.last_name}
                     </div>
@@ -321,7 +337,7 @@ function ListView({
                       {a.city || "—"}
                       {a.state ? `, ${a.state}` : ""}
                     </div>
-                  </Link>
+                  </button>
                   {s ? (
                     <span
                       className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-0.5 text-[12px] font-medium whitespace-nowrap"
@@ -381,11 +397,9 @@ function ListView({
                       Next →
                     </Button>
                   )}
-                  <Link to="/portal/applicants/$applicantId" params={{ applicantId: a.id }}>
-                    <Button size="sm" variant="secondary">
-                      Open
-                    </Button>
-                  </Link>
+                  <Button size="sm" variant="secondary" onClick={() => onOpen(a.id)}>
+                    Open
+                  </Button>
                 </div>
               </div>
             );
@@ -443,11 +457,7 @@ function ListView({
                 return (
                   <TR key={a.id}>
                     <TD>
-                      <Link
-                        to="/portal/applicants/$applicantId"
-                        params={{ applicantId: a.id }}
-                        className="min-w-0 block"
-                      >
+                      <button onClick={() => onOpen(a.id)} className="block min-w-0 text-left">
                         <div className="p-body font-semibold truncate hover:opacity-80">
                           {a.first_name} {a.last_name}
                         </div>
@@ -456,7 +466,7 @@ function ListView({
                           {a.state ? `, ${a.state}` : ""}
                           {a.referring_recruiter_name ? ` · ref: ${a.referring_recruiter_name}` : ""}
                         </div>
-                      </Link>
+                      </button>
                     </TD>
                     <TD>
                       <div className="p-body truncate max-w-[200px]">{a.email}</div>
@@ -521,9 +531,7 @@ function ListView({
                             Next →
                           </Button>
                         )}
-                        <Link to="/portal/applicants/$applicantId" params={{ applicantId: a.id }}>
-                          <Button size="sm" variant="secondary">Open</Button>
-                        </Link>
+                        <Button size="sm" variant="secondary" onClick={() => onOpen(a.id)}>Open</Button>
                       </div>
                     </TD>
                   </TR>
@@ -542,11 +550,13 @@ function PipelineView({
   applicants,
   isLoading,
   onAdd,
+  onOpen,
 }: {
   stages: any[];
   applicants: any[];
   isLoading: boolean;
   onAdd: (stageId: string | null) => void;
+  onOpen: (id: string) => void;
 }) {
   if (isLoading)
     return (
@@ -583,11 +593,10 @@ function PipelineView({
             </div>
             <div className="flex flex-col gap-1.5">
               {items.map((a: any) => (
-                <Link
+                <button
                   key={a.id}
-                  to="/portal/applicants/$applicantId"
-                  params={{ applicantId: a.id }}
-                  className="p-panel block px-2.5 py-2 transition hover:brightness-[1.08]"
+                  onClick={() => onOpen(a.id)}
+                  className="p-panel block w-full px-2.5 py-2 text-left transition hover:brightness-[1.08]"
                   style={{ minHeight: 72 }}
                 >
                   <div className="p-body font-medium truncate">
@@ -598,7 +607,7 @@ function PipelineView({
                     {a.state ? `, ${a.state}` : ""}
                   </div>
                   <div className="p-muted mt-1 truncate">{a.email}</div>
-                </Link>
+                </button>
               ))}
               <button
                 onClick={() => onAdd(s.id)}

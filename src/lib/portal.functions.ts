@@ -4,6 +4,7 @@ import { z } from "zod";
 import { writeAudit } from "@/lib/audit";
 import { queueEmail, firstNameFrom } from "@/lib/emails/send";
 import { ONBOARDING_STEP_ORDER } from "@/lib/onboarding";
+import { RECRUITING_STATUSES } from "@/lib/recruiting";
 
 const APP_URL = () =>
   (process.env.VANTAGE_APP_URL || "https://vantage-financial.net").replace(/\/$/, "");
@@ -663,6 +664,142 @@ export const addApplicantNote = createServerFn({ method: "POST" })
       .update({ last_contacted_at: new Date().toISOString() })
       .eq("id", data.id);
     return { ok: true };
+  });
+
+/** Inline-edit an applicant's CRM fields (everything except stage, which goes
+ *  through updateApplicantStage so its onboarding automation runs). Only the
+ *  provided fields are written; a summary of what changed is logged. */
+export const updateApplicant = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        first_name: z.string().trim().max(120).optional(),
+        last_name: z.string().trim().max(120).optional(),
+        email: z.string().trim().email().max(200).optional(),
+        phone: z.string().trim().max(40).nullable().optional(),
+        city: z.string().trim().max(120).nullable().optional(),
+        state: z.string().trim().max(60).nullable().optional(),
+        resident_state: z.string().trim().max(60).nullable().optional(),
+        npn: z.string().trim().max(40).nullable().optional(),
+        licensing_status: z.string().trim().max(60).nullable().optional(),
+        recruiting_status: z.enum(RECRUITING_STATUSES).optional(),
+        assigned_recruiter_id: z.string().uuid().nullable().optional(),
+        next_follow_up_at: z.string().datetime().nullable().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const { id, ...rest } = data;
+    const patch: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(rest)) {
+      if (v !== undefined) patch[k] = v;
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
+    patch.updated_at = new Date().toISOString();
+
+    const { error } = await supabase.from("applicants").update(patch as never).eq("id", id);
+    if (error) throw new Error(error.message);
+
+    const changed = Object.keys(patch).filter((k) => k !== "updated_at");
+    await supabase.from("applicant_activities").insert({
+      applicant_id: id,
+      event_type: "record_updated",
+      summary: `Updated ${changed.join(", ")}`,
+      actor_id: userId,
+      data: { fields: changed },
+    } as never);
+    return { ok: true };
+  });
+
+// Manual activity types an authorized user can log from the applicant record.
+const MANUAL_ACTIVITY_TYPES = [
+  "called",
+  "no_answer",
+  "left_voicemail",
+  "text_sent",
+  "email_sent",
+  "spoke_with",
+  "interview_scheduled",
+  "interview_completed",
+  "follow_up_scheduled",
+  "evaluation_completed",
+  "licensing_update",
+  "onboarding_started",
+  "training_started",
+  "hired",
+  "terminated",
+  "other",
+] as const;
+// Types that count as making contact (bump last_contacted_at).
+const CONTACT_ACTIVITY_TYPES = new Set([
+  "called",
+  "left_voicemail",
+  "text_sent",
+  "email_sent",
+  "spoke_with",
+]);
+
+/** Log a manual activity on an applicant's timeline. Optionally schedules a
+ *  follow-up (writes next_follow_up_at). Stores type/notes/time/actor. */
+export const logApplicantActivity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        type: z.enum(MANUAL_ACTIVITY_TYPES),
+        summary: z.string().trim().max(400).optional(),
+        notes: z.string().trim().max(2000).optional(),
+        occurred_at: z.string().datetime().optional(),
+        follow_up_at: z.string().datetime().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    const when = data.occurred_at ?? new Date().toISOString();
+    const summary =
+      (data.summary && data.summary.trim()) ||
+      (data.notes && data.notes.trim()) ||
+      data.type.replace(/_/g, " ");
+
+    await supabase.from("applicant_activities").insert({
+      applicant_id: data.id,
+      event_type: data.type,
+      summary,
+      actor_id: userId,
+      created_at: when,
+      data: { notes: data.notes ?? null, follow_up_at: data.follow_up_at ?? null },
+    } as never);
+
+    const patch: Record<string, unknown> = {};
+    if (data.follow_up_at) patch.next_follow_up_at = data.follow_up_at;
+    if (CONTACT_ACTIVITY_TYPES.has(data.type)) patch.last_contacted_at = when;
+    if (Object.keys(patch).length) {
+      patch.updated_at = new Date().toISOString();
+      await supabase.from("applicants").update(patch as never).eq("id", data.id);
+    }
+    return { ok: true };
+  });
+
+/** Active profiles the caller can assign as recruiter/manager (RLS scopes it). */
+export const listAssignableUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email")
+      .eq("is_active", true)
+      .order("first_name");
+    const users = (data ?? []).map((p: any) => ({
+      id: p.id,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Unnamed",
+    }));
+    return { users };
   });
 
 /* ============================================================
