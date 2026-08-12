@@ -116,6 +116,8 @@ function ProfileSection() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
+  const [npn, setNpn] = useState("");
+  const [residentState, setResidentState] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -124,14 +126,26 @@ function ProfileSection() {
     setFirstName(profile.first_name ?? "");
     setLastName(profile.last_name ?? "");
     setPhone(profile.phone ?? "");
+    setNpn(profile.npn ?? "");
+    setResidentState(profile.resident_state ?? "");
     setAvatarUrl(profile.avatar_url ?? null);
   }, [profile]);
 
   const save = useMutation({
-    mutationFn: () =>
-      saveFn({
-        data: { first_name: firstName.trim(), last_name: lastName.trim(), phone: phone.trim() },
-      }),
+    mutationFn: () => {
+      if (phone.trim() && !/^[\d\s()+.-]{7,}$/.test(phone.trim())) {
+        throw new Error("Please enter a valid phone number.");
+      }
+      return saveFn({
+        data: {
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          phone: phone.trim(),
+          npn: npn.trim(),
+          resident_state: residentState.trim(),
+        },
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
       toast.success("Profile saved.");
@@ -147,12 +161,10 @@ function ProfileSection() {
       const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
       if (error) throw error;
-      // The avatars bucket is private, so store a long-lived signed URL.
-      const { data: signed, error: signErr } = await supabase.storage
-        .from("avatars")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign upload URL.");
-      const url = signed.signedUrl;
+      // The avatars bucket is public — store the public URL.
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = pub.publicUrl;
+      if (!url) throw new Error("Could not resolve upload URL.");
       await saveFn({ data: { avatar_url: url } });
       setAvatarUrl(url);
       qc.invalidateQueries({ queryKey: ["me"] });
@@ -196,6 +208,12 @@ function ProfileSection() {
         <Field label="Email (read-only)">
           <Input readOnly value={profile?.email ?? ""} className="opacity-70" />
         </Field>
+        <Field label="NPN">
+          <Input value={npn} onChange={(e) => setNpn(e.target.value)} placeholder="National Producer Number" />
+        </Field>
+        <Field label="Resident state">
+          <Input value={residentState} onChange={(e) => setResidentState(e.target.value)} placeholder="e.g. TX" />
+        </Field>
       </FormGrid>
 
       <Button variant="primary" className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
@@ -208,25 +226,32 @@ function ProfileSection() {
 /* ---------------- Security ---------------- */
 
 function SecuritySection() {
+  const [current, setCurrent] = useState("");
   const [pw, setPw] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
   const [lastSignIn, setLastSignIn] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? null);
       setLastSignIn(data.user?.last_sign_in_at ?? null);
     });
   }, []);
 
-  const valid = pw.length >= 8 && pw === confirm;
+  const valid = !!current && pw.length >= 8 && pw === confirm;
 
   async function changePassword() {
-    if (!valid) return;
+    if (!valid || !email) return;
     setBusy(true);
     try {
+      // Re-authenticate with the current password before changing it.
+      const { error: reauthErr } = await supabase.auth.signInWithPassword({ email, password: current });
+      if (reauthErr) throw new Error("Current password is incorrect.");
       const { error } = await supabase.auth.updateUser({ password: pw });
       if (error) throw error;
+      setCurrent("");
       setPw("");
       setConfirm("");
       toast.success("Password updated.");
@@ -241,6 +266,9 @@ function SecuritySection() {
     <div className="space-y-4">
       <Panel title="Change password">
         <div className="grid gap-4">
+          <Field label="Current password">
+            <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="Your current password" />
+          </Field>
           <Field label="New password">
             <Input
               type="password"
@@ -278,11 +306,13 @@ function SecuritySection() {
 /* ---------------- Notifications ---------------- */
 
 const NOTIF_EVENTS: { key: string; label: string; def: boolean }[] = [
-  { key: "new_applicant_assigned", label: "A new applicant is assigned to me", def: true },
-  { key: "applicant_stage_changed", label: "An applicant moves to a new stage", def: true },
-  { key: "follow_up_overdue", label: "A pre-licensing follow-up is overdue", def: true },
-  { key: "evaluation_submitted", label: "An applicant submits their evaluation", def: true },
-  { key: "weekly_summary", label: "Weekly summary of my pipeline", def: false },
+  { key: "email_notifications", label: "Email notifications", def: true },
+  { key: "recruiting_updates", label: "Recruiting updates", def: true },
+  { key: "applicant_follow_ups", label: "Applicant follow-ups", def: true },
+  { key: "training_reminders", label: "Training reminders", def: true },
+  { key: "meeting_reminders", label: "Meeting reminders", def: true },
+  { key: "agency_announcements", label: "Agency announcements", def: true },
+  { key: "onboarding_updates", label: "Onboarding updates", def: true },
 ];
 
 function NotificationsSection() {
@@ -311,7 +341,7 @@ function NotificationsSection() {
   return (
     <Panel
       title="Notifications"
-      description="Choose which events email you. These are saved to your profile — we'll wire them into the exact send events as the list is finalized."
+      description="Choose which updates you receive. Preferences are saved to your profile and applied wherever notifications are sent."
     >
       <div className="flex flex-col divide-y" style={{ borderColor: "var(--p-border)" }}>
         {NOTIF_EVENTS.map((e) => (

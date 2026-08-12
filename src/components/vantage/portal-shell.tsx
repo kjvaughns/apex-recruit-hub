@@ -19,7 +19,6 @@ import {
   Settings,
   Rocket,
   UserPlus,
-  Mail,
   ShieldCheck,
   ScrollText,
   PanelLeftClose,
@@ -178,11 +177,9 @@ export function PortalShell({ children }: { children: ReactNode }) {
       .find((n) => (n.to === "/portal" ? path === "/portal" : path.startsWith(n.to)))?.label ??
     (path.startsWith("/portal/admin")
       ? "Admin"
-      : path.startsWith("/portal/invitations")
-        ? "Invitations"
-        : path.startsWith("/portal/onboarding")
-          ? "Onboarding"
-          : "Portal");
+      : path.startsWith("/portal/onboarding")
+        ? "Onboarding"
+        : "Portal");
 
   return (
     <div
@@ -256,14 +253,6 @@ export function PortalShell({ children }: { children: ReactNode }) {
                   <UserPlus className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
                   {!collapsed && <span>Add Agent</span>}
                 </button>
-                <NavRow
-                  to="/portal/invitations"
-                  icon={Mail}
-                  label="Invitations"
-                  active={path.startsWith("/portal/invitations")}
-                  collapsed={collapsed}
-                  onClick={() => setMobileOpen(false)}
-                />
               </>
             )}
 
