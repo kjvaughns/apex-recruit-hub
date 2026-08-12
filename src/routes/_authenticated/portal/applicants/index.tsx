@@ -144,14 +144,14 @@ function ApplicantsPage() {
       <PageBody>
         <PageHeader
           title="Applicants"
-          description="Recruiting pipeline"
+          description="Every recruit you're working, from first application through licensing."
           actions={
             <>
               <Button variant="secondary" size="sm" onClick={() => setAddAgentOpen(true)}>
-                + Add Agent
+                <UserPlus size={14} aria-hidden /> Add Agent
               </Button>
               <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
-                + Add Applicant
+                <Plus size={14} aria-hidden /> Add Applicant
               </Button>
             </>
           }
@@ -182,7 +182,15 @@ function ApplicantsPage() {
           />
         </div>
 
-        {activeTab === "list" ? (
+        {applicantsQ.isError ? (
+          <Panel>
+            <ErrorState
+              title="Couldn't load applicants"
+              description="Your pipeline didn't load. Check your connection and try again."
+              onRetry={() => applicantsQ.refetch()}
+            />
+          </Panel>
+        ) : activeTab === "list" ? (
           <ListView
             data={data}
             isLoading={isLoading}
@@ -198,6 +206,7 @@ function ApplicantsPage() {
             nextStageOf={nextStageOf}
             moveNext={moveNext}
             onOpen={setOpenId}
+            onAdd={() => setAddOpen(true)}
           />
         ) : (
           <PipelineView

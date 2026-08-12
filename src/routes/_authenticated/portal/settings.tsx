@@ -340,10 +340,26 @@ function NotificationsSection() {
     mutationFn: () => saveFn({ data: { prefs } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast.success("Notification preferences saved.");
+      notify.success("Notification preferences saved.");
     },
-    onError: (e: unknown) => toast.error((e as Error).message || "Could not save."),
+    onError: () => notify.error("Could not save your preferences.", "Please try again."),
   });
+
+  if (meQ.isError) {
+    return (
+      <Panel title="Notifications">
+        <ErrorState description="We couldn't load your preferences." onRetry={() => meQ.refetch()} />
+      </Panel>
+    );
+  }
+
+  if (meQ.isLoading) {
+    return (
+      <Panel title="Notifications">
+        <ListSkeleton rows={NOTIF_EVENTS.length} />
+      </Panel>
+    );
+  }
 
   return (
     <Panel
@@ -352,34 +368,19 @@ function NotificationsSection() {
     >
       <div className="flex flex-col divide-y" style={{ borderColor: "var(--p-border)" }}>
         {NOTIF_EVENTS.map((e) => (
-          <div key={e.key} className="flex items-center justify-between gap-4 py-3" style={{ borderColor: "var(--p-border)" }}>
-            <span className="p-body">{e.label}</span>
-            <Toggle on={!!prefs[e.key]} onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))} />
+          <div key={e.key} className="py-3">
+            <Toggle
+              checked={!!prefs[e.key]}
+              onChange={(v) => setPrefs((p) => ({ ...p, [e.key]: v }))}
+              label={e.label}
+            />
           </div>
         ))}
       </div>
-      <Button variant="primary" className="mt-5" onClick={() => save.mutate()} disabled={save.isPending}>
-        {save.isPending ? "Saving…" : "Save preferences"}
+      <Button variant="primary" className="mt-5" loading={save.isPending} onClick={() => save.mutate()}>
+        Save preferences
       </Button>
     </Panel>
-  );
-}
-
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      onClick={() => onChange(!on)}
-      className="p-focus relative h-6 w-11 flex-none rounded-full border transition-colors"
-      style={{
-        background: on ? "var(--p-gold)" : "var(--p-raised)",
-        borderColor: on ? "var(--p-gold)" : "var(--p-border)",
-      }}
-    >
-      <span
-        className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform"
-        style={{ transform: on ? "translateX(22px)" : "translateX(2px)" }}
-      />
-    </button>
   );
 }
 
@@ -432,7 +433,9 @@ function RecruitingSection() {
 
       <Panel title="Licensed scheduling">
         {q.isLoading ? (
-          <div className="p-muted">Loading…</div>
+          <TextSkeleton lines={3} />
+        ) : q.isError ? (
+          <ErrorState description="We couldn't load this setting." onRetry={() => q.refetch()} />
         ) : !canEdit ? (
           <p className="p-secondary">
             Your account isn't permitted to schedule licensed applicants. Ask an administrator to
