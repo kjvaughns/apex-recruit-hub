@@ -346,7 +346,7 @@ export function ApplicantRecord({
         )}
 
         {/* State exam */}
-        <StateExamCard applicant={a} onDone={() => refetch()} />
+        <StateExamCard applicant={a} onDone={invalidate} />
 
         {/* Onboarding progress */}
         {currentStage?.slug === "onboarding" && (
