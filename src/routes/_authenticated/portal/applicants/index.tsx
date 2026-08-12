@@ -128,6 +128,13 @@ function ApplicantsPage() {
     if (!next) return;
     await changeStage({ data: { id: applicantId, stage_id: next.id } });
     qc.invalidateQueries({ queryKey: ["applicants"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+  }
+  async function moveToStage(applicantId: string, stageId: string) {
+    if (!stageId) return;
+    await changeStage({ data: { id: applicantId, stage_id: stageId } });
+    qc.invalidateQueries({ queryKey: ["applicants"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
   }
 
   function setTab(t: "list" | "pipeline") {
@@ -197,6 +204,7 @@ function ApplicantsPage() {
             onboardingStageIds={onboardingStageIds}
             nextStageOf={nextStageOf}
             moveNext={moveNext}
+            moveToStage={moveToStage}
             onOpen={setOpenId}
             onAdd={() => setAddOpen(true)}
           />
@@ -249,6 +257,7 @@ function ListView({
   onboardingStageIds,
   nextStageOf,
   moveNext,
+  moveToStage,
   onOpen,
   onAdd,
 }: any) {
@@ -430,7 +439,6 @@ function ListView({
               </TR>
             ) : (
               (data?.applicants ?? []).map((a: any) => {
-                const s = a.current_stage_id ? stageMap[a.current_stage_id] : null;
                 const next = nextStageOf(a.current_stage_id);
                 const licensed = !!a.licensed;
                 return (
@@ -452,11 +460,20 @@ function ListView({
                       <div className="p-muted">{a.phone || "—"}</div>
                     </TD>
                     <TD>
-                      {s ? (
-                        <StageChip stage={s} />
-                      ) : (
-                        <span className="p-muted">—</span>
-                      )}
+                      {/* Inline stage change — no need to open the record. */}
+                      <Select
+                        aria-label={`Stage for ${a.first_name} ${a.last_name}`}
+                        value={a.current_stage_id ?? ""}
+                        onChange={(e) => moveToStage(a.id, e.target.value)}
+                        className="h-8 w-auto max-w-[180px] py-0 text-[12.5px]"
+                      >
+                        {!a.current_stage_id && <option value="">—</option>}
+                        {(data?.stages ?? []).map((st: any) => (
+                          <option key={st.id} value={st.id}>
+                            {st.name}
+                          </option>
+                        ))}
+                      </Select>
                     </TD>
                     <TD>
                       <div className="flex flex-wrap gap-1">
