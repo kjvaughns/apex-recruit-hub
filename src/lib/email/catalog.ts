@@ -286,13 +286,15 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Congratulations — you've been selected to join {{agency_name}}. Everything from here runs on one thing: getting you licensed.",
-        "Step one is your licensing course. Grab it today, then tap the button below so we can move you into pre licensing and start checking in on your progress.",
+        "Do these three things today: join the Vantage Discord, work through the Start Here channel as an unlicensed agent, and get your licensing course.",
+        "Once you've bought the course, take a screenshot of your confirmation screen and post it in the #unlicensed Discord channel with the caption \"I've got the course\" — then tap the button below so we can move you into pre licensing.",
       ],
       bullets: [
+        "Join the Vantage Discord — that's where questions get answered and team sales get posted",
+        "Complete Start Here as an unlicensed agent",
         "Get your licensing course (use partner code karmakore at checkout)",
-        "Join the Vantage Discord so you're plugged into the team",
+        "Screenshot your course confirmation and post it in #unlicensed with \"I've got the course\"",
         "Study daily — most agents finish in two to three weeks",
-        "Tell your recruiter when you're ready to schedule your state exam",
       ],
       details: [
         { label: "Licensing course", value: "{{course_link}}" },
@@ -301,7 +303,8 @@ const applicantTemplates: EmailTemplateDef[] = [
       ],
       ctaLabel: "I've purchased my course",
       ctaUrl: "{{course_confirm_link}}",
-      note: "Tap that button once you've enrolled and we'll take it from there.",
+      note: "Bring every question to Discord — that's also where you keep up with team wins and team sales.",
+
     },
   }),
   def({
