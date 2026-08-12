@@ -678,9 +678,11 @@ export const getCourseLearner = createServerFn({ method: "POST" })
       modules: modules ?? [],
       lessons: lessons ?? [],
       questions: questions ?? [], // no correct_index
+      transcripts: transcripts ?? [],
       progress: progress ?? [],
       enrollment,
     };
+
   });
 
 async function lessonCourseId(s: any, lessonId: string): Promise<{ courseId: string; threshold: number } | null> {
