@@ -363,7 +363,7 @@ export const getApplicant = createServerFn({ method: "POST" })
         .limit(50),
       supabase
         .from("evaluations")
-        .select("id, email, answers, matched, created_at")
+        .select("id, email, answers, matched, score, created_at")
         .eq("applicant_id", data.id)
         .order("created_at", { ascending: false }),
       supabase
