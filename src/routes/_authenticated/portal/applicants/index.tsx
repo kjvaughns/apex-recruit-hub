@@ -10,6 +10,9 @@ import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
+
+/** Stages at or past Onboarding mean the recruit is licensed. */
+const LICENSED_STAGE_SLUGS = new Set(["onboarding", "training", "active-agent"]);
 import {
   PageHeader,
   PageBody,
@@ -440,7 +443,11 @@ function ListView({
             ) : (
               (data?.applicants ?? []).map((a: any) => {
                 const next = nextStageOf(a.current_stage_id);
-                const licensed = !!a.licensed || LICENSED_STAGE_SLUGS.has(s?.slug ?? "");
+                const licensed =
+                  !!a.licensed ||
+                  LICENSED_STAGE_SLUGS.has(
+                    (a.current_stage_id ? stageMap[a.current_stage_id]?.slug : "") ?? "",
+                  );
                 return (
                   <TR key={a.id}>
                     <TD>
