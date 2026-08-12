@@ -157,6 +157,7 @@ export type Database = {
           licensed: boolean
           licensing_status: string | null
           next_follow_up_at: string | null
+          npn: string | null
           onboarding_completed_at: string | null
           onboarding_steps: Json | null
           original_recruiter_id: string | null
@@ -170,6 +171,7 @@ export type Database = {
           priority: string
           promoted_by_user_id: string | null
           promoted_to_agent_at: string | null
+          recruiting_status: string
           ref_slug: string | null
           referral_landing_url: string | null
           referral_source: string | null
@@ -177,6 +179,7 @@ export type Database = {
           referred_by_name_snapshot: string | null
           referred_by_profile_id: string | null
           requested_overview_at: string | null
+          resident_state: string | null
           scheduled_event_end: string | null
           scheduled_event_id: string | null
           scheduled_event_start: string | null
@@ -222,6 +225,7 @@ export type Database = {
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
+          npn?: string | null
           onboarding_completed_at?: string | null
           onboarding_steps?: Json | null
           original_recruiter_id?: string | null
@@ -235,6 +239,7 @@ export type Database = {
           priority?: string
           promoted_by_user_id?: string | null
           promoted_to_agent_at?: string | null
+          recruiting_status?: string
           ref_slug?: string | null
           referral_landing_url?: string | null
           referral_source?: string | null
@@ -242,6 +247,7 @@ export type Database = {
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
           requested_overview_at?: string | null
+          resident_state?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -287,6 +293,7 @@ export type Database = {
           licensed?: boolean
           licensing_status?: string | null
           next_follow_up_at?: string | null
+          npn?: string | null
           onboarding_completed_at?: string | null
           onboarding_steps?: Json | null
           original_recruiter_id?: string | null
@@ -300,6 +307,7 @@ export type Database = {
           priority?: string
           promoted_by_user_id?: string | null
           promoted_to_agent_at?: string | null
+          recruiting_status?: string
           ref_slug?: string | null
           referral_landing_url?: string | null
           referral_source?: string | null
@@ -307,6 +315,7 @@ export type Database = {
           referred_by_name_snapshot?: string | null
           referred_by_profile_id?: string | null
           requested_overview_at?: string | null
+          resident_state?: string | null
           scheduled_event_end?: string | null
           scheduled_event_id?: string | null
           scheduled_event_start?: string | null
@@ -915,6 +924,7 @@ export type Database = {
           email: string
           id: string
           matched: boolean
+          score: number | null
         }
         Insert: {
           answers?: Json
@@ -923,6 +933,7 @@ export type Database = {
           email: string
           id?: string
           matched?: boolean
+          score?: number | null
         }
         Update: {
           answers?: Json
@@ -931,6 +942,7 @@ export type Database = {
           email?: string
           id?: string
           matched?: boolean
+          score?: number | null
         }
         Relationships: [
           {
@@ -1154,6 +1166,7 @@ export type Database = {
           is_required: boolean
           media_type: string | null
           position: number
+          section: string
           slug: string | null
           status: string
           thumbnail_url: string | null
@@ -1174,6 +1187,7 @@ export type Database = {
           is_required?: boolean
           media_type?: string | null
           position?: number
+          section?: string
           slug?: string | null
           status?: string
           thumbnail_url?: string | null
@@ -1194,6 +1208,7 @@ export type Database = {
           is_required?: boolean
           media_type?: string | null
           position?: number
+          section?: string
           slug?: string | null
           status?: string
           thumbnail_url?: string | null
@@ -1400,6 +1415,7 @@ export type Database = {
           parent_user_id: string | null
           phone: string | null
           recruiting_slug: string | null
+          resident_state: string | null
           state: string | null
           status: string
           team_id: string | null
@@ -1434,6 +1450,7 @@ export type Database = {
           parent_user_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
+          resident_state?: string | null
           state?: string | null
           status?: string
           team_id?: string | null
@@ -1468,6 +1485,7 @@ export type Database = {
           parent_user_id?: string | null
           phone?: string | null
           recruiting_slug?: string | null
+          resident_state?: string | null
           state?: string | null
           status?: string
           team_id?: string | null
@@ -1867,10 +1885,6 @@ export type Database = {
     }
     Functions: {
       academy_can_manage: { Args: { _uid: string }; Returns: boolean }
-      academy_enroll: {
-        Args: { _slug: string; _user: string }
-        Returns: undefined
-      }
       academy_slugify: { Args: { _txt: string }; Returns: string }
       can_access_user: {
         Args: { _target: string; _viewer: string }
@@ -1889,6 +1903,7 @@ export type Database = {
           contacted_count: number
           conversion: number
           full_name: string
+          hired_count: number
           manager_name: string
           new_count: number
           prev_total: number
