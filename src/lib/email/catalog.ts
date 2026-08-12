@@ -884,21 +884,25 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your course is the only thing standing between you and getting paid, so treat it like a job.",
+        "If you haven't already: join the Vantage Discord, finish the Start Here channel as an unlicensed agent, and post a screenshot of your course confirmation in #unlicensed with the caption \"I've got the course\".",
         "Most agents finish in two to three weeks studying an hour or two a day. When you're ready to test, tell your recruiter and we'll get your exam on the calendar.",
       ],
       bullets: [
+        "Join the Vantage Discord and complete Start Here as an unlicensed agent",
+        "Post your course confirmation screenshot in #unlicensed with \"I've got the course\"",
         "Work through your course daily — an hour or two beats a weekend cram",
         "Take the practice exams until you're consistently passing",
         "Message your recruiter the moment you're ready to schedule your state exam",
-        "Stay plugged into Discord so you're learning the business while you study",
       ],
       details: [
+        { label: "Discord", value: "{{discord_link}}" },
         { label: "Your recruiter", value: "{{recruiter_name}}" },
         { label: "Reach them at", value: "{{recruiter_email}}" },
       ],
       ctaLabel: "Open your course",
       ctaUrl: "{{course_link}}",
-      note: "Licensing cheat sheet: {{cheat_sheet_link}}",
+      note: "Any question at all goes in Discord — it's also where you keep up with team success and team sales. Licensing cheat sheet: {{cheat_sheet_link}}",
+
     },
   }),
   def({
