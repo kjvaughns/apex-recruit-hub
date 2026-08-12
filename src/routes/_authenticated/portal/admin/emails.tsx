@@ -82,7 +82,7 @@ function EmailAdminPage() {
     <PortalShell>
       <PageHeader
         title="Email system"
-        subtitle="Every automated and manual email the platform sends, in one place."
+        description="Every automated and manual email the platform sends, in one place."
       />
       <PageBody>
         <SectionNav
@@ -191,7 +191,7 @@ function TemplatesTab() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-      <Panel title="Templates" subtitle={`${templates.length} emails`}>
+      <Panel title="Templates" description={`${templates.length} emails`}>
         <Stack>
           <SearchField value={search} onChange={setSearch} placeholder="Search templates…" />
           <div className="max-h-[560px] overflow-y-auto">
@@ -219,7 +219,7 @@ function TemplatesTab() {
       </Panel>
 
       {active ? (
-        <Panel title={active.label} subtitle={active.trigger}>
+        <Panel title={active.label} description={active.trigger}>
           <Stack>
             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
               <Badge tone="neutral">{CATEGORY_LABEL[active.category] ?? active.category}</Badge>
@@ -375,7 +375,7 @@ function CampaignsTab() {
         const fields = CAMPAIGN_FIELDS[c.slug] ?? [];
         const draft = drafts[c.slug] ?? (c.content ?? {});
         return (
-          <Panel key={c.slug} title={c.name} subtitle={c.schedule_label}>
+          <Panel key={c.slug} title={c.name} description={c.schedule_label}>
             <Stack>
               <div className="flex flex-wrap items-center gap-3">
                 <Toggle
@@ -456,7 +456,7 @@ function HistoryTab() {
   if (!rows.length) return <EmptyState title="No emails have gone out yet." />;
 
   return (
-    <Panel title="Recent emails" subtitle="Newest first">
+    <Panel title="Recent emails" description="Newest first">
       <TableWrap>
         <Table>
           <THead>
