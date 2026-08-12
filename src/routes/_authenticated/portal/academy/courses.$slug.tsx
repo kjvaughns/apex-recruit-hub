@@ -325,8 +325,6 @@ function LessonView({
             </details>
           )}
         </Panel>
-
-        </Panel>
       )}
     </>
   );
