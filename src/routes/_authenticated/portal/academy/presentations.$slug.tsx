@@ -92,19 +92,8 @@ function RecordingPage() {
 
   const rec = data.recording as any;
   const transcript = data.transcript as any;
-  const media = resolveMedia(rec.video_url);
-  const isAudio = rec.format === "audio";
-  const nativeRef = useRef<HTMLMediaElement | null>(null);
-  const frameRef = useRef<HTMLIFrameElement | null>(null);
-  const isNative = isAudio || media.kind === "direct" || (!!rec.video_url && !media.embedUrl);
-  const target = isNative
-    ? ({ kind: "element", ref: nativeRef } as const)
-    : media.kind === "youtube"
-      ? ({ kind: "youtube", ref: frameRef } as const)
-      : media.kind === "vimeo"
-        ? ({ kind: "vimeo", ref: frameRef } as const)
-        : ({ kind: "none" } as const);
-  const { seek, canSeek, currentMs } = useMediaSeek(target);
+  const media = mediaPre;
+  const isAudio = isAudioPre;
 
   return (
     <PortalShell>
