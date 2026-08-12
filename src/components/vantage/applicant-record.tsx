@@ -301,31 +301,40 @@ export function ApplicantRecord({
           </div>
         </Panel>
 
-        <SendEvaluationCard applicant={a} />
-
         {!a.licensed && a.hired_at && (
           <DiscordCard applicantId={applicantId} confirmed={!!a.discord_confirmed} onChange={invalidate} />
         )}
 
         <FollowUpCard applicantId={applicantId} onSent={invalidate} />
 
-        {/* Evaluation results */}
-        {(data?.evaluations ?? []).length > 0 && (
-          <Panel title="Evaluation results">
-            {data!.evaluations.map((ev: any) => (
-              <div key={ev.id} className="grid gap-2 text-[13px] sm:grid-cols-2">
+        {/* Evaluation results (View Evaluation) */}
+        {(data?.evaluations ?? []).length > 0 &&
+          data!.evaluations.map((ev: any) => (
+            <Panel
+              key={ev.id}
+              title="Evaluation"
+              description={`Submitted ${new Date(ev.created_at).toLocaleDateString()}`}
+              actions={
+                typeof ev.score === "number" ? (
+                  <Badge tone={ev.score >= 70 ? "green" : ev.score >= 45 ? "amber" : "red"}>
+                    Score {ev.score}/100
+                  </Badge>
+                ) : undefined
+              }
+            >
+              <div className="grid gap-2 text-[13px] sm:grid-cols-2">
                 {Object.entries((ev.answers as Record<string, any>) ?? {})
-                  .filter(([k]) => !k.startsWith("_"))
+                  .filter(([k, v]) => !k.startsWith("_") && String(v ?? "").trim() !== "")
                   .map(([k, v]) => (
                     <div key={k} className="rounded-[10px] border p-2.5" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
-                      <div className="p-label mb-1">{k.replace(/_/g, " ")}</div>
-                      <div className="p-body">{String(v)}</div>
+                      <div className="p-label mb-1">{evalFieldLabel(k)}</div>
+                      <div className="p-body whitespace-pre-wrap">{String(v)}</div>
                     </div>
                   ))}
               </div>
-            ))}
-          </Panel>
-        )}
+              <p className="p-muted mt-3 text-[11.5px]">Internal score is guidance only — it never approves or rejects anyone.</p>
+            </Panel>
+          ))}
 
         {/* Add note */}
         <Panel title="Add a note">
@@ -792,37 +801,29 @@ function FollowUpCard({ applicantId, onSent }: { applicantId: string; onSent: ()
   );
 }
 
-function SendEvaluationCard({ applicant }: { applicant: any }) {
-  const [copied, setCopied] = useState(false);
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const link = `${origin}/evaluation?a=${applicant.id}`;
-  const alreadyHired = !!applicant.hired_at;
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* noop */
-    }
-  }
-  return (
-    <Panel title="Evaluation form" description="Send this pre-filled link after the overview.">
-      {alreadyHired ? (
-        <div className="rounded-[10px] border px-3 py-2.5 text-[13px]" style={{ borderColor: "var(--p-green)", background: "rgba(63,179,127,0.1)", color: "var(--p-green)" }}>
-          ✓ Evaluation submitted.
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          <Input readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="min-w-[180px] flex-1" />
-          <Button variant="primary" onClick={copy} className="shrink-0">{copied ? "Copied!" : "Copy link"}</Button>
-          <a href={link} target="_blank" rel="noreferrer noopener" className="shrink-0">
-            <Button variant="ghost">Open →</Button>
-          </a>
-        </div>
-      )}
-    </Panel>
-  );
+const EVAL_LABELS: Record<string, string> = {
+  full_name: "Full name",
+  phone: "Phone",
+  desired_monthly_income: "Desired monthly income",
+  employment_status: "Employment status",
+  time_commitment: "Time commitment",
+  hours_per_week: "Hours per week",
+  why_join: "Why join Vantage",
+  why_you: "Why we should choose them",
+  looking_for: "Looking for",
+  path_interest: "Path interest",
+  motivation: "Motivation",
+  goal_12mo: "12-month goal",
+  commission_comfort: "Commission comfort",
+  willing_to_call: "Willing to call daily",
+  coachable: "Coachable",
+  start_timeframe: "Can start",
+  comments: "Comments",
+  licensing_status: "Licensing status",
+  why: "Why join Vantage",
+};
+function evalFieldLabel(k: string): string {
+  return EVAL_LABELS[k] ?? k.replace(/_/g, " ");
 }
 
 function OnboardingProgressCard({ steps }: { steps: unknown }) {
