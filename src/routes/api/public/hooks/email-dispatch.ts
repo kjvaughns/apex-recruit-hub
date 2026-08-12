@@ -2,7 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { emailLinks, SITE_URL } from "@/lib/email/links";
 import { formatDate, formatTime } from "@/lib/email/vars";
-import { onboardingProgress } from "@/lib/onboarding";
+import {
+  ONBOARDING_STEP_LABELS,
+  ONBOARDING_STEP_ORDER,
+  onboardingProgress,
+  type OnboardingStepKey,
+} from "@/lib/onboarding";
 
 /**
  * Scheduled email dispatcher. Called by pg_cron:
@@ -114,7 +119,7 @@ async function runReminders() {
         .select("id, full_name, email, is_active")
         .in("id", recruiterIds)
     : { data: [] };
-  const byId = new Map((recruiters ?? []).map((r: any) => [r.id, r]));
+  const byId = new Map<string, any>((recruiters ?? []).map((r: any) => [r.id, r]));
 
   for (const a of due ?? []) {
     const r = byId.get(a.assigned_recruiter_id);
@@ -148,7 +153,9 @@ async function runReminders() {
 
   for (const a of onboarding ?? []) {
     const progress = onboardingProgress(a.onboarding_steps ?? {});
-    if (!progress.nextStep) continue;
+    const steps = (a.onboarding_steps ?? {}) as Record<string, { completed?: boolean }>;
+    const nextKey = ONBOARDING_STEP_ORDER.find((k: OnboardingStepKey) => !steps[k]?.completed);
+    if (!nextKey) continue;
     const { data: p } = await supabase
       .from("profiles")
       .select("id, full_name, email, is_active")
@@ -166,7 +173,7 @@ async function runReminders() {
         ...emailLinks(),
         first_name: (a.first_name ?? p.full_name ?? "").split(/\s+/)[0] || undefined,
         progress: `${progress.done} of ${progress.total} steps complete`,
-        next_step: progress.nextStep,
+        next_step: ONBOARDING_STEP_LABELS[nextKey],
       },
     });
     if (result.status === "sent") counts.onboarding += 1;
