@@ -508,12 +508,25 @@ export async function applyStage(args: {
   context?: EmailContext;
   /** Dedupe suffix for the stage email. */
   dedupeKey?: string;
-}): Promise<void> {
+  /** Extra applicant columns to write alongside the stage change. */
+  patch?: Record<string, any>;
+}): Promise<{ ok: true }> {
   const applicant = await loadApplicant(args.applicantId);
   if (!applicant) throw new Error("Applicant not found");
   
   const fromStage = await stageSlugById(applicant.current_stage_id);
-  if (fromStage === args.stage) return; // already here
+  if (fromStage === args.stage) {
+    // Already at this stage — still persist any extra column updates.
+    if (args.patch && Object.keys(args.patch).length) {
+      const sb = await db();
+      const { error: patchErr } = await sb
+        .from("applicants")
+        .update({ ...args.patch, updated_at: new Date().toISOString() })
+        .eq("id", args.applicantId);
+      if (patchErr) throw new Error(patchErr.message);
+    }
+    return { ok: true };
+  }
 
   const stageId = await stageIdBySlug(args.stage);
   if (!stageId) throw new Error(`Invalid stage: ${args.stage}`);
@@ -529,6 +542,7 @@ export async function applyStage(args: {
   };
   if (stamp) patch[stamp] = patch.stage_entered_at;
   if (status) patch.recruiting_status = status;
+  if (args.patch) Object.assign(patch, args.patch);
 
   const { error } = await supabase
     .from("applicants")
@@ -537,7 +551,7 @@ export async function applyStage(args: {
   if (error) throw new Error(error.message);
 
   const fresh = await loadApplicant(args.applicantId);
-  if (!fresh) return;
+  if (!fresh) return { ok: true };
 
   await logActivity(
     args.applicantId,
@@ -565,4 +579,6 @@ export async function applyStage(args: {
   if (args.stage !== "state-exam") {
     await stopSequence(args.applicantId, "exam_reminders", `Moved to ${args.stage}`);
   }
+
+  return { ok: true };
 }
