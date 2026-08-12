@@ -1903,6 +1903,7 @@ export type Database = {
           contacted_count: number
           conversion: number
           full_name: string
+          hired_count: number
           manager_name: string
           new_count: number
           prev_total: number
