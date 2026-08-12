@@ -387,7 +387,7 @@ export const getRecordingLearner = createServerFn({ method: "POST" })
       s.from("presenters").select("id, name, role, initials, photo_url").eq("id", rec.presenter_id).maybeSingle(),
       s
         .from("media_transcripts")
-        .select("transcript_text, transcript_segments, notes, status, notes_status")
+        .select("transcript_text, transcript_segments, speaker_names, notes, status, notes_status")
         .eq("owner_type", "recording")
         .eq("owner_id", rec.id)
         .maybeSingle(),

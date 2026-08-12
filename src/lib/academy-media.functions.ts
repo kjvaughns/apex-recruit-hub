@@ -254,3 +254,29 @@ export const saveTranscriptEdits = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+/** Admin renames the diarized speakers (e.g. "Speaker A" -> "Kevin"). */
+export const saveSpeakerNames = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    ownerSchema
+      .extend({ speaker_names: z.record(z.string().max(60), z.string().max(80)) })
+      .parse(d),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertCanManage(supabase, userId);
+    const s = supabase as any;
+    const cleaned: Record<string, string> = {};
+    for (const [k, v] of Object.entries(data.speaker_names)) {
+      const name = v.trim();
+      if (name) cleaned[k] = name;
+    }
+    const { error } = await s
+      .from("media_transcripts")
+      .update({ speaker_names: cleaned })
+      .eq("owner_type", data.owner_type)
+      .eq("owner_id", data.owner_id);
+    if (error) throw new Error(error.message);
+    return { ok: true, speaker_names: cleaned };
+  });
