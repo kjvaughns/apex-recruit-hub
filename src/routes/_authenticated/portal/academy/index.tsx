@@ -24,7 +24,9 @@ import { Video, Headphones, FileText, Link2, GraduationCap, PlayCircle, ChevronL
 
 const searchSchema = z.object({
   section: z.enum(["presentations", "courses", "library"]).optional(),
+  speaker: z.string().max(200).optional(),
 });
+
 
 export const Route = createFileRoute("/_authenticated/portal/academy/")({
   head: () => ({ meta: [{ title: "Academy — Vantage Portal" }, { name: "robots", content: "noindex" }] }),
