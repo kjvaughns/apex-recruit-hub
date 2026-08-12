@@ -28,15 +28,33 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const NAV: { to: string; label: string; icon: LucideIcon }[] = [
-  { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/portal/applicants", label: "Applicants", icon: Users },
-  { to: "/portal/calendar", label: "Calendar", icon: CalendarDays },
-  { to: "/portal/leaderboard", label: "Leaderboard", icon: Trophy },
-  { to: "/portal/academy", label: "Academy", icon: GraduationCap },
-  { to: "/portal/organization", label: "Organization", icon: Network },
-  { to: "/portal/settings", label: "My Settings", icon: Settings },
+type NavItem = { to: string; label: string; icon: LucideIcon };
+
+/** Grouped so the sidebar reads as day-to-day work, growth, then account. */
+const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Work",
+    items: [
+      { to: "/portal", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/portal/applicants", label: "Applicants", icon: Users },
+      { to: "/portal/calendar", label: "Calendar", icon: CalendarDays },
+    ],
+  },
+  {
+    label: "Growth",
+    items: [
+      { to: "/portal/academy", label: "Academy", icon: GraduationCap },
+      { to: "/portal/leaderboard", label: "Leaderboard", icon: Trophy },
+      { to: "/portal/organization", label: "Organization", icon: Network },
+    ],
+  },
+  {
+    label: "Account",
+    items: [{ to: "/portal/settings", label: "My Settings", icon: Settings }],
+  },
 ];
+
+const NAV: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
 
 
 const ROLE_LABEL: Record<string, string> = {
@@ -137,6 +155,20 @@ export function PortalShell({ children }: { children: ReactNode }) {
     )
   ) : null;
 
+  // Close the mobile drawer on Escape and when the route changes.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setMobileOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [path]);
+
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") navigate({ to: "/login", replace: true });
@@ -224,16 +256,21 @@ export function PortalShell({ children }: { children: ReactNode }) {
               collapsed={collapsed}
               onClick={() => setMobileOpen(false)}
             />
-            {NAV.map((n) => (
-              <NavRow
-                key={n.to}
-                to={n.to}
-                icon={n.icon}
-                label={n.label}
-                active={n.to === "/portal" ? path === "/portal" : path.startsWith(n.to)}
-                collapsed={collapsed}
-                onClick={() => setMobileOpen(false)}
-              />
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label}>
+                <GroupLabel hidden={collapsed}>{group.label}</GroupLabel>
+                {group.items.map((n) => (
+                  <NavRow
+                    key={n.to}
+                    to={n.to}
+                    icon={n.icon}
+                    label={n.label}
+                    active={n.to === "/portal" ? path === "/portal" : path.startsWith(n.to)}
+                    collapsed={collapsed}
+                    onClick={() => setMobileOpen(false)}
+                  />
+                ))}
+              </div>
             ))}
 
             {canInvite && (
