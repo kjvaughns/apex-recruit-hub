@@ -2037,6 +2037,10 @@ export type Database = {
       }
       email_claim_send: { Args: { _key: string }; Returns: boolean }
       enqueue_email: { Args: { payload: Json }; Returns: string }
+      ensure_onboarding_invitation: {
+        Args: { _applicant_id: string }
+        Returns: Json
+      }
       finalize_invitation_acceptance: { Args: { payload: Json }; Returns: Json }
       get_applicant_notify_context: { Args: { _token: string }; Returns: Json }
       get_evaluation_prefill: { Args: { _applicant_id: string }; Returns: Json }
