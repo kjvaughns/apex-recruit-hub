@@ -273,15 +273,81 @@ export function TranscriptPanel({
             {editing ? (
               <Textarea rows={12} value={draft} onChange={(e) => setDraft(e.target.value)} />
             ) : (
-              <div
-                className="p-secondary max-h-[220px] overflow-y-auto whitespace-pre-wrap rounded-[10px] p-3 leading-relaxed"
-                style={{ background: "var(--p-hover)" }}
-              >
-                {t.transcript_text}
-              </div>
+              <>
+                <SpeakerNamesEditor t={t} ownerType={ownerType} ownerId={ownerId} onSaved={() => q.refetch()} />
+                <TranscriptViewer
+                  segments={t.transcript_segments as any}
+                  fallbackText={t.transcript_text}
+                  speakerNames={(t.speaker_names ?? {}) as Record<string, string>}
+                  maxHeight={260}
+                />
+              </>
             )}
           </div>
         )}
+      </div>
+    </Panel>
+  );
+}
+
+/** Rename diarized speakers so learners see real names. */
+function SpeakerNamesEditor({
+  t,
+  ownerType,
+  ownerId,
+  onSaved,
+}: {
+  t: any;
+  ownerType: OwnerType;
+  ownerId: string;
+  onSaved: () => void;
+}) {
+  const saveNamesFn = useServerFn(saveSpeakerNames);
+  const keys: string[] = Array.from(
+    new Set(((t?.transcript_segments ?? []) as any[]).map((s) => s?.speaker).filter(Boolean)),
+  );
+  const [names, setNames] = useState<Record<string, string>>((t?.speaker_names ?? {}) as Record<string, string>);
+  const [saving, setSaving] = useState(false);
+  if (keys.length === 0) return null;
+
+  return (
+    <div className="rounded-[10px] p-3" style={{ background: "var(--p-hover)" }}>
+      <div className="p-label mb-2">Speaker names</div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {keys.map((k) => (
+          <Field key={k} label={k}>
+            <Input
+              value={names[k] ?? ""}
+              placeholder={k}
+              onChange={(e) => setNames((n) => ({ ...n, [k]: e.target.value }))}
+            />
+          </Field>
+        ))}
+      </div>
+      <Button
+        className="mt-2"
+        variant="secondary"
+        size="sm"
+        loading={saving}
+        onClick={async () => {
+          setSaving(true);
+          try {
+            await saveNamesFn({ data: { owner_type: ownerType, owner_id: ownerId, speaker_names: names } });
+            notify.success("Speaker names saved.");
+            onSaved();
+          } catch (e) {
+            notify.error(e instanceof Error ? e.message : "Couldn't save speaker names.");
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        Save names
+      </Button>
+    </div>
+  );
+}
+
       </div>
     </Panel>
   );
