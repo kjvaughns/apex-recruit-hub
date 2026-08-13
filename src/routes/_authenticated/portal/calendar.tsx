@@ -200,7 +200,7 @@ function Chip({ e, onSelect, compact }: { e: CalEvent; onSelect: (e: CalEvent) =
   return (
     <button
       onClick={() => onSelect(e)}
-      className={`flex w-full items-center gap-1.5 truncate rounded ${compact ? "px-1.5 py-0.5 text-[10.5px]" : "px-2.5 py-2 text-[13px]"} text-left font-medium transition hover:brightness-110`}
+      className={`flex w-full items-center gap-1.5 truncate rounded ${compact ? "px-1.5 py-0.5 text-[10.5px]" : "min-h-[44px] px-2.5 py-2 text-[14px] sm:min-h-0 sm:text-[13px]"} text-left font-medium transition hover:brightness-110`}
       style={e.kind === "appt" ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" } : { background: "rgba(63,179,127,0.12)", color: "var(--p-green)" }}
     >
       <span className="shrink-0 tabular-nums">{e.time}</span>
