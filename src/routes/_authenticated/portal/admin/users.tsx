@@ -292,6 +292,7 @@ function UsersPage() {
               </tbody>
             </Table>
           </TableWrap>
+          </>
         )}
       </PageBody>
     </PortalShell>
