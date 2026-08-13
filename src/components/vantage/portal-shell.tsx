@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { VantageLogo } from "@/components/vantage/brand";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,7 +91,7 @@ function NavRow({
       to={to}
       onClick={onClick}
       title={collapsed ? label : undefined}
-      className={`p-focus mb-0.5 flex h-[38px] items-center gap-2.5 rounded-[8px] px-2.5 text-[14px] font-medium transition ${
+      className={`p-focus mb-0.5 flex min-h-[44px] items-center gap-2.5 rounded-[8px] px-2.5 text-[15px] font-medium transition md:h-[38px] md:min-h-0 md:text-[14px] ${
         collapsed ? "justify-center" : ""
       } ${active ? "" : "hover:bg-[var(--p-hover)]"}`}
       style={
@@ -125,6 +125,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [addAgentOpen, setAddAgentOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -162,14 +163,24 @@ export function PortalShell({ children }: { children: ReactNode }) {
     )
   ) : null;
 
-  // Close the mobile drawer on Escape and when the route changes.
+  // Close the mobile drawer on Escape and when the route changes. While it is
+  // open the page behind it can't scroll, and focus moves into the panel so a
+  // keyboard/screen-reader user isn't left behind the overlay.
   useEffect(() => {
     if (!mobileOpen) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setMobileOpen(false);
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    sidebarRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      previouslyFocused?.focus?.();
+    };
   }, [mobileOpen]);
 
   useEffect(() => {
@@ -218,15 +229,20 @@ export function PortalShell({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className={`vantage-portal relative min-h-screen ${theme === "light" ? "vantage-theme-light" : ""}`}
+      className={`vantage-portal relative min-h-dvh ${theme === "light" ? "vantage-theme-light" : ""}`}
       style={{ background: "var(--p-bg)", color: "var(--p-text)" }}
     >
       <div className="relative flex">
         {/* Sidebar */}
         <aside
-          className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-50 flex ${
-            collapsed ? "w-[64px]" : "w-[240px]"
-          } flex-col border-r transition-[width,transform] md:sticky md:top-0 md:h-screen md:translate-x-0`}
+          ref={sidebarRef}
+          tabIndex={-1}
+          id="portal-sidebar"
+          aria-label="Portal navigation"
+          
+          className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} p-safe-t p-safe-b fixed inset-y-0 left-0 z-50 flex ${
+            collapsed ? "w-[64px]" : "w-[264px] md:w-[240px]"
+          } flex-col border-r transition-[width,transform] outline-none md:sticky md:top-0 md:h-dvh md:translate-x-0`}
           style={{ background: "var(--p-sidebar)", borderColor: "var(--p-border)" }}
         >
           <div
@@ -285,7 +301,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
                     setAddAgentOpen(true);
                   }}
                   title={collapsed ? "Add Agent" : undefined}
-                  className={`p-focus mb-0.5 flex h-[38px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[14px] font-medium transition hover:bg-[var(--p-hover)] ${
+                  className={`p-focus mb-0.5 flex min-h-[44px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[15px] font-medium transition hover:bg-[var(--p-hover)] md:h-[38px] md:min-h-0 md:text-[14px] ${
                     collapsed ? "justify-center" : ""
                   }`}
                   style={{ color: "var(--p-gold)" }}
@@ -338,7 +354,15 @@ export function PortalShell({ children }: { children: ReactNode }) {
               <Avatar name={displayName} email={profile?.email} size={30} />
               {!collapsed && (
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13px] font-semibold">{displayName}</div>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <span className="truncate text-[13px] font-semibold">{displayName}</span>
+                    {/* The header badge is desktop-only, so the role lives here on phones. */}
+                    {primaryRole && (
+                      <Badge tone="neutral" className="shrink-0 sm:hidden">
+                        {ROLE_LABEL[primaryRole] ?? primaryRole}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="truncate text-[11.5px]" style={{ color: "var(--p-text-3)" }}>
                     {profile?.email}
                   </div>
@@ -347,7 +371,10 @@ export function PortalShell({ children }: { children: ReactNode }) {
             </div>
 
             {!collapsed && (
-              <button onClick={signOut} className={`${btnClass("secondary", "sm")} mt-1 w-full`}>
+              <button
+                onClick={signOut}
+                className={`${btnClass("secondary", "sm")} mt-1 min-h-[44px] w-full md:min-h-0`}
+              >
                 Sign out
               </button>
             )}
@@ -364,7 +391,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Top bar */}
           <header
-            className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center gap-3 border-b px-3 backdrop-blur-xl md:px-6"
+            className="p-safe-t sticky top-0 z-30 flex h-[56px] shrink-0 items-center gap-2 border-b px-3 backdrop-blur-xl sm:gap-3 md:px-6"
             style={{
               borderColor: "var(--p-border)",
               background: "color-mix(in oklab, var(--p-bg) 88%, transparent)",
@@ -373,7 +400,9 @@ export function PortalShell({ children }: { children: ReactNode }) {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle navigation"
-              className={`${btnClass("ghost", "sm")} min-h-[40px] min-w-[40px] text-[18px] md:hidden`}
+              aria-expanded={mobileOpen}
+              aria-controls="portal-sidebar"
+              className={`${btnClass("ghost", "sm")} min-h-[44px] min-w-[44px] text-[18px] md:hidden`}
             >
               ☰
             </button>
@@ -388,16 +417,18 @@ export function PortalShell({ children }: { children: ReactNode }) {
             {canInvite && (
               <button
                 onClick={() => setAddAgentOpen(true)}
-                className={`${btnClass("primary", "sm")} hidden sm:inline-flex`}
+                aria-label="Add agent"
+                className={`${btnClass("primary", "sm")} min-h-[44px] min-w-[44px] px-0 sm:min-h-0 sm:min-w-0 sm:px-2.5`}
               >
-                ＋ Add Agent
+                <UserPlus className="h-4 w-4 sm:hidden" aria-hidden="true" />
+                <span className="hidden sm:inline">＋ Add Agent</span>
               </button>
             )}
             <button
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className={`${btnClass("ghost", "sm")} min-h-[40px] min-w-[40px] md:min-h-0 md:min-w-0`}
+              className={`${btnClass("ghost", "sm")} min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0`}
             >
               {theme === "dark" ? (
                 <Sun className="h-4 w-4" aria-hidden="true" />

@@ -431,3 +431,25 @@ textarea.vantage-input { padding: 14px; height: auto; min-height: 110px; resize:
     box-shadow: 0 0 0 2px var(--p-gold-soft), 0 0 0 1px var(--p-gold);
   }
 }
+
+/* --- Mobile safe areas ---------------------------------------------------- */
+/* Notch / home-indicator padding for fixed and sticky portal chrome. */
+@utility p-safe-t {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+@utility p-safe-b {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@utility p-safe-x {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Horizontal card scrollers (pipeline board) snap one column at a time. */
+@utility p-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+@utility p-snap-item {
+  scroll-snap-align: start;
+}

@@ -200,7 +200,7 @@ function Chip({ e, onSelect, compact }: { e: CalEvent; onSelect: (e: CalEvent) =
   return (
     <button
       onClick={() => onSelect(e)}
-      className={`flex w-full items-center gap-1.5 truncate rounded ${compact ? "px-1.5 py-0.5 text-[10.5px]" : "px-2.5 py-2 text-[13px]"} text-left font-medium transition hover:brightness-110`}
+      className={`flex w-full items-center gap-1.5 truncate rounded ${compact ? "px-1.5 py-0.5 text-[10.5px]" : "min-h-[44px] px-2.5 py-2 text-[14px] sm:min-h-0 sm:text-[13px]"} text-left font-medium transition hover:brightness-110`}
       style={e.kind === "appt" ? { background: "var(--p-gold-soft)", color: "var(--p-gold)" } : { background: "rgba(63,179,127,0.12)", color: "var(--p-green)" }}
     >
       <span className="shrink-0 tabular-nums">{e.time}</span>
@@ -287,7 +287,29 @@ function WeekView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<str
     );
   }
   return (
-    <div className="overflow-x-auto">
+    <>
+      {/* Mobile agenda — a 7-column grid is unreadable on a phone. */}
+      <div className="space-y-2 sm:hidden">
+        {days
+          .filter((d) => (byDay[d.toDateString()]?.length ?? 0) > 0)
+          .map((d) => (
+            <div key={d.toISOString()} className="p-panel p-3">
+              <div
+                className="mb-2 text-[14px] font-semibold"
+                style={{ color: d.toDateString() === today ? "var(--p-gold)" : "var(--p-text)" }}
+              >
+                {d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+              </div>
+              <div className="space-y-1.5">
+                {(byDay[d.toDateString()] ?? []).map((e) => (
+                  <Chip key={e.key} e={e} onSelect={onSelect} />
+                ))}
+              </div>
+            </div>
+          ))}
+      </div>
+
+      <div className="hidden overflow-x-auto sm:block">
       <div className="grid min-w-[720px] grid-cols-7 gap-px overflow-hidden rounded-[10px] border sm:min-w-0" style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}>
         {days.map((d) => {
           const events = byDay[d.toDateString()] ?? [];
@@ -304,7 +326,8 @@ function WeekView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<str
           );
         })}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

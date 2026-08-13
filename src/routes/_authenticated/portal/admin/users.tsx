@@ -6,7 +6,7 @@ import { adminListUsers, adminSetUserRole, adminUpdateProfile } from "@/lib/port
 import { useState } from "react";
 import {
   PageHeader, PageBody, Toolbar, SearchField, TableWrap, Table, THead, TH, TR, TD,
-  Badge, Select, Input, TableSkeleton, ErrorState, EmptyState, notify,
+  Badge, Select, Input, TableSkeleton, ErrorState, EmptyState, notify, Panel,
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
@@ -62,7 +62,116 @@ function UsersPage() {
             <ErrorState description="We couldn't load users." onRetry={() => usersQ.refetch()} />
           </TableWrap>
         ) : (
-          <TableWrap>
+          <>
+          {/* Phones get stacked cards — a six-column admin table is unusable there. */}
+          <div className="flex flex-col gap-2.5 sm:hidden">
+            {users.length === 0 && (
+              <Panel>
+                <EmptyState title="No users match" description="Try a different name or email." />
+              </Panel>
+            )}
+            {users.map((u: any) => (
+              <Panel key={u.id}>
+                <div className="min-w-0">
+                  <Link
+                    to="/portal/admin/users/$userId"
+                    params={{ userId: u.id }}
+                    className="p-card-title truncate hover:underline"
+                  >
+                    {[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}
+                  </Link>
+                  <div className="p-muted truncate">{u.email}</div>
+                  {u.roles.includes("super_admin") && (
+                    <Badge tone="gold" className="mt-1">Owner</Badge>
+                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {ROLES.map((r) => {
+                    const on = u.roles.includes(r);
+                    return (
+                      <button
+                        key={r}
+                        disabled={roleMut.isPending}
+                        onClick={() => roleMut.mutate({ user_id: u.id, role: r, grant: !on })}
+                        className="p-focus min-h-[40px] rounded-full border px-3 text-[13px] font-medium capitalize transition"
+                        style={
+                          on
+                            ? { borderColor: "var(--p-gold-line)", background: "var(--p-gold-soft)", color: "var(--p-gold)" }
+                            : { borderColor: "var(--p-border)", color: "var(--p-text-3)" }
+                        }
+                      >
+                        {r}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3">
+                  <div className="p-label mb-1">Reports to</div>
+                  <Select
+                    value={u.parent_user_id ?? ""}
+                    onChange={(e) =>
+                      profileMut.mutate({ id: u.id, parent_user_id: e.target.value || null })
+                    }
+                  >
+                    <option value="">— none —</option>
+                    {allUsers
+                      .filter((p: any) => p.id !== u.id)
+                      .map((p: any) => (
+                        <option key={p.id} value={p.id}>
+                          {[p.first_name, p.last_name].filter(Boolean).join(" ") || p.email}
+                        </option>
+                      ))}
+                  </Select>
+                </div>
+
+                <div className="mt-3 flex flex-col gap-2">
+                  <PermToggle
+                    label="Invite agents"
+                    checked={!!u.can_invite_agents}
+                    onChange={(v) => profileMut.mutate({ id: u.id, can_invite_agents: v })}
+                  />
+                  <PermToggle
+                    label="Invite leaders"
+                    checked={!!u.can_invite_leaders}
+                    onChange={(v) => profileMut.mutate({ id: u.id, can_invite_leaders: v })}
+                  />
+                  <PermToggle
+                    label="Manage resources"
+                    checked={!!u.can_manage_resources}
+                    onChange={(v) => profileMut.mutate({ id: u.id, can_manage_resources: v })}
+                  />
+                </div>
+
+                <div className="mt-3">
+                  <div className="p-label mb-1">Recruiting link</div>
+                  <SlugCell
+                    slug={u.recruiting_slug ?? ""}
+                    disabled={profileMut.isPending}
+                    onSave={(slug) => profileMut.mutate({ id: u.id, recruiting_slug: slug })}
+                  />
+                  <div className="mt-2">
+                    <PermToggle
+                      label="Can receive applicants"
+                      checked={u.can_receive_applicants !== false}
+                      onChange={(v) => profileMut.mutate({ id: u.id, can_receive_applicants: v })}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <PermToggle
+                    label={u.is_active !== false ? "Active" : "Inactive"}
+                    checked={u.is_active !== false}
+                    onChange={(v) => profileMut.mutate({ id: u.id, is_active: v })}
+                  />
+                </div>
+              </Panel>
+            ))}
+          </div>
+
+          <TableWrap className="hidden sm:block">
             <Table className="min-w-[900px]">
               <THead>
                 <TH>Name</TH>
@@ -183,6 +292,7 @@ function UsersPage() {
               </tbody>
             </Table>
           </TableWrap>
+          </>
         )}
       </PageBody>
     </PortalShell>

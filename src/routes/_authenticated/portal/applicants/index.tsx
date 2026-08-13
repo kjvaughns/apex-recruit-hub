@@ -561,9 +561,9 @@ function PipelineView({
 }) {
   if (isLoading)
     return (
-      <div className="flex gap-3 overflow-x-auto pb-4">
+      <div className="p-snap-x -mx-4 flex gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="min-w-[240px] flex-1">
+          <div key={i} className="p-snap-item w-[82vw] min-w-[82vw] flex-1 sm:w-auto sm:min-w-[240px]">
             <div
               className="mb-2 rounded-[10px] border px-2.5 py-2.5"
               style={{ background: "var(--p-raised)", borderColor: "var(--p-border)" }}
@@ -594,11 +594,11 @@ function PipelineView({
     );
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4">
+    <div className="p-snap-x -mx-4 flex gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:px-0">
       {stages.map((s: any) => {
         const items = applicants.filter((a: any) => a.current_stage_id === s.id);
         return (
-          <div key={s.id} className="min-w-[240px] flex-1">
+          <div key={s.id} className="p-snap-item w-[82vw] min-w-[82vw] flex-1 sm:w-auto sm:min-w-[240px]">
             <div
               className="mb-2 flex items-center justify-between rounded-[10px] border px-2.5 py-2"
               style={{ background: "var(--p-raised)", borderColor: "var(--p-border)" }}

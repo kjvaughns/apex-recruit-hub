@@ -217,7 +217,7 @@ function ProfileModal({ row, isMe, onClose }: { row: Ranked; isMe: boolean; onCl
         <Avatar name={row.full_name} src={row.avatar_url} size={48} />
         {isMe && <Badge tone="gold">You</Badge>}
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {stats.map((s) => (
           <div key={s.label} className="p-panel px-3 py-2.5">
             <div className="p-label uppercase tracking-[0.06em]">{s.label}</div>

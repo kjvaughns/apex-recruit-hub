@@ -215,7 +215,10 @@ export function IconButton({
       title={label}
       className={cn(
         btnClass(variant, size),
-        size === "sm" ? "w-8 px-0" : "h-[36px] w-[36px] px-0",
+        "px-0",
+        size === "sm"
+          ? "min-w-[40px] sm:w-8 sm:min-w-0"
+          : "min-w-[44px] sm:h-[36px] sm:w-[36px] sm:min-w-0",
         className,
       )}
       {...rest}
@@ -228,7 +231,11 @@ export function IconButton({
 export function btnClass(variant: BtnVariant = "secondary", size: BtnSize = "md") {
   const base =
     "p-focus inline-flex items-center justify-center gap-1.5 rounded-[10px] border font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100 whitespace-nowrap";
-  const sizes = size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-[36px] px-3.5 text-[13.5px]";
+  // Phones get a 40/44px minimum tap target; desktop keeps the compact height.
+  const sizes =
+    size === "sm"
+      ? "min-h-[40px] px-2.5 text-[13px] sm:h-8 sm:min-h-0"
+      : "min-h-[44px] px-3.5 text-[13.5px] sm:h-[36px] sm:min-h-0";
   const variants: Record<BtnVariant, string> = {
     primary: "border-transparent text-[#0B0B0C] hover:brightness-[1.06]",
     secondary: "hover:brightness-[1.08]",
@@ -422,9 +429,23 @@ export function TableWrap({ children, className }: { children: ReactNode; classN
   );
 }
 
-export function Table({ children, className }: { children: ReactNode; className?: string }) {
+/**
+ * `minWidth` guarantees the table scrolls sideways inside `TableWrap` instead of
+ * crushing its columns on a phone. Pass a larger value for wide tables.
+ */
+export function Table({
+  children,
+  className,
+  minWidth = 620,
+}: {
+  children: ReactNode;
+  className?: string;
+  minWidth?: number;
+}) {
   return (
-    <table className={cn("w-full border-collapse text-[13px]", className)}>{children}</table>
+    <table className={cn("w-full border-collapse text-[13px]", className)} style={{ minWidth }}>
+      {children}
+    </table>
   );
 }
 
@@ -555,11 +576,18 @@ export function EmptyState({
 /* Inputs                                                                     */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * 16px text below `sm` keeps iOS Safari from zooming the page on focus; the
+ * compact 14px sizing takes over from the `sm` breakpoint up.
+ */
 const controlClass =
-  "p-focus w-full rounded-[10px] border px-3 text-[14px] transition placeholder:opacity-60 [background:var(--vantage-input-bg)] [border-color:var(--p-border)] [color:var(--p-text)] focus:[border-color:var(--p-gold)]";
+  "p-focus w-full rounded-[10px] border px-3 text-[16px] transition placeholder:opacity-60 sm:text-[14px] [background:var(--vantage-input-bg)] [border-color:var(--p-border)] [color:var(--p-text)] focus:[border-color:var(--p-gold)]";
+
+/** Minimum 44px tap height on phones, 40px on desktop. */
+const controlHeight = "h-[44px] sm:h-[40px]";
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(controlClass, "h-[40px]", className)} {...rest} />;
+  return <input className={cn(controlClass, controlHeight, className)} {...rest} />;
 }
 
 export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -568,7 +596,7 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
 
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(controlClass, "h-[40px] pr-8", className)} {...rest}>
+    <select className={cn(controlClass, controlHeight, "pr-8", className)} {...rest}>
       {children}
     </select>
   );
@@ -640,7 +668,7 @@ export function SearchField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className={cn(controlClass, "h-9 pl-8 text-[13.5px]")}
+        className={cn(controlClass, "h-[44px] pl-8 sm:h-9 sm:text-[13.5px]")}
       />
     </div>
   );
@@ -747,7 +775,7 @@ export function Modal({
         <div
           role="dialog"
           aria-modal="true"
-          className="p-panel relative z-10 my-auto flex w-full max-h-[calc(100vh-2rem)] flex-col"
+          className="p-panel p-safe-b relative z-10 my-auto flex max-h-[calc(100dvh-2rem)] w-full flex-col"
           style={{ maxWidth: width }}
         >
           <header
@@ -762,7 +790,7 @@ export function Modal({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
+              className="p-focus grid h-11 w-11 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)] sm:h-8 sm:w-8"
               style={{ color: "var(--p-text-2)" }}
             >
               <X size={15} aria-hidden />
@@ -978,7 +1006,7 @@ export function Drawer({
         <div
           role="dialog"
           aria-modal="true"
-          className="p-panel relative z-10 flex max-h-[92vh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[var(--drawer-w)] sm:rounded-none sm:border-y-0 sm:border-r-0"
+          className="p-panel p-safe-b relative z-10 flex max-h-[92dvh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[var(--drawer-w)] sm:rounded-none sm:border-y-0 sm:border-r-0"
           style={{ "--drawer-w": `${width}px` } as CSSProperties}
         >
           <header
@@ -993,7 +1021,7 @@ export function Drawer({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
+              className="p-focus grid h-11 w-11 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)] sm:h-8 sm:w-8"
               style={{ color: "var(--p-text-2)" }}
             >
               <X size={15} aria-hidden />
@@ -1042,7 +1070,9 @@ export function Toggle({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "p-focus relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-45",
+        // The pill stays 22x38, but an invisible inset on phones lifts the tap
+        // target to ~44px without changing the layout.
+        "p-focus relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full border transition before:absolute before:-inset-x-1.5 before:-inset-y-[11px] before:content-[''] disabled:cursor-not-allowed disabled:opacity-45 sm:before:hidden",
       )}
       style={{
         background: checked ? "var(--p-gold)" : "var(--p-hover)",
@@ -1091,7 +1121,7 @@ export function Checkbox({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="p-focus h-4 w-4 shrink-0 cursor-pointer rounded-[4px] border accent-[var(--p-gold)] disabled:cursor-not-allowed"
+        className="p-focus h-5 w-5 shrink-0 cursor-pointer rounded-[4px] border accent-[var(--p-gold)] disabled:cursor-not-allowed sm:h-4 sm:w-4"
         style={{ borderColor: "var(--p-border)" }}
       />
       {label}
@@ -1122,7 +1152,7 @@ export function Radio({
         checked={checked}
         disabled={disabled}
         onChange={onChange}
-        className="p-focus h-4 w-4 shrink-0 cursor-pointer accent-[var(--p-gold)] disabled:cursor-not-allowed"
+        className="p-focus h-5 w-5 shrink-0 cursor-pointer accent-[var(--p-gold)] disabled:cursor-not-allowed sm:h-4 sm:w-4"
       />
       {label}
     </label>
