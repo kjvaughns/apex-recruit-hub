@@ -228,7 +228,11 @@ export function IconButton({
 export function btnClass(variant: BtnVariant = "secondary", size: BtnSize = "md") {
   const base =
     "p-focus inline-flex items-center justify-center gap-1.5 rounded-[10px] border font-semibold transition disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:brightness-100 whitespace-nowrap";
-  const sizes = size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-[36px] px-3.5 text-[13.5px]";
+  // Phones get a 40/44px minimum tap target; desktop keeps the compact height.
+  const sizes =
+    size === "sm"
+      ? "min-h-[40px] px-2.5 text-[13px] sm:h-8 sm:min-h-0"
+      : "min-h-[44px] px-3.5 text-[13.5px] sm:h-[36px] sm:min-h-0";
   const variants: Record<BtnVariant, string> = {
     primary: "border-transparent text-[#0B0B0C] hover:brightness-[1.06]",
     secondary: "hover:brightness-[1.08]",
