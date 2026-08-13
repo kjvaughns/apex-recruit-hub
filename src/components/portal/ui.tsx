@@ -562,11 +562,18 @@ export function EmptyState({
 /* Inputs                                                                     */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * 16px text below `sm` keeps iOS Safari from zooming the page on focus; the
+ * compact 14px sizing takes over from the `sm` breakpoint up.
+ */
 const controlClass =
-  "p-focus w-full rounded-[10px] border px-3 text-[14px] transition placeholder:opacity-60 [background:var(--vantage-input-bg)] [border-color:var(--p-border)] [color:var(--p-text)] focus:[border-color:var(--p-gold)]";
+  "p-focus w-full rounded-[10px] border px-3 text-[16px] transition placeholder:opacity-60 sm:text-[14px] [background:var(--vantage-input-bg)] [border-color:var(--p-border)] [color:var(--p-text)] focus:[border-color:var(--p-gold)]";
+
+/** Minimum 44px tap height on phones, 40px on desktop. */
+const controlHeight = "h-[44px] sm:h-[40px]";
 
 export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(controlClass, "h-[40px]", className)} {...rest} />;
+  return <input className={cn(controlClass, controlHeight, className)} {...rest} />;
 }
 
 export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -575,7 +582,7 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
 
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cn(controlClass, "h-[40px] pr-8", className)} {...rest}>
+    <select className={cn(controlClass, controlHeight, "pr-8", className)} {...rest}>
       {children}
     </select>
   );
