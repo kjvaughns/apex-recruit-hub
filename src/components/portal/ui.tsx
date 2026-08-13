@@ -215,7 +215,10 @@ export function IconButton({
       title={label}
       className={cn(
         btnClass(variant, size),
-        size === "sm" ? "w-8 px-0" : "h-[36px] w-[36px] px-0",
+        "px-0",
+        size === "sm"
+          ? "min-w-[40px] sm:w-8 sm:min-w-0"
+          : "min-w-[44px] sm:h-[36px] sm:w-[36px] sm:min-w-0",
         className,
       )}
       {...rest}
