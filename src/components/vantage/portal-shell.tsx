@@ -391,7 +391,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Top bar */}
           <header
-            className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center gap-3 border-b px-3 backdrop-blur-xl md:px-6"
+            className="p-safe-t sticky top-0 z-30 flex h-[56px] shrink-0 items-center gap-2 border-b px-3 backdrop-blur-xl sm:gap-3 md:px-6"
             style={{
               borderColor: "var(--p-border)",
               background: "color-mix(in oklab, var(--p-bg) 88%, transparent)",
@@ -400,7 +400,9 @@ export function PortalShell({ children }: { children: ReactNode }) {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Toggle navigation"
-              className={`${btnClass("ghost", "sm")} min-h-[40px] min-w-[40px] text-[18px] md:hidden`}
+              aria-expanded={mobileOpen}
+              aria-controls="portal-sidebar"
+              className={`${btnClass("ghost", "sm")} min-h-[44px] min-w-[44px] text-[18px] md:hidden`}
             >
               ☰
             </button>
@@ -415,16 +417,18 @@ export function PortalShell({ children }: { children: ReactNode }) {
             {canInvite && (
               <button
                 onClick={() => setAddAgentOpen(true)}
-                className={`${btnClass("primary", "sm")} hidden sm:inline-flex`}
+                aria-label="Add agent"
+                className={`${btnClass("primary", "sm")} min-h-[44px] min-w-[44px] px-0 sm:min-h-0 sm:min-w-0 sm:px-2.5`}
               >
-                ＋ Add Agent
+                <UserPlus className="h-4 w-4 sm:hidden" aria-hidden="true" />
+                <span className="hidden sm:inline">＋ Add Agent</span>
               </button>
             )}
             <button
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className={`${btnClass("ghost", "sm")} min-h-[40px] min-w-[40px] md:min-h-0 md:min-w-0`}
+              className={`${btnClass("ghost", "sm")} min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0`}
             >
               {theme === "dark" ? (
                 <Sun className="h-4 w-4" aria-hidden="true" />
