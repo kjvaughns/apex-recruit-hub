@@ -1121,7 +1121,7 @@ export function Checkbox({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="p-focus h-4 w-4 shrink-0 cursor-pointer rounded-[4px] border accent-[var(--p-gold)] disabled:cursor-not-allowed"
+        className="p-focus h-5 w-5 shrink-0 cursor-pointer rounded-[4px] border accent-[var(--p-gold)] disabled:cursor-not-allowed sm:h-4 sm:w-4"
         style={{ borderColor: "var(--p-border)" }}
       />
       {label}
@@ -1152,7 +1152,7 @@ export function Radio({
         checked={checked}
         disabled={disabled}
         onChange={onChange}
-        className="p-focus h-4 w-4 shrink-0 cursor-pointer accent-[var(--p-gold)] disabled:cursor-not-allowed"
+        className="p-focus h-5 w-5 shrink-0 cursor-pointer accent-[var(--p-gold)] disabled:cursor-not-allowed sm:h-4 sm:w-4"
       />
       {label}
     </label>
