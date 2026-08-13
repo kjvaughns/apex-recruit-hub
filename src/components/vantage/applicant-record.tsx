@@ -543,7 +543,7 @@ function DrawerShell({
       <div
         role="dialog"
         aria-modal="true"
-        className="p-panel relative z-10 flex max-h-[92vh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[560px] sm:rounded-none sm:border-y-0 sm:border-r-0"
+        className="p-panel relative z-10 flex max-h-[92dvh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[560px] sm:rounded-none sm:border-y-0 sm:border-r-0"
       >
         <header
           className="flex items-center justify-between gap-3 border-b px-4 py-3"
