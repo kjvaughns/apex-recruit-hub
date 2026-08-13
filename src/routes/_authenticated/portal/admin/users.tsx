@@ -6,7 +6,7 @@ import { adminListUsers, adminSetUserRole, adminUpdateProfile } from "@/lib/port
 import { useState } from "react";
 import {
   PageHeader, PageBody, Toolbar, SearchField, TableWrap, Table, THead, TH, TR, TD,
-  Badge, Select, Input, TableSkeleton, ErrorState, EmptyState, notify,
+  Badge, Select, Input, TableSkeleton, ErrorState, EmptyState, notify, Panel,
 } from "@/components/portal/ui";
 
 export const Route = createFileRoute("/_authenticated/portal/admin/users")({
