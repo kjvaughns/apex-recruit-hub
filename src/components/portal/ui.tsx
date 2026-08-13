@@ -1021,7 +1021,7 @@ export function Drawer({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="p-focus grid h-8 w-8 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)]"
+              className="p-focus grid h-11 w-11 shrink-0 place-items-center rounded-md hover:bg-[var(--p-hover)] sm:h-8 sm:w-8"
               style={{ color: "var(--p-text-2)" }}
             >
               <X size={15} aria-hidden />
