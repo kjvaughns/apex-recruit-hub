@@ -1070,7 +1070,9 @@ export function Toggle({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "p-focus relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-45",
+        // The pill stays 22x38, but an invisible inset on phones lifts the tap
+        // target to ~44px without changing the layout.
+        "p-focus relative inline-flex h-[22px] w-[38px] shrink-0 items-center rounded-full border transition before:absolute before:-inset-x-1.5 before:-inset-y-[11px] before:content-[''] disabled:cursor-not-allowed disabled:opacity-45 sm:before:hidden",
       )}
       style={{
         background: checked ? "var(--p-gold)" : "var(--p-hover)",
