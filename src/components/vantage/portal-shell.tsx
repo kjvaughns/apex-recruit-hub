@@ -354,7 +354,15 @@ export function PortalShell({ children }: { children: ReactNode }) {
               <Avatar name={displayName} email={profile?.email} size={30} />
               {!collapsed && (
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13px] font-semibold">{displayName}</div>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <span className="truncate text-[13px] font-semibold">{displayName}</span>
+                    {/* The header badge is desktop-only, so the role lives here on phones. */}
+                    {primaryRole && (
+                      <Badge tone="neutral" className="shrink-0 sm:hidden">
+                        {ROLE_LABEL[primaryRole] ?? primaryRole}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="truncate text-[11.5px]" style={{ color: "var(--p-text-3)" }}>
                     {profile?.email}
                   </div>
@@ -363,7 +371,10 @@ export function PortalShell({ children }: { children: ReactNode }) {
             </div>
 
             {!collapsed && (
-              <button onClick={signOut} className={`${btnClass("secondary", "sm")} mt-1 w-full`}>
+              <button
+                onClick={signOut}
+                className={`${btnClass("secondary", "sm")} mt-1 min-h-[44px] w-full md:min-h-0`}
+              >
                 Sign out
               </button>
             )}
