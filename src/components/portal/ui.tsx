@@ -775,7 +775,7 @@ export function Modal({
         <div
           role="dialog"
           aria-modal="true"
-          className="p-panel relative z-10 my-auto flex w-full max-h-[calc(100vh-2rem)] flex-col"
+          className="p-panel p-safe-b relative z-10 my-auto flex max-h-[calc(100dvh-2rem)] w-full flex-col"
           style={{ maxWidth: width }}
         >
           <header
