@@ -429,9 +429,23 @@ export function TableWrap({ children, className }: { children: ReactNode; classN
   );
 }
 
-export function Table({ children, className }: { children: ReactNode; className?: string }) {
+/**
+ * `minWidth` guarantees the table scrolls sideways inside `TableWrap` instead of
+ * crushing its columns on a phone. Pass a larger value for wide tables.
+ */
+export function Table({
+  children,
+  className,
+  minWidth = 620,
+}: {
+  children: ReactNode;
+  className?: string;
+  minWidth?: number;
+}) {
   return (
-    <table className={cn("w-full border-collapse text-[13px]", className)}>{children}</table>
+    <table className={cn("w-full border-collapse text-[13px]", className)} style={{ minWidth }}>
+      {children}
+    </table>
   );
 }
 
