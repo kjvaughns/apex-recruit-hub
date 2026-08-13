@@ -1006,7 +1006,7 @@ export function Drawer({
         <div
           role="dialog"
           aria-modal="true"
-          className="p-panel relative z-10 flex max-h-[92vh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[var(--drawer-w)] sm:rounded-none sm:border-y-0 sm:border-r-0"
+          className="p-panel p-safe-b relative z-10 flex max-h-[92dvh] w-full flex-col rounded-b-none sm:h-full sm:max-h-none sm:max-w-[var(--drawer-w)] sm:rounded-none sm:border-y-0 sm:border-r-0"
           style={{ "--drawer-w": `${width}px` } as CSSProperties}
         >
           <header
