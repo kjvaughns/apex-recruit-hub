@@ -125,6 +125,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [addAgentOpen, setAddAgentOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { theme, toggle: toggleTheme } = useTheme();
