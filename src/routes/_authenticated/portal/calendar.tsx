@@ -326,7 +326,8 @@ function WeekView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<str
           );
         })}
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
