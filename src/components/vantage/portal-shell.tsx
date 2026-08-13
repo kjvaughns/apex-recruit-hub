@@ -91,7 +91,7 @@ function NavRow({
       to={to}
       onClick={onClick}
       title={collapsed ? label : undefined}
-      className={`p-focus mb-0.5 flex h-[38px] items-center gap-2.5 rounded-[8px] px-2.5 text-[14px] font-medium transition ${
+      className={`p-focus mb-0.5 flex min-h-[44px] items-center gap-2.5 rounded-[8px] px-2.5 text-[15px] font-medium transition md:h-[38px] md:min-h-0 md:text-[14px] ${
         collapsed ? "justify-center" : ""
       } ${active ? "" : "hover:bg-[var(--p-hover)]"}`}
       style={
@@ -301,7 +301,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
                     setAddAgentOpen(true);
                   }}
                   title={collapsed ? "Add Agent" : undefined}
-                  className={`p-focus mb-0.5 flex h-[38px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[14px] font-medium transition hover:bg-[var(--p-hover)] ${
+                  className={`p-focus mb-0.5 flex min-h-[44px] w-full items-center gap-2.5 rounded-[8px] px-2.5 text-[15px] font-medium transition hover:bg-[var(--p-hover)] md:h-[38px] md:min-h-0 md:text-[14px] ${
                     collapsed ? "justify-center" : ""
                   }`}
                   style={{ color: "var(--p-gold)" }}
