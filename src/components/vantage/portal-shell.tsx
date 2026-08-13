@@ -239,7 +239,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
           tabIndex={-1}
           id="portal-sidebar"
           aria-label="Portal navigation"
-          aria-hidden={undefined}
+          
           className={`${mobileOpen ? "translate-x-0" : "-translate-x-full"} p-safe-t p-safe-b fixed inset-y-0 left-0 z-50 flex ${
             collapsed ? "w-[64px]" : "w-[264px] md:w-[240px]"
           } flex-col border-r transition-[width,transform] outline-none md:sticky md:top-0 md:h-dvh md:translate-x-0`}
