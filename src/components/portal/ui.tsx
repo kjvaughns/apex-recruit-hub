@@ -668,7 +668,7 @@ export function SearchField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className={cn(controlClass, "h-9 pl-8 text-[13.5px]")}
+        className={cn(controlClass, "h-[44px] pl-8 sm:h-9 sm:text-[13.5px]")}
       />
     </div>
   );
