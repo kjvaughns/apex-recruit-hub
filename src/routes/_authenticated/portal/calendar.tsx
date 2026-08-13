@@ -287,7 +287,29 @@ function WeekView({ cursor, byDay, onSelect }: { cursor: Date; byDay: Record<str
     );
   }
   return (
-    <div className="overflow-x-auto">
+    <>
+      {/* Mobile agenda — a 7-column grid is unreadable on a phone. */}
+      <div className="space-y-2 sm:hidden">
+        {days
+          .filter((d) => (byDay[d.toDateString()]?.length ?? 0) > 0)
+          .map((d) => (
+            <div key={d.toISOString()} className="p-panel p-3">
+              <div
+                className="mb-2 text-[14px] font-semibold"
+                style={{ color: d.toDateString() === today ? "var(--p-gold)" : "var(--p-text)" }}
+              >
+                {d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+              </div>
+              <div className="space-y-1.5">
+                {(byDay[d.toDateString()] ?? []).map((e) => (
+                  <Chip key={e.key} e={e} onSelect={onSelect} />
+                ))}
+              </div>
+            </div>
+          ))}
+      </div>
+
+      <div className="hidden overflow-x-auto sm:block">
       <div className="grid min-w-[720px] grid-cols-7 gap-px overflow-hidden rounded-[10px] border sm:min-w-0" style={{ borderColor: "var(--p-border)", background: "var(--p-border)" }}>
         {days.map((d) => {
           const events = byDay[d.toDateString()] ?? [];
