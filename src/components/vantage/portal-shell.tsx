@@ -162,14 +162,24 @@ export function PortalShell({ children }: { children: ReactNode }) {
     )
   ) : null;
 
-  // Close the mobile drawer on Escape and when the route changes.
+  // Close the mobile drawer on Escape and when the route changes. While it is
+  // open the page behind it can't scroll, and focus moves into the panel so a
+  // keyboard/screen-reader user isn't left behind the overlay.
   useEffect(() => {
     if (!mobileOpen) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setMobileOpen(false);
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    sidebarRef.current?.focus();
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      previouslyFocused?.focus?.();
+    };
   }, [mobileOpen]);
 
   useEffect(() => {
