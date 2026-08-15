@@ -183,12 +183,13 @@ export function welcomeOnboarding(params: TemplateParams): RenderedEmail {
       `Your first stop is the agent portal. That's where you'll find your full onboarding checklist — log in and knock it out:`,
     ) +
     button(portal, "Open your portal") +
-    p(`Here's what's waiting for you, four quick steps:`) +
+    p(`Here's what's waiting for you, five quick steps:`) +
     `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:4px 0 14px 0">` +
-    li("AgentSpace contracting") +
-    li("Discord role update") +
-    li("Portal setup") +
-    li("Expectations review") +
+    li("Agent Cloud onboarding") +
+    li("Discord Licensed role") +
+    li("Read the Agent Playbook") +
+    li("Expectations & schedule") +
+    li("Vantage Closer Course") +
     `</table>` +
     p(`Knock these out and you're fully onboarded. Let's build.`);
   return { subject: "Welcome to the team — let's get you set up", html: layout(inner) };
