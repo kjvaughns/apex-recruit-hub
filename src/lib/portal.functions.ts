@@ -1604,17 +1604,9 @@ export const updateMyProfile = createServerFn({ method: "POST" })
     if (data.npn !== undefined) patch.npn = data.npn || null;
     if (data.resident_state !== undefined) patch.resident_state = data.resident_state || null;
     if (data.avatar_url !== undefined) patch.avatar_url = data.avatar_url || null;
-    // Keep the denormalized full_name (used in org/leaderboard) in sync.
-    if (data.first_name !== undefined || data.last_name !== undefined) {
-      const { data: cur } = await supabase
-        .from("profiles")
-        .select("first_name, last_name")
-        .eq("id", userId)
-        .maybeSingle();
-      const fn = data.first_name ?? (cur as any)?.first_name ?? "";
-      const ln = data.last_name ?? (cur as any)?.last_name ?? "";
-      patch.full_name = [fn, ln].filter(Boolean).join(" ") || null;
-    }
+    // full_name is a generated column in the database — it updates itself from
+    // first_name/last_name and must never be written directly.
+
     const { error } = await supabase.from("profiles").update(patch as never).eq("id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
