@@ -505,7 +505,7 @@ export const notifyOnboarding = createServerFn({ method: "POST" })
     const name = `${app.first_name ?? ""} ${app.last_name ?? ""}`.trim() || "An agent";
     const isContracting = data.kind === "contracting_done";
     const summary = isContracting
-      ? "Reached pending contracting (agent-reported)"
+      ? "Created their Agent Cloud account (agent-reported)"
       : "Onboarding complete — trainer notified";
 
     await supabase.from("applicant_activities").insert({
@@ -520,7 +520,7 @@ export const notifyOnboarding = createServerFn({ method: "POST" })
       try {
         const { sendRawEmail } = await import("@/lib/email-templates/send-email");
         const subject = isContracting
-          ? `${name} reached pending contracting`
+          ? `${name} created their Agent Cloud account`
           : `${name} completed onboarding`;
         const line = isContracting
           ? `${name} has completed Agent Cloud onboarding.`
