@@ -28,7 +28,7 @@ export function sampleContext(): EmailContext {
     deadline: "Friday, August 22",
     score: "88%",
     progress: "3 of 5 steps complete",
-    next_step: "Agentspace contracting",
+    next_step: "Agent Cloud onboarding",
     message: "Sample message body for this notification.",
     subject_line: "Team update",
     target: "20 dials before noon",
