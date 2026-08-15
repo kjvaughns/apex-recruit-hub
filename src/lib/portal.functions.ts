@@ -2085,3 +2085,136 @@ export const startApplicantFollowUp = createServerFn({ method: "POST" })
     await engine.logActivity(data.id, "follow_up_started", "Follow up started", {}, userId);
     return { ok: true as const };
   });
+
+export type OnboardingContext = {
+  isAdmin: boolean;
+  prefill: {
+    fullName: string | null;
+    email: string | null;
+    phone: string | null;
+    npn: string | null;
+  };
+  upline: { name: string; role: string | null } | null;
+  playbook: { slug: string; title: string } | null;
+  closerCourse: { slug: string; title: string; published: boolean } | null;
+};
+
+/** Contextual data for the onboarding checklist: the agent's nearest upline in
+ *  the Vantage hierarchy, the details to reuse during Agent Cloud setup, and the
+ *  live Academy records backing the Playbook and Closer Course steps. */
+export const getOnboardingContext = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<OnboardingContext> => {
+    const { supabase, userId } = context;
+    const sb = supabase as any;
+
+    const { data: roleRows } = await sb.from("user_roles").select("role").eq("user_id", userId);
+    const myRoles = ((roleRows ?? []) as { role: string }[]).map((r) => r.role);
+    const isAdmin = myRoles.some((r) => r === "admin" || r === "super_admin");
+
+    const { data: me } = await sb
+      .from("profiles")
+      .select("id, first_name, last_name, full_name, email, phone, npn, parent_user_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const { data: app } = await sb
+      .from("applicants")
+      .select("id, first_name, last_name, email, phone, npn, assigned_recruiter_id, original_recruiter_id")
+      .eq("portal_profile_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const fullName =
+      (me?.full_name as string | null) ||
+      [me?.first_name, me?.last_name].filter(Boolean).join(" ") ||
+      [app?.first_name, app?.last_name].filter(Boolean).join(" ") ||
+      null;
+
+    const nameOf = (p: any) =>
+      (p?.full_name as string | null) ||
+      [p?.first_name, p?.last_name].filter(Boolean).join(" ") ||
+      (p?.email as string | null) ||
+      null;
+
+    const LEADER_ROLES = ["super_admin", "admin", "manager", "leader"];
+    const primaryRole = (roles: string[]) =>
+      ["super_admin", "admin", "manager", "leader", "agent"].find((r) => roles.includes(r)) ?? null;
+
+    // Walk up the hierarchy to the nearest leader/manager/admin.
+    let upline: { name: string; role: string | null } | null = null;
+    let cursor: string | null = (me?.parent_user_id as string | null) ?? null;
+    const seen = new Set<string>([userId]);
+    for (let hops = 0; hops < 12 && cursor && !seen.has(cursor); hops++) {
+      seen.add(cursor);
+      const { data: p } = await sb
+        .from("profiles")
+        .select("id, first_name, last_name, full_name, email, parent_user_id")
+        .eq("id", cursor)
+        .maybeSingle();
+      if (!p) break;
+      const { data: rr } = await sb.from("user_roles").select("role").eq("user_id", p.id);
+      const roles = ((rr ?? []) as { role: string }[]).map((r) => r.role);
+      const name = nameOf(p);
+      if (name && roles.some((r) => LEADER_ROLES.includes(r))) {
+        upline = { name, role: primaryRole(roles) };
+        break;
+      }
+      cursor = (p.parent_user_id as string | null) ?? null;
+    }
+
+    // Fall back to the recruiting agent on the applicant record.
+    if (!upline) {
+      const recruiterId = (app?.assigned_recruiter_id || app?.original_recruiter_id) as
+        | string
+        | null;
+      if (recruiterId) {
+        const { data: r } = await sb
+          .from("profiles")
+          .select("id, first_name, last_name, full_name, email")
+          .eq("id", recruiterId)
+          .maybeSingle();
+        const name = nameOf(r);
+        if (name) {
+          const { data: rr } = await sb.from("user_roles").select("role").eq("user_id", recruiterId);
+          upline = {
+            name,
+            role: primaryRole(((rr ?? []) as { role: string }[]).map((x) => x.role)),
+          };
+        }
+      }
+    }
+
+    // Resolve the published Agent Playbook out of the Academy library.
+    const { data: resources } = await sb
+      .from("library_resources")
+      .select("slug, title, status")
+      .eq("status", "published")
+      .ilike("title", "%playbook%")
+      .order("position", { ascending: true });
+    const playbookRow = ((resources ?? []) as any[]).find((r) => r.slug) ?? null;
+
+    // Resolve the existing Vantage Closer Course.
+    const { data: courses } = await sb
+      .from("courses")
+      .select("slug, title, status")
+      .ilike("title", "%closer%")
+      .order("created_at", { ascending: true });
+    const courseRow = ((courses ?? []) as any[]).find((c) => c.slug) ?? null;
+
+    return {
+      isAdmin,
+      prefill: {
+        fullName,
+        email: (me?.email as string | null) ?? (app?.email as string | null) ?? null,
+        phone: (me?.phone as string | null) ?? (app?.phone as string | null) ?? null,
+        npn: (me?.npn as string | null) ?? (app?.npn as string | null) ?? null,
+      },
+      upline,
+      playbook: playbookRow ? { slug: playbookRow.slug, title: playbookRow.title } : null,
+      closerCourse: courseRow
+        ? { slug: courseRow.slug, title: courseRow.title, published: courseRow.status === "published" }
+        : null,
+    };
+  });
