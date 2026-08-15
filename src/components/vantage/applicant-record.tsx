@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { formatPhone, phoneHref } from "@/lib/phone";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -265,8 +266,8 @@ export function ApplicantRecord({
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-1.5">
-          <QuickAction href={a.phone ? `tel:${a.phone}` : undefined} label="Call" icon={<Phone size={14} aria-hidden />} />
-          <QuickAction href={a.phone ? `sms:${a.phone}` : undefined} label="Text" icon={<MessageSquare size={14} aria-hidden />} />
+          <QuickAction href={phoneHref(a.phone) ? `tel:${phoneHref(a.phone)}` : undefined} label="Call" icon={<Phone size={14} aria-hidden />} />
+          <QuickAction href={phoneHref(a.phone) ? `sms:${phoneHref(a.phone)}` : undefined} label="Text" icon={<MessageSquare size={14} aria-hidden />} />
           <Button variant="secondary" size="sm" onClick={() => setEmailOpen(true)} disabled={!a.email}>
             <Mail size={14} aria-hidden /> Email
           </Button>
@@ -294,7 +295,7 @@ export function ApplicantRecord({
             <EditText label="First name" defaultValue={a.first_name ?? ""} onSave={(v) => save({ first_name: v })} />
             <EditText label="Last name" defaultValue={a.last_name ?? ""} onSave={(v) => save({ last_name: v })} />
             <EditText label="Email" type="email" defaultValue={a.email ?? ""} onSave={(v) => save({ email: v })} />
-            <EditText label="Phone" defaultValue={a.phone ?? ""} onSave={(v) => save({ phone: v || null })} />
+            <EditText label="Phone" defaultValue={formatPhone(a.phone)} onSave={(v) => save({ phone: v ? formatPhone(v) : null })} />
             <EditText label="City" defaultValue={a.city ?? ""} onSave={(v) => save({ city: v || null })} />
             <EditText label="Resident state" defaultValue={a.resident_state ?? a.state ?? ""} onSave={(v) => save({ resident_state: v || null })} />
             <EditText label="NPN" defaultValue={a.npn ?? ""} onSave={(v) => save({ npn: v || null })} />

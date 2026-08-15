@@ -10,6 +10,7 @@ import { listApplicants, updateApplicantStage } from "@/lib/portal.functions";
 import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
+import { formatPhone } from "@/lib/phone";
 
 /** Stages at or past Onboarding mean the recruit is licensed. */
 const LICENSED_STAGE_SLUGS = new Set(["onboarding", "training", "active-agent"]);
@@ -354,7 +355,7 @@ function ListView({
 
                 <div className="p-muted mt-2 truncate text-[12.5px]">
                   {a.email}
-                  {a.phone ? ` · ${a.phone}` : ""}
+                  {a.phone ? ` · ${formatPhone(a.phone)}` : ""}
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -464,7 +465,7 @@ function ListView({
                     </TD>
                     <TD>
                       <div className="p-body truncate max-w-[200px]">{a.email}</div>
-                      <div className="p-muted">{a.phone || "—"}</div>
+                      <div className="p-muted">{formatPhone(a.phone) || "—"}</div>
                     </TD>
                     <TD>
                       {/* Inline stage change — no need to open the record. */}

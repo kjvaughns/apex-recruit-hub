@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatPhone } from "@/lib/phone";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { PortalShell } from "@/components/vantage/portal-shell";
@@ -75,7 +76,7 @@ function AgentProfilePage() {
                 <DField label="Roles" value={roles.length ? roles.join(", ") : "—"} />
                 <DField label="NPN" value={p?.npn || "—"} />
                 <DField label="Resident state" value={p?.resident_state || "—"} />
-                <DField label="Phone" value={p?.phone || "—"} />
+                <DField label="Phone" value={formatPhone(p?.phone) || "—"} />
                 <DField label="Recruiting link" value={p?.recruiting_slug || "—"} />
                 <DField label="Status" value={p?.is_active === false ? "Inactive" : "Active"} />
               </dl>

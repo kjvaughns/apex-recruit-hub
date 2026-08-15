@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { formatPhoneInput } from "@/lib/phone";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -267,7 +268,7 @@ function ApplyPage() {
               type="tel"
               className="vantage-input"
               value={form.phone}
-              onChange={(e) => set("phone", e.target.value)}
+              onChange={(e) => set("phone", formatPhoneInput(e.target.value))}
             />
           </Field>
           <Field label="State *">

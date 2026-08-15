@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatPhoneInput } from "@/lib/phone";
 import { Modal, Field, Input, Button } from "@/components/portal/ui";
 
 export type AddAgentFields = {
@@ -119,7 +120,7 @@ export function AddAgentModal({
           <Input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} />
         </Field>
         <Field label="Phone" required>
-          <Input type="tel" value={f.phone} onChange={(e) => set("phone", e.target.value)} />
+          <Input type="tel" value={f.phone} onChange={(e) => set("phone", formatPhoneInput(e.target.value))} />
         </Field>
 
         {error && (
