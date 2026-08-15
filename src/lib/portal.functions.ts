@@ -2112,15 +2112,29 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
     const myRoles = ((roleRows ?? []) as { role: string }[]).map((r) => r.role);
     const isAdmin = myRoles.some((r) => r === "admin" || r === "super_admin");
 
+    // Hierarchy/recruiter lookups need to read rows above the caller, which the
+    // caller's own RLS scope hides — resolve them with the privileged client
+    // (read-only, and only after the caller is authenticated above).
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const admin = supabaseAdmin as any;
+
     const { data: me } = await sb
       .from("profiles")
       .select("id, first_name, last_name, full_name, email, phone, npn, parent_user_id")
       .eq("id", userId)
       .maybeSingle();
 
-    const { data: app } = await sb
+    const { data: meFull } = await admin
+      .from("profiles")
+      .select("id, parent_user_id, manager_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const { data: app } = await admin
       .from("applicants")
-      .select("id, first_name, last_name, email, phone, npn, assigned_recruiter_id, original_recruiter_id")
+      .select(
+        "id, first_name, last_name, email, phone, npn, assigned_recruiter_id, original_recruiter_id, assigned_manager_id, referred_by_profile_id, referred_by_name_snapshot, referred_by_name",
+      )
       .eq("portal_profile_id", userId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -2138,53 +2152,44 @@ export const getOnboardingContext = createServerFn({ method: "POST" })
       (p?.email as string | null) ||
       null;
 
-    const LEADER_ROLES = ["super_admin", "admin", "manager", "leader"];
     const primaryRole = (roles: string[]) =>
       ["super_admin", "admin", "manager", "leader", "agent"].find((r) => roles.includes(r)) ?? null;
 
-    // Walk up the hierarchy to the nearest leader/manager/admin.
-    let upline: { name: string; role: string | null } | null = null;
-    let cursor: string | null = (me?.parent_user_id as string | null) ?? null;
-    const seen = new Set<string>([userId]);
-    for (let hops = 0; hops < 12 && cursor && !seen.has(cursor); hops++) {
-      seen.add(cursor);
-      const { data: p } = await sb
+    const profileUpline = async (id: string | null | undefined) => {
+      if (!id) return null;
+      const { data: p } = await admin
         .from("profiles")
-        .select("id, first_name, last_name, full_name, email, parent_user_id")
-        .eq("id", cursor)
+        .select("id, first_name, last_name, full_name, email")
+        .eq("id", id)
         .maybeSingle();
-      if (!p) break;
-      const { data: rr } = await sb.from("user_roles").select("role").eq("user_id", p.id);
-      const roles = ((rr ?? []) as { role: string }[]).map((r) => r.role);
       const name = nameOf(p);
-      if (name && roles.some((r) => LEADER_ROLES.includes(r))) {
-        upline = { name, role: primaryRole(roles) };
-        break;
-      }
-      cursor = (p.parent_user_id as string | null) ?? null;
+      if (!name) return null;
+      const { data: rr } = await admin.from("user_roles").select("role").eq("user_id", id);
+      return {
+        name,
+        role: primaryRole(((rr ?? []) as { role: string }[]).map((x) => x.role)),
+      };
+    };
+
+    // Whoever they signed up under, in order of confidence: recruiter on the
+    // applicant record, referring agent, assigned manager, then the reporting
+    // hierarchy. Never leaves the step blank when any name is known.
+    let upline: { name: string; role: string | null } | null =
+      (await profileUpline(app?.assigned_recruiter_id as string | null)) ??
+      (await profileUpline(app?.original_recruiter_id as string | null)) ??
+      (await profileUpline(app?.referred_by_profile_id as string | null)) ??
+      (await profileUpline(app?.assigned_manager_id as string | null)) ??
+      (await profileUpline(meFull?.manager_id as string | null)) ??
+      (await profileUpline((meFull?.parent_user_id ?? me?.parent_user_id) as string | null));
+
+    if (!upline) {
+      const snapshot =
+        ((app?.referred_by_name_snapshot as string | null) ||
+          (app?.referred_by_name as string | null) ||
+          "").trim() || null;
+      if (snapshot) upline = { name: snapshot, role: null };
     }
 
-    // Fall back to the recruiting agent on the applicant record.
-    if (!upline) {
-      const recruiterId = (app?.assigned_recruiter_id || app?.original_recruiter_id) as
-        | string
-        | null;
-      if (recruiterId) {
-        const { data: r } = await sb
-          .from("profiles")
-          .select("id, first_name, last_name, full_name, email")
-          .eq("id", recruiterId)
-          .maybeSingle();
-        const name = nameOf(r);
-        if (name) {
-          const { data: rr } = await sb.from("user_roles").select("role").eq("user_id", recruiterId);
-          upline = {
-            name,
-            role: primaryRole(((rr ?? []) as { role: string }[]).map((x) => x.role)),
-          };
-        }
-      }
-    }
 
     // Resolve the published Agent Playbook out of the Academy library.
     const { data: resources } = await sb
