@@ -14,6 +14,7 @@ import {
   Checkbox,
   notify,
 } from "@/components/portal/ui";
+import { AGENT_CLOUD_INVITE_URL, DISCORD_INVITE_URL } from "@/lib/next-steps";
 import {
   getMyOnboarding,
   completeOnboardingStep,
@@ -34,9 +35,8 @@ export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   component: OnboardingPage,
 });
 
-const AGENT_CLOUD_INVITE =
-  "https://useagentcloud.com/invite/dcee6766-4b8f-44c0-9f4c-025ccdcbce2e";
-const DISCORD_INVITE = "https://discord.gg/sFgEEPRSmw";
+const AGENT_CLOUD_INVITE = AGENT_CLOUD_INVITE_URL;
+const DISCORD_INVITE = DISCORD_INVITE_URL;
 
 type SelfCheckStep = Exclude<OnboardingStepKey, never>;
 

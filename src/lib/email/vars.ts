@@ -28,6 +28,7 @@ export type EmailVarKey =
   | "preferences_link"
   | "course_link"
   | "discord_link"
+  | "agent_cloud_link"
   | "overview_link"
   | "one_on_one_link"
   | "invitation_link"
@@ -99,6 +100,7 @@ export const EMAIL_VAR_KEYS: EmailVarKey[] = [
   "preferences_link",
   "course_link",
   "discord_link",
+  "agent_cloud_link",
   "overview_link",
   "one_on_one_link",
   "invitation_link",
