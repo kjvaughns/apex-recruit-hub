@@ -4,14 +4,14 @@
 // onboarding begins, so there is no "portal account setup" step.)
 
 export type OnboardingStepKey =
-  | "agentspace_contracting"
+  | "agent_cloud_onboarding"
   | "discord_role_update"
   | "read_agent_playbook"
   | "agent_expectations_schedule"
   | "complete_vantage_closer_course";
 
 export const ONBOARDING_STEP_ORDER: OnboardingStepKey[] = [
-  "agentspace_contracting",
+  "agent_cloud_onboarding",
   "discord_role_update",
   "read_agent_playbook",
   "agent_expectations_schedule",
@@ -19,7 +19,7 @@ export const ONBOARDING_STEP_ORDER: OnboardingStepKey[] = [
 ];
 
 export const ONBOARDING_STEP_LABELS: Record<OnboardingStepKey, string> = {
-  agentspace_contracting: "AgentSpace contracting",
+  agent_cloud_onboarding: "Agent Cloud onboarding",
   discord_role_update: "Update Discord role",
   read_agent_playbook: "Read the Agent Playbook",
   agent_expectations_schedule: "Agent expectations & schedule",
@@ -29,7 +29,7 @@ export const ONBOARDING_STEP_LABELS: Record<OnboardingStepKey, string> = {
 // Steps an agent self-checks. (The Closer Course step also auto-completes when
 // the Academy course is finished.)
 export const SELF_CHECK_STEPS: OnboardingStepKey[] = [
-  "agentspace_contracting",
+  "agent_cloud_onboarding",
   "discord_role_update",
   "read_agent_playbook",
   "agent_expectations_schedule",
@@ -42,13 +42,14 @@ export type OnboardingSteps = Record<OnboardingStepKey, OnboardingStepState>;
 /** Canonical freshly-initialized steps (all false). */
 export function initialOnboardingSteps(): OnboardingSteps {
   return {
-    agentspace_contracting: { completed: false, completed_at: null },
+    agent_cloud_onboarding: { completed: false, completed_at: null },
     discord_role_update: { completed: false, completed_at: null },
     read_agent_playbook: { completed: false, completed_at: null },
     agent_expectations_schedule: { completed: false, completed_at: null },
     complete_vantage_closer_course: { completed: false, completed_at: null },
   };
 }
+
 
 /** Count completed steps from a possibly-missing/loosely-typed jsonb value. */
 export function onboardingProgress(steps: unknown): { done: number; total: number } {
