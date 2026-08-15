@@ -7,4 +7,8 @@ export const XCEL_COURSE_URL =
 
 export const XCEL_PARTNER_CODE = "karmakore";
 
-export const DISCORD_INVITE_URL = "https://discord.gg/Tgf8M9kgSz";
+export const DISCORD_INVITE_URL = "https://discord.gg/sFgEEPRSmw";
+
+/** Agent Cloud onboarding invite for newly licensed Vantage agents. */
+export const AGENT_CLOUD_INVITE_URL =
+  "https://useagentcloud.com/invite/dcee6766-4b8f-44c0-9f4c-025ccdcbce2e";

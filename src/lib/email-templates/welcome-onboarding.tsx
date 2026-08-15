@@ -35,6 +35,10 @@ const Email = ({ firstName, portalLink, copyFor }: Props) => (
     <Step label="Read the Agent Playbook" />
     <Step label="Expectations & schedule" />
     <Step label="Vantage Closer Course" />
+    <Text style={paragraph}>
+      Start with Agent Cloud — create your account with the Vantage invite link, and use the upline
+      shown in your portal checklist.
+    </Text>
     <Text style={paragraph}>Knock these out and you&apos;re fully onboarded. Let&apos;s build.</Text>
   </Shell>
 )
