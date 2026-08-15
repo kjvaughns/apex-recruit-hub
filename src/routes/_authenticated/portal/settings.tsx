@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { formatPhoneInput } from "@/lib/phone";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -213,7 +214,7 @@ function ProfileSection() {
           <Input value={lastName} onChange={(e) => setLastName(e.target.value)} />
         </Field>
         <Field label="Phone">
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} />
         </Field>
         <Field label="Email (read-only)">
           <Input readOnly value={profile?.email ?? ""} className="opacity-70" />

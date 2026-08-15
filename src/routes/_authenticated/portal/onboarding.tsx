@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { formatPhone } from "@/lib/phone";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -289,7 +290,7 @@ function stepDefs(ctx?: OnboardingContext): StepDef[] {
             <div className="p-label mb-1">Use these details</div>
             <PrefillRow label="Full name" value={ctx?.prefill.fullName ?? null} />
             <PrefillRow label="Email" value={ctx?.prefill.email ?? null} />
-            <PrefillRow label="Phone" value={ctx?.prefill.phone ?? null} />
+            <PrefillRow label="Phone" value={formatPhone(ctx?.prefill.phone) || null} />
             <PrefillRow label="NPN" value={ctx?.prefill.npn ?? null} />
             <p className="p-muted mt-2 text-[12px]">
               You&apos;ll also choose a password for Agent Cloud during setup.

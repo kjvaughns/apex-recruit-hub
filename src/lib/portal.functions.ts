@@ -261,14 +261,14 @@ export const listApplicants = createServerFn({ method: "POST" })
       .limit(data.limit);
 
     // Pre-Licensing Pipeline: hired-but-unlicensed, oldest follow-up first so the
-    // most overdue check-ins float to the top. Otherwise newest-touched first.
+    // most overdue check-ins float to the top. Otherwise newest applicants first.
     if (data.view === "pre_licensing") {
       query = query
         .eq("licensed", false)
         .not("hired_at", "is", null)
         .order("last_follow_up_at", { ascending: true, nullsFirst: true });
     } else {
-      query = query.order("updated_at", { ascending: false });
+      query = query.order("created_at", { ascending: false });
     }
 
     // Scope: mine = own only; direct = self + direct reports; downline/all rely
