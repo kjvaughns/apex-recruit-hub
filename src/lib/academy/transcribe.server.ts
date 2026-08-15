@@ -9,11 +9,13 @@ function key(): string {
   return k;
 }
 
-/** Confirm the media is actually fetchable before handing it to AssemblyAI. */
-export async function assertMediaReachable(url: string): Promise<void> {
+/** Confirm the media is actually fetchable before handing it to AssemblyAI.
+ *  Returns the URL that should be sent to the provider (Google Drive's
+ *  "can't scan this file for viruses" interstitial is resolved here). */
+export async function assertMediaReachable(url: string, attempt = 0): Promise<string> {
   let res: Response;
   try {
-    res = await fetch(url, { method: "GET", headers: { Range: "bytes=0-1023" }, redirect: "follow" });
+    res = await fetch(url, { method: "GET", headers: { Range: "bytes=0-4095" }, redirect: "follow" });
   } catch {
     throw new Error("We couldn't reach that media link from the server. Make sure it's publicly accessible.");
   }
@@ -27,6 +29,10 @@ export async function assertMediaReachable(url: string): Promise<void> {
   }
   const type = res.headers.get("content-type") ?? "";
   if (/text\/html/i.test(type)) {
+    // Large Drive files answer with a confirmation page instead of bytes.
+    const html = await res.text().catch(() => "");
+    const confirmed = driveConfirmUrl(url, html);
+    if (confirmed && attempt < 2) return assertMediaReachable(confirmed, attempt + 1);
     throw new Error(
       "That link points at a web page, not a media file. In Google Drive use Share → Copy link on the file itself (not a folder), or upload the file to Vantage Academy.",
     );
@@ -36,14 +42,32 @@ export async function assertMediaReachable(url: string): Promise<void> {
   } catch {
     /* ignore */
   }
+  return url;
+}
+
+/** Build the post-interstitial download URL from Drive's confirmation page. */
+function driveConfirmUrl(url: string, html: string): string | null {
+  if (!/drive\.(google|usercontent\.google)\.com/.test(url)) return null;
+  if (!/confirm|virus|download-form|uc-download-link/i.test(html)) return null;
+  const id = html.match(/name="id"\s+value="([^"]+)"/)?.[1] ?? url.match(/[?&]id=([a-zA-Z0-9_-]{10,})/)?.[1];
+  if (!id) return null;
+  const confirm = html.match(/name="confirm"\s+value="([^"]+)"/)?.[1] ?? "t";
+  const uuid = html.match(/name="uuid"\s+value="([^"]+)"/)?.[1];
+  const next = new URL("https://drive.usercontent.google.com/download");
+  next.searchParams.set("id", id);
+  next.searchParams.set("export", "download");
+  next.searchParams.set("confirm", confirm);
+  if (uuid) next.searchParams.set("uuid", uuid);
+  const built = next.toString();
+  return built === url ? null : built;
 }
 
 export async function submitTranscription(mediaUrl: string): Promise<string> {
-  await assertMediaReachable(mediaUrl);
+  const audioUrl = await assertMediaReachable(mediaUrl);
   const res = await fetch(AAI, {
     method: "POST",
     headers: { authorization: key(), "content-type": "application/json" },
-    body: JSON.stringify({ audio_url: mediaUrl, punctuate: true, format_text: true, speaker_labels: true }),
+    body: JSON.stringify({ audio_url: audioUrl, punctuate: true, format_text: true, speaker_labels: true }),
   });
   const body = await res.text();
   if (!res.ok) {
@@ -54,6 +78,7 @@ export async function submitTranscription(mediaUrl: string): Promise<string> {
   if (!json.id) throw new Error("Transcription service did not return a job id.");
   return json.id;
 }
+
 
 export type TranscriptSegment = { start: number; end: number; text: string; speaker?: string | null };
 
