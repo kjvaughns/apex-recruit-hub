@@ -456,7 +456,7 @@ export const completeOnboardingStep = createServerFn({ method: "POST" })
     z
       .object({
         step: z.enum([
-          "agentspace_contracting",
+          "agent_cloud_onboarding",
           "discord_role_update",
           "read_agent_playbook",
           "agent_expectations_schedule",
