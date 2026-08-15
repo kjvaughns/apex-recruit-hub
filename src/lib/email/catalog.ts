@@ -466,8 +466,8 @@ const applicantTemplates: EmailTemplateDef[] = [
       lines: [
         "You're licensed and officially a Vantage agent. First, create your portal account and password using the secure registration button below. Your name, email, phone, and state will already be filled in; you'll only need to confirm your NPN and choose a password.",
         "After registration, complete these five onboarding steps — most people knock them out in one sitting.",
-        "1) AgentSpace contracting — log in with your NPN, verify your info, refresh your profile, complete the SureLC steps, then request contracts until each one shows Pending. Message Vantage when they're all requested.",
-        "2) Discord role update — head to Start Here, open New App, and select Licensed Agent so you get the right channels.",
+        "1) Agent Cloud onboarding — create your Agent Cloud account with the Vantage invite link in your portal checklist, and select the upline shown there.",
+        "2) Discord role update — go to Start Here and select Licensed so the licensed agent channels unlock.",
         "3) Read the Agent Playbook in the Academy Library.",
         "4) Agent expectations and schedule — Monday 9:30 AM team meeting, Monday ~10:30 AM new agent training, Monday 7:00 PM company overview, Wednesday 10:30 AM agency training, Tuesday and Thursday 6:00 PM film review, live dials 10-6 daily.",
         "5) Complete the Vantage Closer Course before live training starts.",

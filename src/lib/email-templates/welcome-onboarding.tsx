@@ -29,11 +29,12 @@ const Email = ({ firstName, portalLink, copyFor }: Props) => (
       NPN and choose a password to open your onboarding checklist:
     </Text>
     <GoldButton href={portalLink || '#'} label="Create my agent account" />
-    <Text style={paragraph}>Here&apos;s what&apos;s waiting for you — four quick steps:</Text>
-    <Step label="AgentSpace contracting" />
-    <Step label="Discord role update" />
-    <Step label="Portal setup" />
-    <Step label="Expectations review" />
+    <Text style={paragraph}>Here&apos;s what&apos;s waiting for you — five quick steps:</Text>
+    <Step label="Agent Cloud onboarding" />
+    <Step label="Discord Licensed role" />
+    <Step label="Read the Agent Playbook" />
+    <Step label="Expectations & schedule" />
+    <Step label="Vantage Closer Course" />
     <Text style={paragraph}>Knock these out and you&apos;re fully onboarded. Let&apos;s build.</Text>
   </Shell>
 )
