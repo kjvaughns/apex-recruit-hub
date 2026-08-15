@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatPhoneInput } from "@/lib/phone";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getAssignableRecruiters, createApplicantManual } from "@/lib/portal.functions";
@@ -87,7 +88,7 @@ export function AddApplicantModal({
             <Input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} />
           </Field>
           <Field label="Phone">
-            <Input type="tel" value={f.phone} onChange={(e) => set("phone", e.target.value)} />
+            <Input type="tel" value={f.phone} onChange={(e) => set("phone", formatPhoneInput(e.target.value))} />
           </Field>
           <Field label="State">
             <Input maxLength={2} value={f.state} onChange={(e) => set("state", e.target.value)} />
