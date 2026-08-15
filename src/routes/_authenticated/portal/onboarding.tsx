@@ -14,7 +14,13 @@ import {
   Checkbox,
   notify,
 } from "@/components/portal/ui";
-import { getMyOnboarding, completeOnboardingStep, notifyOnboarding } from "@/lib/portal.functions";
+import {
+  getMyOnboarding,
+  completeOnboardingStep,
+  notifyOnboarding,
+  getOnboardingContext,
+  type OnboardingContext,
+} from "@/lib/portal.functions";
 import {
   ONBOARDING_STEP_ORDER,
   type OnboardingStepKey,
@@ -28,9 +34,9 @@ export const Route = createFileRoute("/_authenticated/portal/onboarding")({
   component: OnboardingPage,
 });
 
-const AGENCY_CODE = "AEFS-AVLX-A7FY-9Z9L";
-const AGENTSPACE_URL = "https://app.useagentspace.com/register";
-const DISCORD_INVITE = "https://discord.gg/HhFwYbjyt2";
+const AGENT_CLOUD_INVITE =
+  "https://useagentcloud.com/invite/dcee6766-4b8f-44c0-9f4c-025ccdcbce2e";
+const DISCORD_INVITE = "https://discord.gg/sFgEEPRSmw";
 
 type SelfCheckStep = Exclude<OnboardingStepKey, never>;
 
@@ -47,9 +53,16 @@ function OnboardingPage() {
   const completeStep = useServerFn(completeOnboardingStep);
   const notifyFn = useServerFn(notifyOnboarding);
 
+  const fetchContext = useServerFn(getOnboardingContext);
+
   const q = useQuery({
     queryKey: ["my-onboarding"],
     queryFn: () => fetchOnboarding(),
+  });
+
+  const ctxQ = useQuery({
+    queryKey: ["onboarding-context"],
+    queryFn: () => fetchContext(),
   });
 
   const mut = useMutation({
@@ -114,7 +127,7 @@ function OnboardingPage() {
               </p>
             </Panel>
             <Panel padded={false}>
-              <StepChecklist preview />
+              <StepChecklist preview ctx={ctxQ.data} />
             </Panel>
           </div>
         </PageBody>
@@ -159,11 +172,12 @@ function OnboardingPage() {
               steps={steps}
               currentIndex={currentIndex}
               onComplete={(s) => mut.mutate(s)}
-              onCompleteContracting={() => {
-                mut.mutate("agentspace_contracting");
+              onCompleteAgentCloud={() => {
+                mut.mutate("agent_cloud_onboarding");
                 notifyContracting();
               }}
               pending={mut.isPending}
+              ctx={ctxQ.data}
             />
           </Panel>
         </div>
@@ -191,9 +205,10 @@ function CompletionPanel() {
       >
         ✓
       </div>
-      <h2 className="p-card-title">You're all set</h2>
+      <h2 className="p-card-title">Onboarding complete</h2>
       <p className="p-secondary mx-auto mt-2 max-w-[460px]">
-        You are ready for New Agent Training. Notify your trainer that you have completed onboarding.
+        You&apos;re ready for Vantage New Agent Training. Notify your trainer that you have completed
+        onboarding.
       </p>
       <div className="mt-4 flex flex-wrap justify-center gap-2">
         <Button variant="primary" loading={mut.isPending} disabled={sent} onClick={() => mut.mutate()}>
@@ -216,159 +231,229 @@ type StepDef = {
   render: () => React.ReactNode;
 };
 
-const STEP_DEFS: StepDef[] = [
-  {
-    key: "agentspace_contracting",
-    title: "AgentSpace contracting",
-    summary: "Create your AgentSpace account, join the agency, and verify licensing.",
-    actionLabel: "I completed contracting",
-    render: () => (
-      <>
-        <p className="p-secondary">
-          Create your AgentSpace account and enter the Vantage Financial agency code when prompted
-          (select <strong style={{ color: "var(--p-text)" }}>"Join Agency"</strong>). Then verify your
-          licensing using your NPN.
-        </p>
-        <p className="p-muted mt-2">
-          Note: AgentSpace occasionally doesn't recognize licensing info right away — refreshing the
-          page often updates it.
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <a href={AGENTSPACE_URL} target="_blank" rel="noreferrer noopener">
-            <Button variant="secondary" size="sm">Open AgentSpace →</Button>
-          </a>
-          <CopyCode code={AGENCY_CODE} />
-        </div>
-        <div className="mt-4 rounded-[10px] border p-3" style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}>
-          <div className="p-label mb-1">Training video</div>
-          <p className="p-secondary">
-            Watch the contracting walkthrough covering SureLC setup, creating your required accounts,
-            requesting carrier contracts, and completing AgentSpace onboarding. Work through
-            everything until you reach the <strong style={{ color: "var(--p-text)" }}>Pending contracting</strong> screen,
-            then mark this step complete below.
-          </p>
-        </div>
-      </>
-    ),
-  },
-  {
-    key: "discord_role_update",
-    title: "Update Discord role",
-    summary: "Register as a Licensed Agent to unlock the licensed-agent channels.",
-    actionLabel: "Mark complete",
-    render: () => (
-      <>
-        <p className="p-secondary">
-          Once you're licensed, update your Discord access so the licensed-agent channels unlock:
-        </p>
-        <ol className="p-secondary mt-2 ml-4 list-decimal space-y-1">
-          <li>Open the <strong style={{ color: "var(--p-text)" }}>Start Here</strong> channel.</li>
-          <li>Click <strong style={{ color: "var(--p-text)" }}>New App</strong>.</li>
-          <li>Register as a <strong style={{ color: "var(--p-text)" }}>Licensed Agent</strong>.</li>
-        </ol>
-        <p className="p-muted mt-2">
-          If you're already in the server, this updates your access from Unlicensed to Licensed. If you
-          haven't joined Discord yet, use the invite below.
-        </p>
-        <div className="mt-3">
-          <a href={DISCORD_INVITE} target="_blank" rel="noreferrer noopener">
-            <Button variant="secondary" size="sm">Join the Discord →</Button>
-          </a>
-        </div>
-      </>
-    ),
-  },
-  {
-    key: "read_agent_playbook",
-    title: "Read the Vantage Financial Agent Playbook",
-    summary: "Covers how we sell, our systems, and what's expected of every agent.",
-    actionLabel: "I have read the playbook",
-    render: () => (
-      <>
-        <p className="p-secondary">
-          Read the Agent Playbook end to end — it covers how we sell, our systems, and what's expected
-          of every Vantage agent.
-        </p>
-        <div className="mt-3">
-          <Link to="/portal/academy/library/$slug" params={{ slug: "agent-playbook" }}>
-            <Button variant="secondary" size="sm">Open Agent Playbook →</Button>
-          </Link>
-        </div>
-      </>
-    ),
-  },
-  {
-    key: "agent_expectations_schedule",
-    title: "Agent expectations & schedule",
-    summary: "Weekly meeting schedule and the Vantage production standards.",
-    actionLabel: "I understand and agree",
-    requireAgree: "I understand and agree to the Vantage Financial standards and schedule.",
-    render: () => (
-      <>
-        <div className="p-label mb-1">Weekly schedule (CST)</div>
-        <ul className="p-secondary space-y-1">
-          <li><strong style={{ color: "var(--p-text)" }}>Mandatory Team Meeting</strong> — Monday 9:30 AM</li>
-          <li><strong style={{ color: "var(--p-text)" }}>Company Overview</strong> — Monday 7:00 PM</li>
-          <li><strong style={{ color: "var(--p-text)" }}>New Agent Live Training</strong> — Monday ~10:30 AM (Training Room Discord voice channel)</li>
-          <li><strong style={{ color: "var(--p-text)" }}>Agency Training</strong> — Wednesday 10:30 AM</li>
-          <li><strong style={{ color: "var(--p-text)" }}>Film Review</strong> — Tuesday & Thursday 6:00 PM</li>
-          <li><strong style={{ color: "var(--p-text)" }}>Live Dials</strong> — 10:00 AM to 6:00 PM daily</li>
-        </ul>
-        <p className="p-muted mt-2">Encouraged to start earlier and continue calling later when possible.</p>
+function PrefillRow({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 py-1">
+      <span className="p-muted text-[12px]">{label}</span>
+      <span className="text-[13px]" style={{ color: value ? "var(--p-text)" : "var(--p-text-3)" }}>
+        {value || "Add during setup"}
+      </span>
+    </div>
+  );
+}
 
-        <div className="p-label mt-4 mb-1">Standards & expectations</div>
-        <ul className="p-secondary ml-4 list-disc space-y-1">
-          <li>Cameras must be on while calling.</li>
-          <li>Stay unmuted while calling unless operationally necessary.</li>
-          <li>Do not be late to meetings.</li>
-          <li>$5,000 weekly and $20,000 monthly personal production is the Vantage standard.</li>
-          <li>Closing business consistently is a normal expectation of the sales role.</li>
-          <li>Agents below standard may be assigned additional training.</li>
-          <li>Consistently falling below production standards may result in loss of free lead eligibility and possible termination.</li>
-          <li>New Agent Training begins Mondays; the Monday Team Meeting is mandatory.</li>
-          <li>Missing required meetings without prior communication may result in termination — communicate beforehand, not after.</li>
-        </ul>
-      </>
-    ),
-  },
-  {
-    key: "complete_vantage_closer_course",
-    title: "Complete the Vantage Closer Course",
-    summary: "Required pre-training course on the Vantage sales process and mindset.",
-    actionLabel: "I've completed the course",
-    render: () => (
-      <>
-        <p className="p-secondary">
-          The Vantage Closer Course is the required pre-training course covering the Vantage sales
-          process, sales psychology, mindset, and fundamentals you'll need before live training.
-        </p>
-        <p className="p-muted mt-2">This step completes automatically once you finish the course.</p>
-        <div className="mt-3">
-          <Link to="/portal/academy/courses/$slug" params={{ slug: "vantage-closer" }}>
-            <Button variant="secondary" size="sm">Start Vantage Closer Course →</Button>
-          </Link>
-        </div>
-      </>
-    ),
-  },
-];
+function AdminWarning({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="mt-3 rounded-[10px] border p-3 text-[12px]"
+      style={{ borderColor: "var(--p-gold)", background: "var(--p-gold-soft)", color: "var(--p-text)" }}
+    >
+      <strong>Configuration warning (admins only):</strong> {children}
+    </div>
+  );
+}
+
+function stepDefs(ctx?: OnboardingContext): StepDef[] {
+  return [
+    {
+      key: "agent_cloud_onboarding",
+      title: "Agent Cloud onboarding",
+      summary: "Create your Agent Cloud account using the Vantage invite link.",
+      actionLabel: "I Created My Agent Cloud Account",
+      render: () => (
+        <>
+          <p className="p-secondary">
+            Create your Agent Cloud account using the Vantage invite link below. When Agent Cloud asks
+            for your upline, select or enter the leader shown here.
+          </p>
+          <div
+            className="mt-3 rounded-[10px] border p-3"
+            style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}
+          >
+            <div className="p-label mb-1">Your upline</div>
+            {ctx?.upline ? (
+              <p className="text-[15px] font-semibold" style={{ color: "var(--p-gold)" }}>
+                {ctx.upline.name}
+              </p>
+            ) : (
+              <p className="p-secondary">
+                We couldn&apos;t determine your upline automatically. Contact your recruiter for your
+                upline before continuing.
+              </p>
+            )}
+          </div>
+          <div
+            className="mt-3 rounded-[10px] border p-3"
+            style={{ borderColor: "var(--p-border)", background: "var(--p-raised)" }}
+          >
+            <div className="p-label mb-1">Use these details</div>
+            <PrefillRow label="Full name" value={ctx?.prefill.fullName ?? null} />
+            <PrefillRow label="Email" value={ctx?.prefill.email ?? null} />
+            <PrefillRow label="Phone" value={ctx?.prefill.phone ?? null} />
+            <PrefillRow label="NPN" value={ctx?.prefill.npn ?? null} />
+            <p className="p-muted mt-2 text-[12px]">
+              You&apos;ll also choose a password for Agent Cloud during setup.
+            </p>
+          </div>
+          <div className="mt-3">
+            <a href={AGENT_CLOUD_INVITE} target="_blank" rel="noreferrer noopener">
+              <Button variant="secondary" size="sm">Create Agent Cloud Account →</Button>
+            </a>
+          </div>
+        </>
+      ),
+    },
+    {
+      key: "discord_role_update",
+      title: "Update Discord role",
+      summary: "Select the Licensed role in Start Here to unlock the licensed agent channels.",
+      actionLabel: "I've Updated My Discord Role",
+      render: () => (
+        <>
+          <ol className="p-secondary ml-4 list-decimal space-y-1">
+            <li>Join the Vantage Financial Discord if you haven&apos;t already.</li>
+            <li>
+              Go to the <strong style={{ color: "var(--p-text)" }}>Start Here</strong> area.
+            </li>
+            <li>
+              Select <strong style={{ color: "var(--p-text)" }}>Licensed</strong>.
+            </li>
+          </ol>
+          <p className="p-muted mt-2">
+            Once you select Licensed, the full licensed agent Discord unlocks.
+          </p>
+          <div className="mt-3">
+            <a href={DISCORD_INVITE} target="_blank" rel="noreferrer noopener">
+              <Button variant="secondary" size="sm">Open Discord →</Button>
+            </a>
+          </div>
+        </>
+      ),
+    },
+    {
+      key: "read_agent_playbook",
+      title: "Read the Vantage Financial Agent Playbook",
+      summary: "Covers how we sell, our systems, and what's expected of every agent.",
+      actionLabel: "I Have Read the Playbook",
+      render: () => (
+        <>
+          <p className="p-secondary">
+            Read the Agent Playbook end to end — it covers how we sell, our systems, and what&apos;s
+            expected of every Vantage agent.
+          </p>
+          {ctx?.playbook ? (
+            <div className="mt-3">
+              <Link to="/portal/academy/library/$slug" params={{ slug: ctx.playbook.slug }}>
+                <Button variant="secondary" size="sm">Open Agent Playbook →</Button>
+              </Link>
+            </div>
+          ) : (
+            <>
+              <p className="p-muted mt-2">
+                The Agent Playbook isn&apos;t available yet — contact your recruiter.
+              </p>
+              {ctx?.isAdmin && (
+                <AdminWarning>
+                  No published Academy library resource with &quot;Playbook&quot; in the title was
+                  found. Publish the Agent Playbook in Academy → Manage → Library.
+                </AdminWarning>
+              )}
+            </>
+          )}
+        </>
+      ),
+    },
+    {
+      key: "agent_expectations_schedule",
+      title: "Agent expectations & schedule",
+      summary: "Weekly meeting schedule and the Vantage production standards.",
+      actionLabel: "I understand and agree",
+      requireAgree: "I understand and agree to the Vantage Financial standards and schedule.",
+      render: () => (
+        <>
+          <div className="p-label mb-1">Weekly schedule (CST)</div>
+          <ul className="p-secondary space-y-1">
+            <li><strong style={{ color: "var(--p-text)" }}>Mandatory Team Meeting</strong> — Monday 9:30 AM</li>
+            <li><strong style={{ color: "var(--p-text)" }}>Company Overview</strong> — Monday 7:00 PM</li>
+            <li><strong style={{ color: "var(--p-text)" }}>New Agent Live Training</strong> — Monday ~10:30 AM (Training Room Discord voice channel)</li>
+            <li><strong style={{ color: "var(--p-text)" }}>Agency Training</strong> — Wednesday 10:30 AM</li>
+            <li><strong style={{ color: "var(--p-text)" }}>Film Review</strong> — Tuesday &amp; Thursday 6:00 PM</li>
+            <li><strong style={{ color: "var(--p-text)" }}>Live Dials</strong> — 10:00 AM to 6:00 PM daily</li>
+          </ul>
+          <p className="p-muted mt-2">Encouraged to start earlier and continue calling later when possible.</p>
+
+          <div className="p-label mt-4 mb-1">Standards &amp; expectations</div>
+          <ul className="p-secondary ml-4 list-disc space-y-1">
+            <li>Cameras must be on while calling.</li>
+            <li>Stay unmuted while calling unless operationally necessary.</li>
+            <li>Do not be late to meetings.</li>
+            <li>$5,000 weekly and $20,000 monthly personal production is the Vantage standard.</li>
+            <li>Closing business consistently is a normal expectation of the sales role.</li>
+            <li>Agents below standard may be assigned additional training.</li>
+            <li>Consistently falling below production standards may result in loss of free lead eligibility and possible termination.</li>
+            <li>New Agent Training begins Mondays; the Monday Team Meeting is mandatory.</li>
+            <li>Missing required meetings without prior communication may result in termination — communicate beforehand, not after.</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      key: "complete_vantage_closer_course",
+      title: "Complete the Vantage Closer Course",
+      summary: "Required pre-training course on the Vantage sales process and mindset.",
+      actionLabel: "I've completed the course",
+      render: () => (
+        <>
+          <p className="p-secondary">
+            The Vantage Closer Course is the required pre-training course covering the Vantage sales
+            process, sales psychology, mindset, and fundamentals you&apos;ll need before live training.
+          </p>
+          <p className="p-muted mt-2">This step completes automatically once you finish the course.</p>
+          {ctx?.closerCourse?.published ? (
+            <div className="mt-3">
+              <Link to="/portal/academy/courses/$slug" params={{ slug: ctx.closerCourse.slug }}>
+                <Button variant="secondary" size="sm">Start Vantage Closer Course →</Button>
+              </Link>
+            </div>
+          ) : (
+            <>
+              <p className="p-muted mt-2">
+                The course isn&apos;t available yet — contact your recruiter.
+              </p>
+              {ctx?.isAdmin && (
+                <AdminWarning>
+                  {ctx?.closerCourse
+                    ? "The Vantage Closer Course exists but isn't published. Publish it in Academy → Manage → Courses."
+                    : "No Academy course with \"Closer\" in the title was found. Create and publish the Vantage Closer Course in Academy → Manage → Courses."}
+                </AdminWarning>
+              )}
+            </>
+          )}
+        </>
+      ),
+    },
+  ];
+}
 
 /** The single sequential onboarding checklist. Shared by the live agent view and the read-only preview. */
 function StepChecklist({
   steps,
   currentIndex = 0,
   onComplete,
-  onCompleteContracting,
+  onCompleteAgentCloud,
   pending,
   preview,
+  ctx,
 }: {
   steps?: Record<string, OnboardingStepState>;
   currentIndex?: number;
   onComplete?: (step: SelfCheckStep) => void;
-  onCompleteContracting?: () => void;
+  onCompleteAgentCloud?: () => void;
   pending?: boolean;
   preview?: boolean;
+  ctx?: OnboardingContext;
 }) {
+  const STEP_DEFS = stepDefs(ctx);
   const allKeys = STEP_DEFS.map((d) => d.key);
   const [open, setOpen] = useState<string[]>(() =>
     preview ? allKeys : [STEP_DEFS[Math.min(currentIndex < 0 ? 0 : currentIndex, STEP_DEFS.length - 1)].key],
@@ -412,8 +497,8 @@ function StepChecklist({
                 )
               }
               onComplete={() =>
-                def.key === "agentspace_contracting" && onCompleteContracting
-                  ? onCompleteContracting()
+                def.key === "agent_cloud_onboarding" && onCompleteAgentCloud
+                  ? onCompleteAgentCloud()
                   : onComplete?.(def.key)
               }
             />
@@ -539,26 +624,5 @@ function StepRow({
         </div>
       </div>
     </div>
-  );
-}
-
-function CopyCode({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* noop */
-    }
-  }
-  return (
-    <Button variant="secondary" size="sm" onClick={copy} title="Copy agency code" className="font-mono">
-      <span className="tracking-[0.08em]">{code}</span>
-      <span className="text-[11px] font-semibold uppercase" style={{ color: "var(--p-gold)" }}>
-        {copied ? "Copied" : "Copy"}
-      </span>
-    </Button>
   );
 }
