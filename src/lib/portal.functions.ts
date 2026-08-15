@@ -523,7 +523,7 @@ export const notifyOnboarding = createServerFn({ method: "POST" })
           ? `${name} reached pending contracting`
           : `${name} completed onboarding`;
         const line = isContracting
-          ? `${name} has completed AgentSpace contracting and reached the pending contracting stage.`
+          ? `${name} has completed Agent Cloud onboarding.`
           : `${name} has completed onboarding and is ready for New Agent Training.`;
         await sendRawEmail(
           copy.email,
