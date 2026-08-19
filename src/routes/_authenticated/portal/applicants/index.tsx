@@ -11,6 +11,7 @@ import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
 import { formatPhone } from "@/lib/phone";
+import { instagramLabel, instagramUrl } from "@/lib/instagram";
 
 /** Stages at or past Onboarding mean the recruit is licensed. */
 const LICENSED_STAGE_SLUGS = new Set(["onboarding", "training", "active-agent"]);
@@ -356,6 +357,9 @@ function ListView({
                 <div className="p-muted mt-2 truncate text-[12.5px]">
                   {a.email}
                   {a.phone ? ` · ${formatPhone(a.phone)}` : ""}
+                  {instagramLabel(a.instagram_handle)
+                    ? ` · ${instagramLabel(a.instagram_handle)}`
+                    : ""}
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -466,6 +470,17 @@ function ListView({
                     <TD>
                       <div className="p-body truncate max-w-[200px]">{a.email}</div>
                       <div className="p-muted">{formatPhone(a.phone) || "—"}</div>
+                      {instagramUrl(a.instagram_handle) ? (
+                        <a
+                          href={instagramUrl(a.instagram_handle)}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-muted truncate text-[var(--p-gold)] hover:underline"
+                        >
+                          {instagramLabel(a.instagram_handle)}
+                        </a>
+                      ) : null}
                     </TD>
                     <TD>
                       {/* Inline stage change — no need to open the record. */}
