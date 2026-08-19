@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { formatPhone, phoneHref } from "@/lib/phone";
+import { instagramLabel, instagramUrl } from "@/lib/instagram";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
