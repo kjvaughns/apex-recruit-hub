@@ -77,6 +77,7 @@ function AgentProfilePage() {
                 <DField label="NPN" value={p?.npn || "—"} />
                 <DField label="Resident state" value={p?.resident_state || "—"} />
                 <DField label="Phone" value={formatPhone(p?.phone) || "—"} />
+                <DField label="Instagram" value={instagramLabel(p?.instagram_handle) || "—"} />
                 <DField label="Recruiting link" value={p?.recruiting_slug || "—"} />
                 <DField label="Status" value={p?.is_active === false ? "Inactive" : "Active"} />
               </dl>
