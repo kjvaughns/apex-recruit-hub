@@ -357,6 +357,9 @@ function ListView({
                 <div className="p-muted mt-2 truncate text-[12.5px]">
                   {a.email}
                   {a.phone ? ` · ${formatPhone(a.phone)}` : ""}
+                  {instagramLabel(a.instagram_handle)
+                    ? ` · ${instagramLabel(a.instagram_handle)}`
+                    : ""}
                 </div>
 
                 <div className="mt-2 flex flex-wrap gap-1">
