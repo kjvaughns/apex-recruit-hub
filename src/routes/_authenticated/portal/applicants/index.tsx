@@ -11,6 +11,7 @@ import { AddApplicantModal } from "@/components/vantage/add-applicant-modal";
 import { RecruitingLinkCard } from "@/components/vantage/recruiting-link-card";
 import { onboardingProgress } from "@/lib/onboarding";
 import { formatPhone } from "@/lib/phone";
+import { instagramLabel, instagramUrl } from "@/lib/instagram";
 
 /** Stages at or past Onboarding mean the recruit is licensed. */
 const LICENSED_STAGE_SLUGS = new Set(["onboarding", "training", "active-agent"]);
