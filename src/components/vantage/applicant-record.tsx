@@ -300,6 +300,21 @@ export function ApplicantRecord({
             <EditText label="Resident state" defaultValue={a.resident_state ?? a.state ?? ""} onSave={(v) => save({ resident_state: v || null })} />
             <EditText label="NPN" defaultValue={a.npn ?? ""} onSave={(v) => save({ npn: v || null })} />
             <EditText label="Licensing status" defaultValue={a.licensing_status ?? ""} onSave={(v) => save({ licensing_status: v || null })} />
+            <div>
+              <div className="p-label mb-1">Instagram</div>
+              {a.instagram_handle ? (
+                <a
+                  href={instagramUrl(a.instagram_handle)}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="p-body text-[var(--p-gold)] hover:underline"
+                >
+                  {instagramLabel(a.instagram_handle)}
+                </a>
+              ) : (
+                <span className="p-body text-[var(--p-muted)]">—</span>
+              )}
+            </div>
             <EditSelectField label="Status" value={a.recruiting_status ?? "pending"} onChange={(v) => save({ recruiting_status: v })}>
               {RECRUITING_STATUSES.map((s) => (
                 <option key={s} value={s}>{RECRUITING_STATUS_LABELS[s]}</option>
