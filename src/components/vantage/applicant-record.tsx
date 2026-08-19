@@ -336,6 +336,16 @@ export function ApplicantRecord({
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </EditSelectField>
+            <EditSelectField
+              label="Referring recruiter (signed up under)"
+              value={a.referred_by_profile_id ?? ""}
+              onChange={(v) => save({ referred_by_profile_id: v || null })}
+            >
+              <option value="">— none —</option>
+              {(usersQ.data?.users ?? []).map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </EditSelectField>
             <EditDateTimeField
               label="Next follow-up"
               defaultValue={isoToLocalInput(a.next_follow_up_at)}

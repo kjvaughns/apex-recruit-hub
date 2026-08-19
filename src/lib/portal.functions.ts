@@ -732,6 +732,7 @@ export const updateApplicant = createServerFn({ method: "POST" })
         licensing_status: z.string().trim().max(60).nullable().optional(),
         recruiting_status: z.enum(RECRUITING_STATUSES).optional(),
         assigned_recruiter_id: z.string().uuid().nullable().optional(),
+        referred_by_profile_id: z.string().uuid().nullable().optional(),
         next_follow_up_at: z.string().datetime().nullable().optional(),
       })
       .parse(d),
@@ -745,6 +746,29 @@ export const updateApplicant = createServerFn({ method: "POST" })
     }
     if (Object.keys(patch).length === 0) return { ok: true };
     patch.updated_at = new Date().toISOString();
+
+    // The recruiter shown on the record resolves from referred_by_profile_id
+    // first, then falls back to the free-text snapshot captured at apply time.
+    // When someone corrects the referring recruiter, refresh (or clear) that
+    // snapshot so the stale typed-in name stops winning the display.
+    if (data.referred_by_profile_id !== undefined) {
+      if (data.referred_by_profile_id) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data: rec } = await supabaseAdmin
+          .from("profiles")
+          .select("first_name, last_name, full_name")
+          .eq("id", data.referred_by_profile_id)
+          .maybeSingle();
+        const name =
+          [rec?.first_name, rec?.last_name].filter(Boolean).join(" ") || rec?.full_name || null;
+        patch.referred_by_name_snapshot = name;
+        patch.referred_by_name = name;
+      } else {
+        patch.referred_by_name_snapshot = null;
+        patch.referred_by_name = null;
+      }
+    }
+
 
     const { error } = await supabase.from("applicants").update(patch as never).eq("id", id);
     if (error) throw new Error(error.message);
