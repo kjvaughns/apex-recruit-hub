@@ -732,6 +732,7 @@ export const updateApplicant = createServerFn({ method: "POST" })
         licensing_status: z.string().trim().max(60).nullable().optional(),
         recruiting_status: z.enum(RECRUITING_STATUSES).optional(),
         assigned_recruiter_id: z.string().uuid().nullable().optional(),
+        referred_by_profile_id: z.string().uuid().nullable().optional(),
         next_follow_up_at: z.string().datetime().nullable().optional(),
       })
       .parse(d),
