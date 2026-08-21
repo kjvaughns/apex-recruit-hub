@@ -32,9 +32,11 @@ const Email = ({ firstName, ...rest }: Props) => {
       </Text>
       <GoldButton href={L.discordInviteUrl} label="Join the Discord" />
       <Text style={paragraph}>
-        Once you pass your exam, check your state requirements ({STATE_REQUIREMENTS_URL}) and apply
-        for your license at {NIPR_URL}.
+        Then it&apos;s two steps: check your state requirements, and once you pass your exam, apply
+        for your license on nipr.com.
       </Text>
+      <GoldButton href={STATE_REQUIREMENTS_URL} label="State requirements" />
+      <GoldButton href={NIPR_URL} label="Apply for your license" />
       <Text style={paragraph}>
         After the overview, if it&apos;s a fit, we&apos;ll send you a short form to officially
         join the team. Let&apos;s get to work.
