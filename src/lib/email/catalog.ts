@@ -294,7 +294,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       bullets: [
         "Join the Vantage Discord — that's where questions get answered and team sales get posted",
         "Complete Start Here as an unlicensed agent",
-        "Get your licensing course (use partner code karmakore at checkout)",
+        "Get your licensing course (use partner code AFE at checkout)",
         "Screenshot your course confirmation and post it in #unlicensed with \"I've got the course\"",
         "Study daily — most agents finish in two to three weeks",
       ],
@@ -345,19 +345,23 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your licensing course is the gate to everything else, so start it today and work it daily.",
-        "Use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
+        "Three steps, in this order: 1) start the Life Insurance Pre Licensing course with partner code AFE, 2) check your State Requirements, 3) apply for your license on nipr.com.",
       ],
       bullets: [
-        "Enroll in the licensing course",
+        "Life Insurance Pre Licensing — enroll with partner code AFE",
         "Study daily — most agents finish in two to three weeks",
-        "Check your state requirements and apply for your license on nipr.com",
+        "State Requirements — check the exact steps for your state",
+        "Apply for License — apply on nipr.com",
         "Complete fingerprinting and background checks if your state requires them",
         "Tell your recruiter the day you pass",
       ],
-      ctaLabel: "Start your course",
+      ctaLabel: "Start pre licensing (code AFE)",
       ctaUrl: "{{course_link}}",
       secondaryCtaLabel: "State requirements",
       secondaryCtaUrl: "{{state_requirements_link}}",
+      details: [
+        { label: "Apply for your license", value: "{{nipr_link}}" },
+      ],
     },
   }),
   def({
@@ -372,7 +376,7 @@ const applicantTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Quick nudge on your licensing course. Consistent daily study is what gets people through fast.",
-        "Use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
+        "The order stays the same: finish Life Insurance Pre Licensing (partner code AFE), check your State Requirements, then apply for your license on nipr.com — including fingerprinting if your state requires it.",
       ],
       ctaLabel: "Back to your course",
       ctaUrl: "{{course_link}}",
@@ -909,12 +913,13 @@ const stageTemplates: EmailTemplateDef[] = [
         "Post your course confirmation screenshot in #unlicensed with \"I've got the course\"",
         "Work through your course daily — an hour or two beats a weekend cram",
         "Take the practice exams until you're consistently passing",
-        "Check your state requirements and apply for your license on nipr.com",
+        "Check your State Requirements, then apply for your license on nipr.com",
         "Complete fingerprinting and background checks if your state requires them",
         "Message your recruiter the moment you're ready to schedule your state exam",
       ],
       details: [
         { label: "Discord", value: "{{discord_link}}" },
+        { label: "Apply for your license", value: "{{nipr_link}}" },
         { label: "Your recruiter", value: "{{recruiter_name}}" },
         { label: "Reach them at", value: "{{recruiter_email}}" },
       ],
@@ -938,7 +943,7 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Your state exam is locked in. Between now and then, practice exams are the highest-value thing you can do.",
-        "After you pass, use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
+        "After you pass: check your State Requirements, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       details: [
         { label: "Exam", value: "{{exam_when}}" },
@@ -948,7 +953,7 @@ const stageTemplates: EmailTemplateDef[] = [
         "Bring two forms of ID and arrive 30 minutes early",
         "Run practice exams until you're passing comfortably",
         "Text your recruiter the second you get your result",
-        "Check your state requirements and apply for your license on nipr.com",
+        "Check your State Requirements, then apply for your license on nipr.com",
         "Complete fingerprinting and background checks if your state requires them",
       ],
       ctaLabel: "Back to your course",
@@ -970,7 +975,7 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Quick reminder about your state exam. You've got this.",
-        "After you pass, use the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
+        "After you pass: check your State Requirements, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
       ],
       details: [
         { label: "Exam", value: "{{exam_when}}" },
@@ -1011,11 +1016,11 @@ const stageTemplates: EmailTemplateDef[] = [
       intro: GREET,
       lines: [
         "Congratulations. Now let's turn that pass into an active license so you can get contracted.",
-        "Click the state requirements button to see the exact steps for your state, then apply for your license on nipr.com and complete any fingerprinting requirements if necessary.",
+        "Two steps left: check your State Requirements, then apply for your license on nipr.com — plus fingerprinting if your state requires it.",
       ],
       bullets: [
-        "Click State requirements to see your state's exact steps",
-        "Apply for your license on nipr.com",
+        "State Requirements — see your state's exact steps",
+        "Apply for License — apply on nipr.com",
         "Complete fingerprinting and the background check if your state requires them",
         "Wait for your license and NPN to be issued",
         "Send your NPN to your recruiter the day you get it — that starts onboarding",
@@ -1026,8 +1031,8 @@ const stageTemplates: EmailTemplateDef[] = [
       ],
       ctaLabel: "State requirements",
       ctaUrl: "{{state_requirements_link}}",
-      secondaryCtaLabel: "Message your recruiter",
-      secondaryCtaUrl: "mailto:{{recruiter_email}}",
+      secondaryCtaLabel: "Apply for your license",
+      secondaryCtaUrl: "{{nipr_link}}",
       note: "Requirements vary by state — the state requirements page will walk you through yours, and your recruiter is there if you get stuck.",
     },
   }),

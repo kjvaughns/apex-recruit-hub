@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PublicShell } from "@/components/vantage/brand";
-import { DISCORD_INVITE_URL } from "@/lib/next-steps";
+import { DISCORD_INVITE_URL, NIPR_URL, STATE_REQUIREMENTS_URL } from "@/lib/next-steps";
 import { confirmCoursePurchase } from "@/lib/recruiting.functions";
 
 export const Route = createFileRoute("/course-purchased/$token")({
@@ -70,7 +70,7 @@ function CoursePurchased() {
             "Work your course daily — an hour or two a day beats a weekend cram.",
             "Run practice exams until you're passing them comfortably.",
             "Tell your recruiter when you're ready and we'll schedule your state exam.",
-            "Pass, apply for your license, then send your NPN to your recruiter.",
+            "Pass, check your state requirements, then apply for your license on nipr.com and send your NPN to your recruiter.",
           ].map((step, i) => (
             <li
               key={step}
@@ -90,6 +90,22 @@ function CoursePurchased() {
             className="vantage-btn-primary px-6 py-3.5"
           >
             Join the Discord →
+          </a>
+          <a
+            href={STATE_REQUIREMENTS_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="vantage-btn-ghost px-6 py-3.5"
+          >
+            State requirements →
+          </a>
+          <a
+            href={NIPR_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="vantage-btn-ghost px-6 py-3.5"
+          >
+            Apply for license →
           </a>
           <Link to="/" className="vantage-btn-ghost px-6 py-3.5">
             Back to Vantage

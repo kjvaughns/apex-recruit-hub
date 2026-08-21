@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Text } from '@react-email/components'
+import { DISCORD_INVITE_URL } from '@/lib/next-steps'
 import type { TemplateEntry } from './registry'
 import { GoldButton, Shell, greet, paragraph, bullet, GOLD } from './_shell'
 
@@ -19,7 +20,7 @@ const Step = ({ label }: { label: string }) => (
 )
 
 const Email = ({ firstName, portalLink, copyFor }: Props) => (
-  <Shell preview={TITLE} title={TITLE} copyFor={copyFor}>
+  <Shell preview={TITLE} title={TITLE} copyFor={copyFor} discordUrl={DISCORD_INVITE_URL}>
     <Text style={paragraph}>
       Congrats {greet(firstName)} — you&apos;re officially on board as a licensed Vantage agent.
       Welcome.

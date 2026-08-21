@@ -149,6 +149,37 @@ const copyBanner: React.CSSProperties = {
   color: '#B8B4A8',
 }
 
+const discordBox: React.CSSProperties = {
+  margin: '0 34px 24px 34px',
+  padding: '14px 16px',
+  borderRadius: '12px',
+  border: '1px solid rgba(201,168,76,0.35)',
+  backgroundColor: 'rgba(201,168,76,0.08)',
+}
+
+const discordText: React.CSSProperties = {
+  margin: 0,
+  fontSize: '13.5px',
+  lineHeight: '1.6',
+  color: MUTED,
+}
+
+/** Standing Discord invite shown at the bottom of every applicant email. */
+export function DiscordInvite({ href }: { href: string }) {
+  return (
+    <Section style={discordBox}>
+      <Text style={discordText}>
+        Not in the Vantage Discord yet? That&apos;s where training, announcements, and the team
+        live &mdash;{' '}
+        <a href={href} style={{ color: GOLD, textDecoration: 'underline', fontWeight: 700 }}>
+          join the Vantage Discord
+        </a>
+        .
+      </Text>
+    </Section>
+  )
+}
+
 export function Shell({
   preview,
   title,
@@ -156,6 +187,7 @@ export function Shell({
   copyFor,
   prefsUrl,
   hideSocial,
+  discordUrl,
   children,
 }: {
   preview: string
@@ -168,6 +200,8 @@ export function Shell({
   prefsUrl?: string
   /** Security/account emails hide the social footer. */
   hideSocial?: boolean
+  /** When set, a standing Discord invite renders above the footer. */
+  discordUrl?: string
   children: React.ReactNode
 }) {
   return (
@@ -187,6 +221,7 @@ export function Shell({
             <Heading style={heading}>{title}</Heading>
             {children}
           </Section>
+          {discordUrl ? <DiscordInvite href={discordUrl} /> : null}
           <Hr style={hr} />
           <Text style={footerStyle}>
             &copy; 2026 Vantage Financial.{' '}

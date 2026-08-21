@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { Text } from '@react-email/components'
+import { DISCORD_INVITE_URL } from '@/lib/next-steps'
 import type { TemplateEntry } from './registry'
 import { Shell, greet, paragraph } from './_shell'
 
@@ -12,7 +13,7 @@ interface Props {
 const TITLE = "You're fully onboarded — welcome to training"
 
 const Email = ({ firstName, copyFor }: Props) => (
-  <Shell preview={TITLE} title={TITLE} copyFor={copyFor}>
+  <Shell preview={TITLE} title={TITLE} copyFor={copyFor} discordUrl={DISCORD_INVITE_URL}>
     <Text style={paragraph}>
       Nice work, {greet(firstName)} — every onboarding step is done. You&apos;re officially set up
       and a real part of the Vantage team.
