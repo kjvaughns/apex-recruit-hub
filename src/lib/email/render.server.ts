@@ -149,7 +149,14 @@ export async function renderEmail(
     prefsUrl: def.prefKey ? (ctx.preferences_link ?? undefined) : undefined,
     copyFor: options.copyFor ?? undefined,
     hideSocial: def.category === "security",
-    discordUrl: discordInvite(def, ctx, [ctaUrl, secondaryCtaUrl, noteRaw, ...lines, ...bullets]),
+    discordUrl: discordInvite(def, ctx, [
+      ctaUrl,
+      secondaryCtaUrl,
+      noteRaw,
+      ...lines,
+      ...bullets,
+      ...details.map((d) => d.value),
+    ]),
   });
 
   const [html, text] = await Promise.all([render(element), render(element, { plainText: true })]);
