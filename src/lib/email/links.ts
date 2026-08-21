@@ -3,11 +3,11 @@
  * override any of these (e.g. a specific evaluation or invitation link).
  */
 
-import { AGENT_CLOUD_INVITE_URL, DISCORD_INVITE_URL, XCEL_COURSE_URL } from "@/lib/next-steps";
+import { AGENT_CLOUD_INVITE_URL, DISCORD_INVITE_URL, NIPR_URL, XCEL_COURSE_URL } from "@/lib/next-steps";
 import type { EmailContext } from "./vars";
 
 export const SITE_URL = "https://vantage-financial.net";
-export const STATE_REQUIREMENTS_URL = "https://partners.xcelsolutions.com/insurance-license/requirements?partner=karmakore";
+export const STATE_REQUIREMENTS_URL = "https://partners.xcelsolutions.com/insurance-license/requirements?partner=afe";
 
 export function emailLinks(overrides: Partial<EmailContext> = {}): EmailContext {
   return {
@@ -24,6 +24,7 @@ export function emailLinks(overrides: Partial<EmailContext> = {}): EmailContext 
     discord_link: DISCORD_INVITE_URL,
     agent_cloud_link: AGENT_CLOUD_INVITE_URL,
     state_requirements_link: STATE_REQUIREMENTS_URL,
+    nipr_link: NIPR_URL,
     ...overrides,
   };
 }

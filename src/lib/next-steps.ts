@@ -3,9 +3,12 @@
  * Keep these in one place so the thank-you pages and emails never drift.
  */
 export const XCEL_COURSE_URL =
-  "https://partners.xcelsolutions.com/karmakore";
+  "https://partners.xcelsolutions.com/afe";
 
-export const XCEL_PARTNER_CODE = "karmakore";
+export const XCEL_PARTNER_CODE = "AFE";
+
+/** Where applicants formally apply for their state license. */
+export const NIPR_URL = "https://nipr.com";
 
 export const DISCORD_INVITE_URL = "https://discord.gg/sFgEEPRSmw";
 

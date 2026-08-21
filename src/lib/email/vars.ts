@@ -71,7 +71,8 @@ export type EmailVarKey =
   | "agency_code"
   | "stage_name"
   | "previous_stage"
-  | "state_requirements_link";
+  | "state_requirements_link"
+  | "nipr_link";
 
 export type EmailContext = Partial<Record<EmailVarKey, string | null | undefined>>;
 
@@ -138,6 +139,7 @@ export const EMAIL_VAR_KEYS: EmailVarKey[] = [
   "exam_provider",
   "course_confirm_link",
   "cheat_sheet_link",
+  "nipr_link",
   "instagram_link",
   "weekly_schedule",
   "agency_code",
