@@ -53,6 +53,25 @@ function footerNote(def: EmailTemplateDef): string {
   return "You're receiving this because you applied to join the Vantage team.";
 }
 
+/**
+ * Every applicant email invites them to the Discord. Suppressed when the email
+ * already links there, so nobody gets the same link twice.
+ */
+function discordInvite(
+  def: EmailTemplateDef,
+  ctx: EmailContext,
+  usedCopy: Array<string | null | undefined>,
+): string | undefined {
+  if (def.audience !== "applicant") return undefined;
+  if (def.category === "security") return undefined;
+  const url = ctx.discord_link;
+  if (!url) return undefined;
+  const already = usedCopy.some(
+    (v) => typeof v === "string" && (v.includes(url) || v.includes("{{discord_link}}")),
+  );
+  return already ? undefined : url;
+}
+
 function splitParagraphs(value?: string | null): string[] | undefined {
   if (!value || !value.trim()) return undefined;
   return value
@@ -130,6 +149,7 @@ export async function renderEmail(
     prefsUrl: def.prefKey ? (ctx.preferences_link ?? undefined) : undefined,
     copyFor: options.copyFor ?? undefined,
     hideSocial: def.category === "security",
+    discordUrl: discordInvite(def, ctx, [ctaUrl, secondaryCtaUrl, noteRaw, ...lines, ...bullets]),
   });
 
   const [html, text] = await Promise.all([render(element), render(element, { plainText: true })]);
