@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 import { GoldButton, Shell, greet, links, paragraph, type EmailLinkProps } from './_shell'
+import { NIPR_URL, STATE_REQUIREMENTS_URL, XCEL_PARTNER_CODE } from '@/lib/next-steps'
 
 interface Props extends EmailLinkProps {
   firstName?: string
@@ -23,13 +24,17 @@ const Email = ({ firstName, ...rest }: Props) => {
       <Text style={paragraph}>
         Don&apos;t wait on us to get moving — you can get a head start on licensing today.
         Start the approved Xcel Solutions pre-licensing course now and use partner code{' '}
-        <strong>karmakore</strong> at checkout for our discounted rate:
+        <strong>{XCEL_PARTNER_CODE}</strong> at checkout for our discounted rate:
       </Text>
       <GoldButton href={L.courseUrl} label="Start the licensing course" />
       <Text style={paragraph}>
         Then join the Vantage Discord — that&apos;s where training, announcements, and the team live:
       </Text>
       <GoldButton href={L.discordInviteUrl} label="Join the Discord" />
+      <Text style={paragraph}>
+        Once you pass your exam, check your state requirements ({STATE_REQUIREMENTS_URL}) and apply
+        for your license at {NIPR_URL}.
+      </Text>
       <Text style={paragraph}>
         After the overview, if it&apos;s a fit, we&apos;ll send you a short form to officially
         join the team. Let&apos;s get to work.

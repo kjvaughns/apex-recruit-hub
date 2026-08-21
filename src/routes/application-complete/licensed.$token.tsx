@@ -4,7 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
 import { CalendlyInline } from "@/components/vantage/calendly-inline";
-import { DISCORD_INVITE_URL, XCEL_COURSE_URL, XCEL_PARTNER_CODE } from "@/lib/next-steps";
+import {
+  DISCORD_INVITE_URL,
+  STATE_REQUIREMENTS_URL,
+  XCEL_COURSE_URL,
+  XCEL_PARTNER_CODE,
+} from "@/lib/next-steps";
 import {
   getOverviewBooking,
   getSchedulingContext,
@@ -187,6 +192,14 @@ function LicensedComplete() {
               className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
             >
               Open the course →
+            </a>
+            <a
+              href={STATE_REQUIREMENTS_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="vantage-btn-ghost px-5 py-3 text-center text-[14px]"
+            >
+              State requirements →
             </a>
           </div>
 
