@@ -3,11 +3,17 @@
  * override any of these (e.g. a specific evaluation or invitation link).
  */
 
-import { AGENT_CLOUD_INVITE_URL, DISCORD_INVITE_URL, NIPR_URL, XCEL_COURSE_URL } from "@/lib/next-steps";
+import {
+  AGENT_CLOUD_INVITE_URL,
+  DISCORD_INVITE_URL,
+  NIPR_URL,
+  STATE_REQUIREMENTS_URL,
+  XCEL_COURSE_URL,
+} from "@/lib/next-steps";
 import type { EmailContext } from "./vars";
 
 export const SITE_URL = "https://vantage-financial.net";
-export const STATE_REQUIREMENTS_URL = "https://partners.xcelsolutions.com/insurance-license/requirements?partner=afe";
+export { STATE_REQUIREMENTS_URL };
 
 export function emailLinks(overrides: Partial<EmailContext> = {}): EmailContext {
   return {

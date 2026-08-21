@@ -7,6 +7,10 @@ export const XCEL_COURSE_URL =
 
 export const XCEL_PARTNER_CODE = "AFE";
 
+/** State-by-state licensing requirements (Xcel partner page). */
+export const STATE_REQUIREMENTS_URL =
+  "https://partners.xcelsolutions.com/insurance-license/requirements?partner=afe";
+
 /** Where applicants formally apply for their state license. */
 export const NIPR_URL = "https://nipr.com";
 
