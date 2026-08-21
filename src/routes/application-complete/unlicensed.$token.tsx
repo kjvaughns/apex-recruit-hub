@@ -3,7 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { PublicShell } from "@/components/vantage/brand";
-import { DISCORD_INVITE_URL, XCEL_COURSE_URL, XCEL_PARTNER_CODE } from "@/lib/next-steps";
+import {
+  DISCORD_INVITE_URL,
+  NIPR_URL,
+  STATE_REQUIREMENTS_URL,
+  XCEL_COURSE_URL,
+  XCEL_PARTNER_CODE,
+} from "@/lib/next-steps";
 import {
   getOverviewBooking,
   getSchedulingContext,
@@ -169,7 +175,7 @@ function UnlicensedComplete() {
         </div>
 
         {/* Head start: licensing course + community */}
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
           <div className="vantage-card flex flex-col gap-3 p-6">
             <div className="font-display text-[20px] leading-tight text-vantage-ivory">
               Start your pre-licensing course
@@ -197,6 +203,32 @@ function UnlicensedComplete() {
               className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
             >
               Open the course →
+            </a>
+          </div>
+
+          <div className="vantage-card flex flex-col gap-3 p-6">
+            <div className="font-display text-[20px] leading-tight text-vantage-ivory">
+              Get licensed in your state
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-vantage-dim">
+              Check your state requirements, then apply for your license on NIPR — plus
+              fingerprinting if your state requires it.
+            </p>
+            <a
+              href={STATE_REQUIREMENTS_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="vantage-btn-ghost px-5 py-3 text-center text-[14px]"
+            >
+              State requirements →
+            </a>
+            <a
+              href={NIPR_URL}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="vantage-btn-ghost mt-auto px-5 py-3 text-center text-[14px]"
+            >
+              Apply for license →
             </a>
           </div>
 
@@ -266,7 +298,7 @@ const NEXT_STEPS = [
   {
     n: "2",
     t: "Get a head start",
-    d: "Start the Xcel pre-licensing course with partner code karmakore and join the Discord.",
+    d: `Start the Xcel pre-licensing course with partner code ${XCEL_PARTNER_CODE} and join the Discord.`,
   },
   {
     n: "3",
@@ -277,11 +309,11 @@ const NEXT_STEPS = [
 
 const LICENSING_CHECKLIST = [
   "Attend the Monday overview (or your 1:1 call)",
-  "Purchase the Xcel course with partner code karmakore",
   "Join the Vantage Discord",
+  `Life Insurance Pre Licensing — Xcel course, partner code ${XCEL_PARTNER_CODE}`,
   "Complete the required education",
-  "Schedule the state exam",
-  "Pass the state exam",
-  "Apply for the state license",
+  "Schedule and pass the state exam",
+  "State Requirements — check the steps for your state",
+  "Apply for License — apply on nipr.com",
   "Complete Vantage onboarding",
 ];
